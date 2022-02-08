@@ -1,0 +1,34 @@
+{
+  "name": "neon-client-transfer",
+  "version": "1.0.0",
+  "description": "Javasript client-side module for creating transfer transactions from solana EVM to Neon EVM",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neonlabsorg/neon-client-transfer.git"
+  },
+  "keywords": [
+    "neonlabs",
+    "neon-evm",
+    "erc20",
+    "spl",
+    "token-transfering"
+  ],
+  "author": "https://github.com/WebKieth",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/neonlabsorg/neon-client-transfer/issues"
+  },
+  "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "@solana/wallet-adapter-react": "^0.15.3",
+    "@solana/web3.js": "^1.33.0",
+    "@web3-react/core": "^6.1.9",
+    "arraybuffer-to-string": "^1.0.2",
+    "web3": "^1.7.0"
+  }
+}
