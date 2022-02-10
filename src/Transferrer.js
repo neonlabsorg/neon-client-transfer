@@ -39,7 +39,7 @@ class Transferrer {
     this.connection = options.customConnection || new Connection(clusterApiUrl(this.network))
     this.events = {
       onBeforeCreateInstructions: options.onBeforeCreateInstructions || function() {},
-      onCreateNeonAccoundInstruction: options.onCreateNeonAccoundInstruction || function () {},
+      onCreateNeonAccountInstruction: options.onCreateNeonAccountInstruction || function () {},
       onBeforeSignTransaction: options.onBeforeSignTransaction || function () {},
       onBeforeNeonSign: options.onBeforeNeonSign || function () {},
       onSuccessSign: options.onSuccessSign || function () {},
@@ -217,6 +217,10 @@ class Transferrer {
   }
 
   async initNeonTransfer() {
+    if (this.broken === false) {
+      console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
+      return
+    }
     this.events.onBeforeCreateInstructions()
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
@@ -228,7 +232,7 @@ class Transferrer {
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      this.events.onCreateNeonAccoundInstruction()
+      this.events.onCreateNeonAccountInstruction()
     }
     const ERC20WrapperAccount = await this._getERC20WrapperAccount()
     if (!ERC20WrapperAccount) {
@@ -250,6 +254,10 @@ class Transferrer {
   }
 
   async createSolanaTransfer () {
+    if (this.broken === false) {
+      console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
+      return
+    }
     this.events.onBeforeCreateInstructions()
     const solanaPubkey = this._getSolanaPubkey()
     const recentBlockhash = await connection.getRecentBlockhash()
