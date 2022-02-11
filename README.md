@@ -1,5 +1,13 @@
 # Neon Transfer module for javascript client
 
+---
+**NOTE**
+
+Package is not fully tested yet.
+For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
+
+---
+
 ## Installation and setup
 
 Firstly, install the package
