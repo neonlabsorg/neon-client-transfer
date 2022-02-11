@@ -12,7 +12,7 @@ For clean working configuration example we have to rebuild connect status button
 
 Firstly, install the package
 
-`npm install neon-client-transfer --save`
+`npm install neon-portal --save`
 
 ### For native
 
