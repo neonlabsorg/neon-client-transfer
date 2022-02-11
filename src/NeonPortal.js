@@ -18,7 +18,7 @@ const mergeTypedArraysUnsafe = (a, b) => {
 const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
-class Transferrer {
+class NeonPortal {
   solanaWalletAddress = ''
   constructor(options) {
     this.broken = false
@@ -320,4 +320,4 @@ class Transferrer {
   }
 }
 
-export default Transferrer
+export default NeonPortal

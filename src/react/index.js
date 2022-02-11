@@ -1,6 +1,6 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWeb3React } from '@web3-react/core'
-import Transferrer from '../Transferrer'
+import Transferrer from '../NeonPortal'
 
 const useNeonTransfer = (events) => {
   const { connection } = useConnection()
@@ -20,6 +20,7 @@ const useNeonTransfer = (events) => {
       customConnection: connection,
       ...events
     })
+    return () => transferrer.current = null
   }, [publicKey, account, connection])
   const { initNeonTransfer, initSolanaTransfer, getNeonAccount } = transferrer.current
   return { initNeonTransfer, initSolanaTransfer, getNeonAccount }
