@@ -16,7 +16,33 @@ Firstly, install the package
 
 ### For native
 
-After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. So, besides Solana Phantom wallet (module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you) you need to connect Metamask wallet and get both user addresses, which you need to pass as properties
+After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. So, besides Solana Phantom wallet (module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you) you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
+
+```javascript
+const eventParams = {
+  onBeforeSignTransaction: () => {
+    /* Your state changes here */
+  }
+  /* ... */
+}
+const portal = new NeonPortal({
+  solanaWalletAddress: publicKey,
+  neonWalletAddress: account,
+  customConnection: connection,
+  /*
+    You can pass events as properties,  
+    but this functions will be call at portal context.  
+  */
+  ...eventParams
+})
+button.addEventListener('onClick', (e) => {
+  /* 
+    If you want to save context of event function - pass it as first argument  
+    Else first argument should be undefined
+  */
+  portal.createNeonTransfer(eventParams, amount, splToken)
+})
+```
 
 | Property name                   | Type       |      Description      | is required |
 |--------------------------------:|:----------:|:---------------------:|------------:|
