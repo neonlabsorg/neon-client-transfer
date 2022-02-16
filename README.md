@@ -3,7 +3,8 @@
 ---
 **NOTE**
 
-Package is not fully tested yet.
+The package is tested on the master branch of private source code of [NeonPass](https://neonpass.live/).  
+Module used as the react wrapper.  
 For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
 
 ---
