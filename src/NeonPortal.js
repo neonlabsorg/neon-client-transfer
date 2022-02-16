@@ -126,7 +126,7 @@ class NeonPortal {
     const data = new Uint8Array([0x0f])
     const solanaPubkey = this._getSolanaWalletPubkey()
     const mintPublicKey = this._getSolanaPubkey(splToken.address_spl)
-    const {erc20Address} = await this._getERC20WrapperAddress()
+    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
     const {neonAddress} = await this._getNeonAccountAddress()
     const contractAddress = await PublicKey.findProgramAddress([
       new Uint8Array([1]),
@@ -216,7 +216,7 @@ class NeonPortal {
     )
   }
 
-  async createNeonTransfer(amount = 0, splToken = {
+  async createNeonTransfer(events = undefined, amount = 0, splToken = {
     chainId: 0,
     address_spl: "",
     address: "",
@@ -225,11 +225,12 @@ class NeonPortal {
     symbol: "",
     logoURI: ""
   }) {
+    events  = events === undefined ? this.events : events
     if (this.broken === true) {
       console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
       return
     }
-    this.events.onBeforeCreateInstructions()
+   if (events.onBeforeCreateInstruction) events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
     const transaction = new Transaction({
@@ -240,7 +241,7 @@ class NeonPortal {
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      this.events.onCreateNeonAccountInstruction()
+      if (events.onCreateNeonAccountInstruction) events.onCreateNeonAccountInstruction()
     }
     const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
     if (!ERC20WrapperAccount) {
@@ -249,14 +250,14 @@ class NeonPortal {
     }
     const transferInstruction = await this._createTransferInstruction(amount, splToken)
     transaction.add(transferInstruction)
-    this.events.onBeforeSignTransaction()
+    if (events.onBeforeSignTransaction) events.onBeforeSignTransaction()
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        this.events.onSuccessSign(sig)
+        if (events.onSuccessSign) events.onSuccessSign(sig)
       } catch (e) {
-        this.events.onErrorSign(e)
+        if (events.onErrorSign) events.onErrorSign(e)
       }
     }, 0)
   }

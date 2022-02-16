@@ -9,12 +9,8 @@ export const useNeonTransfer = (events) => {
   let portal = new NeonPortal({
     solanaWalletAddress: publicKey,
     neonWalletAddress: account,
-    customConnection: connection,
-    ...events
+    customConnection: connection
   })
-  const createNeonTransfer = portal.createNeonTransfer.bind(portal)
-  const createSolanaTransfer = portal.createSolanaTransfer.bind(portal)
+  const createNeonTransfer = portal.createNeonTransfer.bind(portal, events)
+  const createSolanaTransfer = portal.createSolanaTransfer.bind(portal, events)
   return { createNeonTransfer, createSolanaTransfer }
-}
-
-export default useNeonTransfer
