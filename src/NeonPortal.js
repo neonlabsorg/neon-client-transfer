@@ -297,6 +297,7 @@ class NeonPortal {
     } catch (e) {
       if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
     }
+    if (txHash === undefined) return false
     const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
     const transaction = new Transaction({
       recentBlockhash: recentBlockhash.blockhash,

@@ -4,9 +4,8 @@
 **NOTE**
 
 The package is tested on the master branch of private source code of [NeonPass](https://neonpass.live/).  
-Module used as the react wrapper.  
+Module was used by the react wrapper `import {useNeonTransfer} from neon-portal/src/react`
 For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
-
 ---
 
 ## Installation and setup
@@ -57,3 +56,42 @@ button.addEventListener('onClick', (e) => {
 | onBeforeNeonSign | function | Function, which calls before metamask will approve transfer. It uses when you transfer from neon to solana. | false |
 | onSuccessSign | function | Function, which calls after sign the transfer. When you use it on transfer to neon, function get one argument - solana transaction sign. On transfer to solana it provides two arguments. Solana and Neon signatures. | false |
 | onErrorSign | function | Function, which calls, if wallet throw an error after try to sign | false |
+
+
+### For React
+
+You can use hook from package. This hook apply event parameters as object for argument. For clean code You should create your own hook and manipulate your states here.
+
+
+There is example:
+
+
+``` javascript
+export const useTransfering = () => {
+  const {setPending, setSign, setError} = useStates()
+  const {publicKey} = useWallet()
+  const {account} = useWeb3React()
+  const { createNeonTransfer, createSolanaTransfer } = useNeonTransfer({
+    onBeforeCreateInstruction: () => {
+      setPending(true)
+    },
+    onBeforeSignTransaction: () => {
+        setPending(false)
+        setTransfering(true)
+    },
+    /*
+    sig - phantom signature (solana)
+    txHash - neon approve signature when transfer to solana
+    */
+    onSuccessSign: (sig, txHash) => {
+      setSign(sig, txHash)
+      setTransfering(false)
+    },
+    onErrorSign: (e) => {
+      setError(e.message)
+      setPending(false)
+    }
+  })
+  return { createNeonTransfer, createSolanaTransfer }
+}
+```
