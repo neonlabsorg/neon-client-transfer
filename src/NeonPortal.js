@@ -25,12 +25,12 @@ class NeonPortal {
     if (!options.solanaWalletAddress) {
       this.broken = true;
       const errorText = `Phantom wallet address is required, but don't pass to options. Please fill required props!`
-      throw Error(errorText)
+      console.error(errorText)
     }
     if (!options.neonWalletAddress) {
       this.broken = true;
       const errorText = `Metamask (Neon) wallet address is required, but don't pass to options. Please fill required props!`
-      throw Error(errorText)
+      console.error(errorText)
     }
     this.network = 'mainnet-beta'
     if (this._isCorrectNetworkOption(options.network)) this.network = options.network
@@ -38,7 +38,7 @@ class NeonPortal {
     this.neonWalletAddress = options.neonWalletAddress || ''
     this.connection = options.customConnection || new Connection(clusterApiUrl(this.network))
     this.events = {
-      onBeforeCreateInstructions: options.onBeforeCreateInstructions || function() {},
+      onBeforeCreateInstruction: options.onBeforeCreateInstruction || function() {},
       onCreateNeonAccountInstruction: options.onCreateNeonAccountInstruction || function () {},
       onBeforeSignTransaction: options.onBeforeSignTransaction || function () {},
       onBeforeNeonSign: options.onBeforeNeonSign || function () {},
@@ -48,12 +48,12 @@ class NeonPortal {
     if (!window.solana) {
       this.broken = true
       const errorText = `Phantom wallet don't exist. Please install Phantom and try again`
-      throw Error(errorText)
+      console.error(errorText)
     }
     if (!window.ethereum) {
       this.broken = true
       const errorText = `Metamask wallet don't exist. Please install Metamask and try again`
-      throw Error(errorText)
+      console.error(errorText)
     }
   }
 
@@ -230,7 +230,7 @@ class NeonPortal {
       console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
       return
     }
-   if (events.onBeforeCreateInstruction) events.onBeforeCreateInstruction()
+    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
     const transaction = new Transaction({
@@ -241,7 +241,7 @@ class NeonPortal {
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      if (events.onCreateNeonAccountInstruction) events.onCreateNeonAccountInstruction()
+      if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
     }
     const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
     if (!ERC20WrapperAccount) {
@@ -250,19 +250,19 @@ class NeonPortal {
     }
     const transferInstruction = await this._createTransferInstruction(amount, splToken)
     transaction.add(transferInstruction)
-    if (events.onBeforeSignTransaction) events.onBeforeSignTransaction()
+    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (events.onSuccessSign) events.onSuccessSign(sig)
+        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig)
       } catch (e) {
-        if (events.onErrorSign) events.onErrorSign(e)
+        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
     }, 0)
   }
 
-  async createSolanaTransfer (amount = 0, splToken = {
+  async createSolanaTransfer (events = undefined, amount = 0, splToken = {
     chainId: 0,
     address_spl: "",
     address: "",
@@ -271,11 +271,12 @@ class NeonPortal {
     symbol: "",
     logoURI: ""
   }) {
+    events  = events === undefined ? this.events : events
     if (this.broken === true) {
       console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
       return
     }
-    this.events.onBeforeCreateInstructions()
+    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
     const solanaPubkey = this._getSolanaPubkey()
     const recentBlockhash = await this.connection.getRecentBlockhash()
     const transactionParameters = {
@@ -284,7 +285,7 @@ class NeonPortal {
       value: '0x00', // Only required to send ether to the recipient from the initiating external account.
       data: this._computeEthTransactionData(amount, splToken)
     };
-    this.events.onBeforeNeonSign()
+    if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
     // txHash is a hex string
     // As with any RPC call, it may throw an error
     let txHash
@@ -294,8 +295,7 @@ class NeonPortal {
         params: [transactionParameters],
       })
     } catch (e) {
-      this.events.onErrorSign(e)
-      throw Error(e)
+      if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
     }
     const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
     const transaction = new Transaction({
@@ -323,15 +323,14 @@ class NeonPortal {
       transaction.add(createAccountInstruction)
     }
     transaction.add(liquidityInstruction)
-    this.events.onBeforeSignTransaction()
+    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        this.events.onSuccessSign(sig, txHash)
+        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig, txHash)
       } catch (e) {
-        this.events.onErrorSign(e)
-        throw Error(e)
+        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
     }, 0)
   }
