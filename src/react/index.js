@@ -14,3 +14,4 @@ export const useNeonTransfer = (events) => {
   const createNeonTransfer = portal.createNeonTransfer.bind(portal, events)
   const createSolanaTransfer = portal.createSolanaTransfer.bind(portal, events)
   return { createNeonTransfer, createSolanaTransfer }
+}

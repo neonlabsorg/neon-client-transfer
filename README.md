@@ -3,10 +3,13 @@
 ---
 **NOTE**
 
-The package is tested on the master branch of private source code of [NeonPass](https://neonpass.live/).  
+The package is tested on [NeonPass](https://neonpass.live/) codebase, which use react hooks arch.
+You can use clean core, but all important requirements you need to provide as params and see how it goes by yourself.
+
+---
+
 Module was used by the react wrapper `import {useNeonTransfer} from neon-portal/src/react`
 For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
----
 
 ## Installation and setup
 
@@ -16,7 +19,7 @@ Firstly, install the package
 
 ### For native
 
-After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. So, besides Solana Phantom wallet (module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you) you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
+After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. Module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you.  So, besides Solana Phantom wallet you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
 
 ```javascript
 const eventParams = {
