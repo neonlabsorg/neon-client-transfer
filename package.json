@@ -1,6 +1,6 @@
 {
   "name": "neon-portal",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Javasript client-side module for creating transfer transactions from solana EVM to Neon EVM",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,7 @@
   "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
   "dependencies": {
     "@solana/spl-token": "^0.1.8",
-    "@solana/wallet-adapter-react": "^0.15.3",
+    "@solana/wallet-adapter-react": "^0.13.1",
     "@solana/web3.js": "^1.33.0",
     "@web3-react/core": "^6.1.9",
     "arraybuffer-to-string": "^1.0.2",
