@@ -19,7 +19,6 @@ const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
 class NeonPortal {
-  solanaWalletAddress = ''
   constructor(options) {
     this.broken = false
     if (!options.solanaWalletAddress) {
