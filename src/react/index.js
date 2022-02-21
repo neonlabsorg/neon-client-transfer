@@ -1,9 +1,9 @@
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWeb3React } from '@web3-react/core'
 import NeonPortal from '../NeonPortal'
 
 const useNeonTransfer = (events) => {
-  const { connection }  = useConnection()
+  const { connection }  = useSolanaConnection()
   const { account } = useWeb3React()
   const { publicKey } = useWallet()
   let portal = new NeonPortal({
