@@ -74,6 +74,8 @@ export const useTransfering = () => {
   const {setPending, setSign, setError} = useStates()
   const {publicKey} = useWallet()
   const {account} = useWeb3React()
+  // please, add your own custom solana connection, if you use it in the context of your app. Pass it as second argument at neon transfer hook.
+  const connection = useConnection()
   const { createNeonTransfer, createSolanaTransfer } = useNeonTransfer({
     onBeforeCreateInstruction: () => {
       setPending(true)
@@ -94,7 +96,8 @@ export const useTransfering = () => {
       setError(e.message)
       setPending(false)
     }
-  })
+  // yes, there
+  }, connection)
   return { createNeonTransfer, createSolanaTransfer }
 }
 ```
