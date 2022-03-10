@@ -15,6 +15,17 @@ const mergeTypedArraysUnsafe = (a, b) => {
   return c
 }
 
+const parseHexString = (str) => { 
+  const result = [];
+  while (str.length >= 8) { 
+      result.push(parseInt(str.substring(0, 8), 16));
+
+      str = str.substring(8, str.length);
+  }
+
+  return result;
+}
+
 const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
@@ -150,33 +161,20 @@ class NeonPortal {
   }
 
   async _getNeonAccountInstructionKeys (neonAddress = '') {
-    const mintTokenPubkey = this._getNeonMintTokenPubkey()
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
-    const associatedAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintTokenPubkey,
-      neonAddress,
-      true
-    )
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
-      { pubkey: neonAddress, isSigner: false, isWritable: true },
-      { pubkey: associatedAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: mintTokenPubkey, isSigner: false, isWritable: false },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
+      { pubkey: neonAddress, isSigner: false, isWritable: true }
     ]
   }
 
   async _createNeonAccountInstruction () {
     const accountSeed = this._getNeonAccountSeed()
-    const {neonAddress, neonNonce} = await this._getNeonAccountAddress()
+    const {neonAddress, neonNonce} = await this._getNeonAccountAddress() // pda_account
     const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
-    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(pattern, accountSeed), new Uint8Array([neonNonce]))
+    // const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
+    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(parseHexString('18'), accountSeed), new Uint8Array([neonNonce]))
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
       data: instructionData,
