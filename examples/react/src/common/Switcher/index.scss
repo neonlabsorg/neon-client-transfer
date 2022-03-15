@@ -1,0 +1,28 @@
+.switcher {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  border-radius: 24px;
+  background: $pink;
+  transition: 0.2s ease-in-out;
+  $parent: &;
+  &--active {
+    background: $blue;
+    #{$parent}__element {
+      transform: translateX(28px);
+    }
+  }
+  &__element {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 16px;
+    background: $white;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(4px);
+    transition: 0.2s ease-in-out;
+    margin: auto;
+  }
+}

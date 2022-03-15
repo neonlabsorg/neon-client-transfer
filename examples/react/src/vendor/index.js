@@ -1,28 +1,18 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWeb3React } from '@web3-react/core'
-import Transferrer from './Transferrer'
+import NeonPortal from './NeonPortal'
 
-const useNeonTransfer = (events) => {
-  const { connection } = useConnection()
+const useNeonTransfer = (events, currentConnection) => {
+  const { connection }  = useConnection()
   const { account } = useWeb3React()
   const { publicKey } = useWallet()
-  const transferrer = useRef()
-  transferrer.current = new Transferrer({
+  let portal = new NeonPortal({
     solanaWalletAddress: publicKey,
     neonWalletAddress: account,
-    customConnection: connection,
-    ...events
+    customConnection: currentConnection ? currentConnection : connection
   })
-  useEffect(() => {
-    transferrer.current = new Transferrer({
-      solanaWalletAddress: publicKey,
-      neonWalletAddress: account,
-      customConnection: connection,
-      ...events
-    })
-  }, [publicKey, account, connection])
-  const { initNeonTransfer, initSolanaTransfer, getNeonAccount } = transferrer.current
-  return { initNeonTransfer, initSolanaTransfer, getNeonAccount }
+  const createNeonTransfer = portal.createNeonTransfer.bind(portal, events)
+  const createSolanaTransfer = portal.createSolanaTransfer.bind(portal, events)
+  return { createNeonTransfer, createSolanaTransfer }
 }
-
 export default useNeonTransfer
