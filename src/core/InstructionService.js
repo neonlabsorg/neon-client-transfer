@@ -2,7 +2,7 @@ import {
   clusterApiUrl,
   Connection
 } from '@solana/web3.js';
-import {PublicKey, Transaction, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY} from '@solana/web3.js'
+import {PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY} from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 const web3 = require('web3')
@@ -15,21 +15,10 @@ const mergeTypedArraysUnsafe = (a, b) => {
   return c
 }
 
-const parseHexString = (str) => { 
-  const result = [];
-  while (str.length >= 8) { 
-      result.push(parseInt(str.substring(0, 8), 16));
-
-      str = str.substring(8, str.length);
-  }
-
-  return result;
-}
-
 const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
-class NeonPortal {
+class InstructionService {
   constructor(options) {
     this.broken = false
     if (!options.solanaWalletAddress) {
@@ -161,20 +150,33 @@ class NeonPortal {
   }
 
   async _getNeonAccountInstructionKeys (neonAddress = '') {
+    const mintTokenPubkey = this._getNeonMintTokenPubkey()
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
+    const associatedAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mintTokenPubkey,
+      neonAddress,
+      true
+    )
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
+      { pubkey: neonAddress, isSigner: false, isWritable: true },
+      { pubkey: associatedAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: neonAddress, isSigner: false, isWritable: true }
+      { pubkey: mintTokenPubkey, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
     ]
   }
 
   async _createNeonAccountInstruction () {
     const accountSeed = this._getNeonAccountSeed()
-    const {neonAddress, neonNonce} = await this._getNeonAccountAddress() // pda_account
+    const {neonAddress, neonNonce} = await this._getNeonAccountAddress()
     const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    // const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
-    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(parseHexString('18'), accountSeed), new Uint8Array([neonNonce]))
+    const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
+    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(pattern, accountSeed), new Uint8Array([neonNonce]))
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
       data: instructionData,
@@ -212,126 +214,6 @@ class NeonPortal {
       Number(amount) * Math.pow(10, splToken.decimals)
     )
   }
-
-  async createNeonTransfer(events = undefined, amount = 0, splToken = {
-    chainId: 0,
-    address_spl: "",
-    address: "",
-    decimals: 1,
-    name: "",
-    symbol: "",
-    logoURI: ""
-  }) {
-    events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
-    const { blockhash } = await this.connection.getRecentBlockhash()
-    const solanaKey = this._getSolanaWalletPubkey()
-    const transaction = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: solanaKey
-    })
-    const neonAccount = await this.getNeonAccount()
-    if (!neonAccount) {
-      const neonAccountInstruction = await this._createNeonAccountInstruction()
-      transaction.add(neonAccountInstruction)
-      if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
-    }
-    const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
-    if (!ERC20WrapperAccount) {
-      const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
-      transaction.add(ERC20WrapperInstruction)
-    }
-    const transferInstruction = await this._createTransferInstruction(amount, splToken)
-    transaction.add(transferInstruction)
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
-    setTimeout(async () => {
-      try {
-        const signedTransaction = await window.solana.signTransaction(transaction)
-        const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig)
-      } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
-      }
-    }, 0)
-  }
-
-  async createSolanaTransfer (events = undefined, amount = 0, splToken = {
-    chainId: 0,
-    address_spl: "",
-    address: "",
-    decimals: 1,
-    name: "",
-    symbol: "",
-    logoURI: ""
-  }) {
-    events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
-    const solanaPubkey = this._getSolanaPubkey()
-    const recentBlockhash = await this.connection.getRecentBlockhash()
-    const transactionParameters = {
-      to: splToken.address, // Required except during contract publications.
-      from: this.neonWalletAddress, // must match user's active address.
-      value: '0x00', // Only required to send ether to the recipient from the initiating external account.
-      data: this._computeEthTransactionData(amount, splToken)
-    };
-    if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
-    // txHash is a hex string
-    // As with any RPC call, it may throw an error
-    let txHash
-    try {
-      txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [transactionParameters],
-      })
-    } catch (e) {
-      if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
-    }
-    if (txHash === undefined) return false
-    const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
-    const transaction = new Transaction({
-      recentBlockhash: recentBlockhash.blockhash,
-      feePayer: solanaPubkey
-    })
-    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
-    const assocTokenAccountAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintPubkey,
-      solanaPubkey
-    )
-    const associatedTokenAccount = await this.connection.getAccountInfo(assocTokenAccountAddress)
-    if (!associatedTokenAccount) {
-      // Create token account if it not exists
-      const createAccountInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mintPubkey,               // token mint
-        assocTokenAccountAddress, // account to create
-        solanaPubkey,             // new account owner
-        solanaPubkey              // payer
-      )
-      transaction.add(createAccountInstruction)
-    }
-    transaction.add(liquidityInstruction)
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
-    setTimeout(async () => {
-      try {
-        const signedTransaction = await window.solana.signTransaction(transaction)
-        const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig, txHash)
-      } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
-      }
-    }, 0)
-  }
 }
 
-export default NeonPortal
+export default InstructionService

@@ -75,6 +75,7 @@ class NeonPortal {
     return {neonAddress, neonNonce}
   }
 
+  // TODO: put it in instruction service
   async _getAuthorityPoolAddress () {
     const enc = new TextEncoder()
     const authority = await PublicKey.findProgramAddress(enc.encode('Deposit'), new PublicKey(NEON_EVM_LOADER_ID))
@@ -267,17 +268,15 @@ class NeonPortal {
       if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
     }
 
-    if (splToken.address_spl === NEON_MINT_TOKEN) {
-      const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
-      if (!ERC20WrapperAccount) {
-        const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
-        transaction.add(ERC20WrapperInstruction)
-      }
-      const transferInstruction = await this._createDepositTransferInstruction(amount, splToken)
-      transaction.add(transferInstruction)
-    } else {
-      const approveInstruction = await this._createApproveDepositInstruction()
-    }
+   // ???? Нужно ли
+    // const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
+    //   if (!ERC20WrapperAccount) {
+    //     const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
+    //     transaction.add(ERC20WrapperInstruction)
+    //   }
+    const approveInstruction = await this._createApproveDepositInstruction()
+    transaction.add(approveInstruction)
+  
 
 
     if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
@@ -347,7 +346,7 @@ class NeonPortal {
       const transactionParameters = {
         to: splToken.address, // Required except during contract publications.
         from: this.neonWalletAddress, // must match user's active address.
-        value: _computeWithdrawAmountValue, // Only required to send ether to the recipient from the initiating external account.
+        value: this._computeWithdrawAmountValue(), // Only required to send ether to the recipient from the initiating external account.
         data: this._computeWithDrawEthTransactionData()
       };
       if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
