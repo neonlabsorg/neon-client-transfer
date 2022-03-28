@@ -1,6 +1,6 @@
 import InstructionService from "./InstructionService";
-
-// TODO: import dependencies
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Transaction } from '@solana/web3.js'
 
 class MintPortal extends InstructionService {
   async createNeonTransfer(events = undefined, amount = 0, splToken = {
@@ -46,7 +46,7 @@ class MintPortal extends InstructionService {
       } catch (e) {
         if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
-    }, 0)
+    })
   }
 
   async createSolanaTransfer (events = undefined, amount = 0, splToken = {
@@ -120,7 +120,7 @@ class MintPortal extends InstructionService {
       } catch (e) {
         if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
-    }, 0)
+    })
   }
 }
 

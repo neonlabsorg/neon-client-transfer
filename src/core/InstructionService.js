@@ -4,9 +4,9 @@ import {
 } from '@solana/web3.js';
 import {PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY} from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-const web3 = require('web3')
-const ab2str = require('arraybuffer-to-string')
+import web3 from "web3"
+import ab2str from "arraybuffer-to-string"
+import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a, b) => {
   const c = new a.constructor(a.length + b.length)
@@ -14,9 +14,6 @@ const mergeTypedArraysUnsafe = (a, b) => {
   c.set(b, a.length)
   return c
 }
-
-const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
-const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
 class InstructionService {
   constructor(options) {
@@ -67,7 +64,7 @@ class InstructionService {
   _getEthSeed (hex = '') {
     return web3.utils.hexToBytes(hex)
   }
-  
+
   _getNeonAccountSeed () {
     return this._getEthSeed(this.neonWalletAddress)
   }
@@ -76,6 +73,15 @@ class InstructionService {
     const {neonAddress} = await this._getNeonAccountAddress()
     const neonAccount = await this.connection.getAccountInfo(neonAddress)
     return neonAccount
+  }
+
+  async getAuthorityPoolAddress() {
+    const enc = new TextEncoder()
+    const authority = await PublicKey.findProgramAddress(
+      enc.encode("Deposit"),
+      new PublicKey(NEON_EVM_LOADER_ID),
+    )
+    return authority
   }
 
   _getSolanaWalletPubkey () {
@@ -95,9 +101,9 @@ class InstructionService {
     if (!address) return this._getSolanaWalletPubkey()
     return new PublicKey(address)
   }
-  
+
   _getNeonMintTokenPubkey () {
-    return this._getSolanaPubkey(NEON_MINT_TOKEN)
+    return this._getSolanaPubkey(NEON_TOKEN_MINT)
   }
 
   async _getERC20WrapperAddress (splToken) {

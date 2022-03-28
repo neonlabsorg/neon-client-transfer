@@ -1,16 +1,15 @@
 import InstructionService from "./InstructionService";
-
-
-
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Transaction } from '@solana/web3.js'
+import ab2str from "arraybuffer-to-string"
+import { NEON_TOKEN_MINT } from "../constants"
 
 class NeonPortal extends InstructionService {
-
-
-  async _createApproveDepositInstruction(amount) {
-    const authority = this._getAuthorityPoolAddress()
+  async _createApproveDepositInstruction(amount, splToken) {
+    const authority = await this.getAuthorityPoolAddress()
     const pool = await Token.getAssociatedTokenAddress(
       authority,
-      NEON_MINT_TOKEN
+      NEON_TOKEN_MINT
     )
     const instruction = Token.createApproveInstruction({
       delegate: authority,
@@ -59,8 +58,7 @@ class NeonPortal extends InstructionService {
     )
   }
 
-  
-
+  // #region
   async createNeonTransfer(events = undefined, amount = 0, splToken = {
     chainId: 0,
     address_spl: "",
@@ -90,16 +88,8 @@ class NeonPortal extends InstructionService {
       if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
     }
 
-   // ???? Нужно ли
-    // const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
-    //   if (!ERC20WrapperAccount) {
-    //     const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
-    //     transaction.add(ERC20WrapperInstruction)
-    //   }
     const approveInstruction = await this._createApproveDepositInstruction()
     transaction.add(approveInstruction)
-  
-
 
     if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
     setTimeout(async () => {
@@ -110,14 +100,8 @@ class NeonPortal extends InstructionService {
       } catch (e) {
         if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
-    }, 0)
+    })
   }
-
-
-
-
-
-
 
   _computeWithdrawEthTransactionData () {
     const withdrawMethodID = '0x8e19899e'
@@ -133,10 +117,7 @@ class NeonPortal extends InstructionService {
     view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
     return ab2str(amountBuffer, 'hex')
   }
-
-
-
-
+  // #endregion
 
   async createSolanaTransfer (events = undefined, amount = 0, splToken = {
     chainId: 0,
@@ -153,8 +134,8 @@ class NeonPortal extends InstructionService {
       return
     }
     if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
-    if (token.address_spl === NEON_MINT_TOKEN) {
-      
+    if (splToken.address_spl === NEON_TOKEN_MINT) {
+
       const transactionParameters = {
         to: splToken.address, // Required except during contract publications.
         from: this.neonWalletAddress, // must match user's active address.
@@ -173,6 +154,8 @@ class NeonPortal extends InstructionService {
       } catch (e) {
         if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
       }
-    } 
+    }
   }
 }
+
+export default NeonPortal
