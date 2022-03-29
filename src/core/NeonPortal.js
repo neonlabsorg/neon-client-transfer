@@ -3,6 +3,7 @@ import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/sp
 import { Transaction } from '@solana/web3.js'
 import ab2str from "arraybuffer-to-string"
 import { NEON_TOKEN_MINT } from "../constants"
+import web3 from "web3"
 
 class NeonPortal extends InstructionService {
   async _createApproveDepositInstruction(amount, splToken) {
@@ -112,10 +113,8 @@ class NeonPortal extends InstructionService {
 
 
   _computeWithdrawAmountValue (amount, splToken) {
-    const amountBuffer = new Uint8Array(32)
-    const view = new DataView(amountBuffer.buffer);
-    view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
-    return ab2str(amountBuffer, 'hex')
+    const result = Number(amount) * Math.pow(10, splToken.decimals)
+    return '0x' + result.toString(16)
   }
   // #endregion
 
@@ -137,10 +136,10 @@ class NeonPortal extends InstructionService {
     if (splToken.address_spl === NEON_TOKEN_MINT) {
 
       const transactionParameters = {
-        to: splToken.address, // Required except during contract publications.
+        to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
         from: this.neonWalletAddress, // must match user's active address.
-        value: this._computeWithdrawAmountValue(), // Only required to send ether to the recipient from the initiating external account.
-        data: this._computeWithDrawEthTransactionData()
+        value: this._computeWithdrawAmountValue(amount, splToken), // Only required to send ether to the recipient from the initiating external account.
+        data: this._computeWithdrawEthTransactionData()
       };
       if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
       // txHash is a hex string
