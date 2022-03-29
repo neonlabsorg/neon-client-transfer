@@ -17,17 +17,17 @@ const useNeonTransfer = (events, currentConnection) => {
   const neonPortal = new NeonPortal(options)
   const mintPortal = new MintPortal(options)
 
-  const deposit = (events, amount, splToken) => {
+  const deposit = (amount, splToken) => {
     if (NEON_TOKEN_MINT === splToken.address_spl) {
       neonPortal.createNeonTransfer.call(neonPortal, events, amount, splToken)
     } else {
-      neonPortal.createNeonTransfer.call(neonPortal, events, amount, splToken)
+      mintPortal.createNeonTransfer.call(mintPortal, events, amount, splToken)
     }
   }
 
-  const withdraw = (events, amount, splToken) => {
+  const withdraw = (amount, splToken) => {
     if (NEON_TOKEN_MINT === splToken.address_spl) {
-      mintPortal.createSolanaTransfer.call(mintPortal, events, amount, splToken)
+      neonPortal.createSolanaTransfer.call(neonPortal, events, amount, splToken)
     } else {
       mintPortal.createSolanaTransfer.call(mintPortal, events, amount, splToken)
     }

@@ -156,33 +156,26 @@ class InstructionService {
   }
 
   async _getNeonAccountInstructionKeys (neonAddress = '') {
-    const mintTokenPubkey = this._getNeonMintTokenPubkey()
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
-    const associatedAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintTokenPubkey,
-      neonAddress,
-      true
-    )
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
-      { pubkey: neonAddress, isSigner: false, isWritable: true },
-      { pubkey: associatedAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: mintTokenPubkey, isSigner: false, isWritable: false },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
+      { pubkey: neonAddress, isSigner: false, isWritable: true },
     ]
   }
 
   async _createNeonAccountInstruction () {
-    const accountSeed = this._getNeonAccountSeed()
     const {neonAddress, neonNonce} = await this._getNeonAccountAddress()
     const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
-    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(pattern, accountSeed), new Uint8Array([neonNonce]))
+    const pattern = this._getEthSeed("0x18")
+    const instructionData = mergeTypedArraysUnsafe(
+      mergeTypedArraysUnsafe(
+        new Uint8Array(pattern),
+        this._getNeonAccountSeed()
+      ),
+      new Uint8Array([neonNonce])
+    )
+
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
       data: instructionData,
