@@ -1,4 +1,4 @@
-# Neon Transfer module for javascript client
+# Neon Transfer module for JavaScript client
 
 ---
 **NOTE**
@@ -8,14 +8,16 @@ You can use clean core, but all important requirements you need to provide as pa
 
 ---
 
-Module was used by the react wrapper `import {useNeonTransfer} from neon-portal/src/react`
+Module was used by the react wrapper `import {useNeonTransfer} from "neon-portal/src/react"`
 For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
 
 ## Installation and setup
 
-Firstly, install the package
+Firstly, install the package:
 
-`npm install neon-portal --save`
+```sh
+npm install neon-portal --save
+```
 
 ### For native
 
@@ -33,14 +35,14 @@ const portal = new NeonPortal({
   neonWalletAddress: account,
   customConnection: connection,
   /*
-    You can pass events as properties,  
-    but this functions will be call at portal context.  
+    You can pass events as properties,
+    but this functions will be call at portal context.
   */
   ...eventParams
 })
 button.addEventListener('onClick', (e) => {
-  /* 
-    If you want to save context of event function - pass it as first argument  
+  /*
+    If you want to save context of event function - pass it as first argument
     Else first argument should be undefined
   */
   portal.createNeonTransfer(eventParams, amount, splToken)

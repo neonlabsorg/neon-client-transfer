@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/NeonPortal.js',
+  entry: './src/index.js',
   output: {
     filename: 'NeonPortal.js',
     path: path.resolve(__dirname, 'dist'),

@@ -4,9 +4,9 @@ import {
 } from '@solana/web3.js';
 import {PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY} from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-const web3 = require('web3')
-const ab2str = require('arraybuffer-to-string')
+import web3 from "web3"
+import ab2str from "arraybuffer-to-string"
+import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a, b) => {
   const c = new a.constructor(a.length + b.length)
@@ -14,9 +14,6 @@ const mergeTypedArraysUnsafe = (a, b) => {
   c.set(b, a.length)
   return c
 }
-
-const NEON_EVM_LOADER_ID = 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
-const NEON_MINT_TOKEN = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g'
 
 class InstructionService {
   constructor(options) {
@@ -67,7 +64,7 @@ class InstructionService {
   _getEthSeed (hex = '') {
     return web3.utils.hexToBytes(hex)
   }
-  
+
   _getNeonAccountSeed () {
     return this._getEthSeed(this.neonWalletAddress)
   }
@@ -76,6 +73,15 @@ class InstructionService {
     const {neonAddress} = await this._getNeonAccountAddress()
     const neonAccount = await this.connection.getAccountInfo(neonAddress)
     return neonAccount
+  }
+
+  async getAuthorityPoolAddress() {
+    const enc = new TextEncoder()
+    const authority = await PublicKey.findProgramAddress(
+      enc.encode("Deposit"),
+      new PublicKey(NEON_EVM_LOADER_ID),
+    )
+    return authority
   }
 
   _getSolanaWalletPubkey () {
@@ -95,9 +101,9 @@ class InstructionService {
     if (!address) return this._getSolanaWalletPubkey()
     return new PublicKey(address)
   }
-  
+
   _getNeonMintTokenPubkey () {
-    return this._getSolanaPubkey(NEON_MINT_TOKEN)
+    return this._getSolanaPubkey(NEON_TOKEN_MINT)
   }
 
   async _getERC20WrapperAddress (splToken) {
@@ -150,33 +156,26 @@ class InstructionService {
   }
 
   async _getNeonAccountInstructionKeys (neonAddress = '') {
-    const mintTokenPubkey = this._getNeonMintTokenPubkey()
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
-    const associatedAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintTokenPubkey,
-      neonAddress,
-      true
-    )
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
-      { pubkey: neonAddress, isSigner: false, isWritable: true },
-      { pubkey: associatedAccount, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: mintTokenPubkey, isSigner: false, isWritable: false },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
+      { pubkey: neonAddress, isSigner: false, isWritable: true },
     ]
   }
 
   async _createNeonAccountInstruction () {
-    const accountSeed = this._getNeonAccountSeed()
     const {neonAddress, neonNonce} = await this._getNeonAccountAddress()
     const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    const pattern = new Uint8Array([0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0])
-    const instructionData = mergeTypedArraysUnsafe(mergeTypedArraysUnsafe(pattern, accountSeed), new Uint8Array([neonNonce]))
+    const pattern = this._getEthSeed("0x18")
+    const instructionData = mergeTypedArraysUnsafe(
+      mergeTypedArraysUnsafe(
+        new Uint8Array(pattern),
+        this._getNeonAccountSeed()
+      ),
+      new Uint8Array([neonNonce])
+    )
+
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
       data: instructionData,
