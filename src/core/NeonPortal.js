@@ -1,15 +1,29 @@
 import InstructionService from "./InstructionService";
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Transaction } from '@solana/web3.js'
+import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js'
 import ab2str from "arraybuffer-to-string"
+import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../constants"
 
 class NeonPortal extends InstructionService {
-  async _createApproveDepositInstruction(amount, splToken) {
-    const authority = await this.getAuthorityPoolAddress()
-    const instruction = Token.createApproveInstruction({
-      delegate: authority,
-      amount:  Number(amount) * Math.pow(10, splToken.decimals)
-    })
+  async _createApproveDepositInstruction(amount) {
+    const solanaPubkey = this._getSolanaPubkey()
+    const source = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(NEON_TOKEN_MINT),
+      solanaPubkey
+    )
+    const [authority] = await this.getAuthorityPoolAddress()
+
+    const instruction = Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      source,
+      authority,
+      solanaPubkey,
+      [],
+      Number(amount) * Math.pow(10, NEON_TOKEN_DECIMALS),
+    )
+
     return instruction
   }
 
@@ -54,15 +68,7 @@ class NeonPortal extends InstructionService {
   }
 
   // #region
-  async createNeonTransfer(events = undefined, amount = 0, splToken = {
-    chainId: 0,
-    address_spl: "",
-    address: "",
-    decimals: 1,
-    name: "",
-    symbol: "",
-    logoURI: ""
-  }) {
+  async createNeonTransfer(events = undefined, amount = 0) {
     events  = events === undefined ? this.events : events
     if (this.broken === true) {
       console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
@@ -76,6 +82,7 @@ class NeonPortal extends InstructionService {
       recentBlockhash: blockhash,
       feePayer: solanaKey
     })
+
     const neonAccount = await this.getNeonAccount()
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
@@ -83,10 +90,43 @@ class NeonPortal extends InstructionService {
       if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
     }
 
-    const approveInstruction = await this._createApproveDepositInstruction()
+    const approveInstruction = await this._createApproveDepositInstruction(amount)
     transaction.add(approveInstruction)
 
+    const solanaPubkey = this._getSolanaWalletPubkey()
+    const source = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(NEON_TOKEN_MINT),
+      solanaPubkey
+    )
+    const [authority] = await this.getAuthorityPoolAddress()
+    const pool = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(NEON_TOKEN_MINT),
+      authority,
+      true
+    )
+    const {neonAddress} = await this._getNeonAccountAddress()
+
+    const keys = [
+      { pubkey: source, isSigner: false, isWritable: true },
+      { pubkey: pool, isSigner: false, isWritable: true },
+      { pubkey: neonAddress, isSigner: false, isWritable: true },
+      { pubkey: authority, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ]
+
+    const depositInstruction = new TransactionInstruction({
+      programId: new PublicKey(NEON_EVM_LOADER_ID),
+      data: [Number.parseInt('0x19', 16)],
+      keys
+    })
+    transaction.add(depositInstruction)
+
     if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
+
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)

@@ -1,4 +1,5 @@
 export const NEON_TOKEN_MINT_DECIMALS = 18
+export const NEON_TOKEN_DECIMALS = 9
 export const NEON_HOLDER_MSG_SIZE = 1000
 export const NEON_PKG_VERSION = '0.7.0'
 export const NEON_CHAIN_ID = 245022926

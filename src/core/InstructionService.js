@@ -78,7 +78,7 @@ class InstructionService {
   async getAuthorityPoolAddress() {
     const enc = new TextEncoder()
     const authority = await PublicKey.findProgramAddress(
-      enc.encode("Deposit"),
+      [enc.encode("Deposit")],
       new PublicKey(NEON_EVM_LOADER_ID),
     )
     return authority
