@@ -1,0 +1,34 @@
+@keyframes rotating {
+  from {
+    transform: rotate(0deg)
+  }
+  to {
+    transform: rotate(359deg)
+  }
+}
+
+.loader-icon {
+  svg {
+    animation-name: rotating;
+    animation-timing-function: linear;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+  }
+}
+
+.loader {
+  @apply flex flex-col items-center;
+  &__icon {
+    @extend .loader-icon;
+    margin-bottom: 24px;
+  }
+  &__title {
+    font-size: 24px;
+    @apply mb-8 text-gray-900;
+  }
+  &__summary {
+    text-align: center;
+    font-size: 16px;
+    @apply text-gray-500;
+  }
+}

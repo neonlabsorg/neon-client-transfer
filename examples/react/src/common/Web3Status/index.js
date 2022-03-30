@@ -1,9 +1,8 @@
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core'
-import { Fragment } from 'react'
+import { shortenAddress } from '../../utils'
 import { injected } from '../../connectors'
-const NeonConnectButton = ({className = ''}) => {
+const Web3Status = ({className = ''}) => {
   const { account, error, activate, deactivate, active } = useWeb3React()
-
   async function connect() {
     try {
       await activate(injected)
@@ -19,14 +18,8 @@ const NeonConnectButton = ({className = ''}) => {
       console.log(ex)
     }
   }
-
-  function shortenAddress(address = '', chars = 4) {
-    if (!address.length) return ''
-    return `${address.substring(0, chars + 2)}...${address.substring(42 - chars)}`
-  }
-
   if (error) {
-    return <Fragment>
+    return <span>
       {error instanceof UnsupportedChainIdError ? 
       <div className='flex flex-col py-4 px-6 border border-purple-700 mb-6'>
         <div className='text-md mb-3'>{'Wrong Network'}</div>
@@ -35,7 +28,7 @@ const NeonConnectButton = ({className = ''}) => {
           </div>
       </div>
       : 'Error'}
-    </Fragment>
+    </span>
   }
   if (active && account) {
     return <span className={`p-4 text-blue-600 cursor-pointer ${className}`} 
@@ -45,4 +38,4 @@ const NeonConnectButton = ({className = ''}) => {
   }
 
 }
-export default NeonConnectButton
+export default Web3Status

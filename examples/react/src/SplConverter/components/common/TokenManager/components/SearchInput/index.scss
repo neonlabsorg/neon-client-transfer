@@ -1,0 +1,8 @@
+.search-input {
+  @apply p-4 border border-light-blue;
+  font-size: 16px;
+  &:placeholder {
+    content: '';
+    @apply text-gray-600;
+  }
+}

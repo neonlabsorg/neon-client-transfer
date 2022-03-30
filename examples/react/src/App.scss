@@ -1,0 +1,57 @@
+$dark_background: #0E0E0E;
+$pink: #CE3A8B;
+$blue: #4355F9;
+$gray: #C4C4C4;
+$light-gray: #F3F6FD;
+$light: #EBEBF1;
+$white: #fff;
+$offset_grid_top: 80px;
+$offset_grid_top_xs: 50px;
+$header_height: 80px;
+$cube_side: 75px;
+$plate_width: 1120px;
+%title {
+  line-height: 1.2;
+  strong {
+      color: $pink;
+      font-weight: inherit;
+  }
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import './common/Button/index.scss';
+@import './common/Switcher/index.scss';
+@import './common/Button/index.scss';
+@import './common/Input/index.scss';
+@import './common/Layout/index.scss';
+@import './common/Layout/Header/index.scss';
+@import './common/Modal/index.scss';
+@import './styles/vendor/solana-wallet-adapter.scss';
+@import './styles/vendor/notifications.scss';
+@import './SplConverter/components/common/TokenManager/components/SearchInput/index.scss';
+@import './SplConverter/components/Transfering/index.scss';
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  
+}
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+.react-notie {
+  position: relative;
+  z-index: 100;
+}
+input {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+}
