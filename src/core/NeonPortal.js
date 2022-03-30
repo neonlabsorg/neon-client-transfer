@@ -2,16 +2,10 @@ import InstructionService from "./InstructionService";
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Transaction } from '@solana/web3.js'
 import ab2str from "arraybuffer-to-string"
-import { NEON_TOKEN_MINT } from "../constants"
-import web3 from "web3"
 
 class NeonPortal extends InstructionService {
   async _createApproveDepositInstruction(amount, splToken) {
     const authority = await this.getAuthorityPoolAddress()
-    const pool = await Token.getAssociatedTokenAddress(
-      authority,
-      NEON_TOKEN_MINT
-    )
     const instruction = Token.createApproveInstruction({
       delegate: authority,
       amount:  Number(amount) * Math.pow(10, splToken.decimals)
@@ -133,26 +127,22 @@ class NeonPortal extends InstructionService {
       return
     }
     if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
-    if (splToken.address_spl === NEON_TOKEN_MINT) {
 
-      const transactionParameters = {
-        to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
-        from: this.neonWalletAddress, // must match user's active address.
-        value: this._computeWithdrawAmountValue(amount, splToken), // Only required to send ether to the recipient from the initiating external account.
-        data: this._computeWithdrawEthTransactionData()
-      };
-      if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
-      // txHash is a hex string
-      // As with any RPC call, it may throw an error
-      let txHash
-      try {
-        txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [transactionParameters],
-        })
-      } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
-      }
+    const transactionParameters = {
+      to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
+      from: this.neonWalletAddress, // must match user's active address.
+      value: this._computeWithdrawAmountValue(amount, splToken), // Only required to send ether to the recipient from the initiating external account.
+      data: this._computeWithdrawEthTransactionData()
+    };
+    if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
+
+    try {
+      await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [transactionParameters],
+      })
+    } catch (e) {
+      if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
     }
   }
 }
