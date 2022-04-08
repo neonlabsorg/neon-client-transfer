@@ -177,7 +177,7 @@ class NeonPortal extends InstructionService {
     if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
 
     try {
-      await window.ethereum.request({
+      const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [transactionParameters],
       })
