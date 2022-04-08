@@ -181,6 +181,7 @@ class NeonPortal extends InstructionService {
         method: 'eth_sendTransaction',
         params: [transactionParameters],
       })
+      if (typeof events.onSuccessSign === 'function') events.onSuccessSign(undefined, txHash)
     } catch (e) {
       if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
     }
