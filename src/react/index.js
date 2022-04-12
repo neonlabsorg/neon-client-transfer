@@ -21,7 +21,7 @@ const useNeonTransfer = (events, currentConnection) => {
 
   const getEthereumTransactionParams = (amount, splToken) => {
     const portal = _getInstance(splToken.address_spl)
-    return portal.createNeonTransfer.call(portal, amount, splToken)
+    return portal.getEthereumTransactionParams.call(portal, amount, splToken)
   }
 
   const deposit = (amount, splToken) => {
