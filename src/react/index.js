@@ -21,17 +21,17 @@ const useNeonTransfer = (events, currentConnection) => {
 
   const getEthereumTransactionParams = (amount, splToken) => {
     const portal = _getInstance(splToken.address_spl)
-    portal.createNeonTransfer.call(portal, amount, splToken)
+    return portal.createNeonTransfer.call(portal, amount, splToken)
   }
 
   const deposit = (amount, splToken) => {
     const portal = _getInstance(splToken.address_spl)
-    portal.createNeonTransfer.call(portal, events, amount, splToken)
+    return portal.createNeonTransfer.call(portal, events, amount, splToken)
   }
 
   const withdraw = (amount, splToken) => {
     const portal = _getInstance(splToken.address_spl)
-    portal.createSolanaTransfer.call(portal, events, amount, splToken)
+    return portal.createSolanaTransfer.call(portal, events, amount, splToken)
   }
 
   return { deposit, withdraw, getEthereumTransactionParams }
