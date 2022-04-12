@@ -166,7 +166,7 @@ class NeonPortal extends InstructionService {
     logoURI: ""
   }) {
     events  = events === undefined ? this.events : events
-    if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
+    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
     try {
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
