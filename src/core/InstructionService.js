@@ -183,7 +183,7 @@ class InstructionService {
     })
   }
 
-  _computeEthTransactionData (amount, splToken) {
+  _computeWithdrawEthTransactionData (amount, splToken) {
     const approveSolanaMethodID = '0x93e29346'
     const solanaPubkey = this._getSolanaPubkey()
     const solanaStr = ab2str(solanaPubkey.toBytes(), 'hex')
@@ -192,6 +192,15 @@ class InstructionService {
     view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
     const amountStr = ab2str(amountBuffer, 'hex')
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
+  }
+
+  getEthereumTransactionParams (amount, token) {
+    return {
+      to: token.address, // Required except during contract publications.
+      from: this.neonWalletAddress, // must match user's active address.
+      value: '0x00', // Only required to send ether to the recipient from the initiating external account.
+      data: this._computeWithdrawEthTransactionData(amount, token)
+    }
   }
 
   async _createTransferInstruction (amount, splToken, toSolana = false) {

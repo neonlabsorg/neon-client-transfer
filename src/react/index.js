@@ -17,23 +17,24 @@ const useNeonTransfer = (events, currentConnection) => {
   const neonPortal = new NeonPortal(options)
   const mintPortal = new MintPortal(options)
 
+  const _getInstance = (addr = '') => NEON_TOKEN_MINT === addr ? neonPortal : mintPortal
+
+  const getEthereumTransactionParams = (amount, splToken) => {
+    const portal = _getInstance(splToken.address_spl)
+    portal.createNeonTransfer.call(portal, amount, splToken)
+  }
+
   const deposit = (amount, splToken) => {
-    if (NEON_TOKEN_MINT === splToken.address_spl) {
-      neonPortal.createNeonTransfer.call(neonPortal, events, amount, splToken)
-    } else {
-      mintPortal.createNeonTransfer.call(mintPortal, events, amount, splToken)
-    }
+    const portal = _getInstance(splToken.address_spl)
+    portal.createNeonTransfer.call(portal, events, amount, splToken)
   }
 
   const withdraw = (amount, splToken) => {
-    if (NEON_TOKEN_MINT === splToken.address_spl) {
-      neonPortal.createSolanaTransfer.call(neonPortal, events, amount, splToken)
-    } else {
-      mintPortal.createSolanaTransfer.call(mintPortal, events, amount, splToken)
-    }
+    const portal = _getInstance(splToken.address_spl)
+    portal.createSolanaTransfer.call(portal, events, amount, splToken)
   }
 
-  return { deposit, withdraw }
+  return { deposit, withdraw, getEthereumTransactionParams }
 }
 
 export default useNeonTransfer

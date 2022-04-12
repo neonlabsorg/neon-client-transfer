@@ -63,15 +63,8 @@ class MintPortal extends InstructionService {
       console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
       return
     }
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
     const solanaPubkey = this._getSolanaPubkey()
     const recentBlockhash = await this.connection.getRecentBlockhash()
-    const transactionParameters = {
-      to: splToken.address, // Required except during contract publications.
-      from: this.neonWalletAddress, // must match user's active address.
-      value: '0x00', // Only required to send ether to the recipient from the initiating external account.
-      data: this._computeEthTransactionData(amount, splToken)
-    };
     if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
     // txHash is a hex string
     // As with any RPC call, it may throw an error
@@ -79,7 +72,7 @@ class MintPortal extends InstructionService {
     try {
       txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [transactionParameters],
+        params: [this.getEthereumTransactionParams(amount, splToken)],
       })
     } catch (e) {
       if (typeof events.onErrorSign === 'function') events.onErrorSign(e)

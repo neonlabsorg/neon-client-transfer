@@ -150,7 +150,15 @@ class NeonPortal extends InstructionService {
     const result = Number(amount) * Math.pow(10, splToken.decimals)
     return '0x' + result.toString(16)
   }
-  // #endregion
+
+  getEthereumTransactionParams(amount, token) {
+    return {
+      to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
+      from: this.neonWalletAddress,
+      value: this._computeWithdrawAmountValue(amount, token),
+      data: this._computeWithdrawEthTransactionData()
+    }
+  }
 
   async createSolanaTransfer (events = undefined, amount = 0, splToken = {
     chainId: 0,
@@ -166,20 +174,11 @@ class NeonPortal extends InstructionService {
       console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
       return
     }
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
-
-    const transactionParameters = {
-      to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
-      from: this.neonWalletAddress, // must match user's active address.
-      value: this._computeWithdrawAmountValue(amount, splToken), // Only required to send ether to the recipient from the initiating external account.
-      data: this._computeWithdrawEthTransactionData()
-    };
     if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
-
     try {
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [transactionParameters],
+        params: [this.getEthereumTransactionParams(amount, splToken)],
       })
       if (typeof events.onSuccessSign === 'function') events.onSuccessSign(undefined, txHash)
     } catch (e) {
