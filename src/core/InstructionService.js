@@ -17,17 +17,6 @@ const mergeTypedArraysUnsafe = (a, b) => {
 
 class InstructionService {
   constructor(options) {
-    this.broken = false
-    if (!options.solanaWalletAddress) {
-      this.broken = true;
-      const errorText = `Phantom wallet address is required, but don't pass to options. Please fill required props!`
-      console.error(errorText)
-    }
-    if (!options.neonWalletAddress) {
-      this.broken = true;
-      const errorText = `Metamask (Neon) wallet address is required, but don't pass to options. Please fill required props!`
-      console.error(errorText)
-    }
     this.network = 'mainnet-beta'
     if (this._isCorrectNetworkOption(options.network)) this.network = options.network
     this.solanaWalletAddress = options.solanaWalletAddress || ''
@@ -40,16 +29,6 @@ class InstructionService {
       onBeforeNeonSign: options.onBeforeNeonSign || function () {},
       onSuccessSign: options.onSuccessSign || function () {},
       onErrorSign: options.onErrorSign || function () {}
-    }
-    if (!window.solana) {
-      this.broken = true
-      const errorText = `Phantom wallet don't exist. Please install Phantom and try again`
-      console.error(errorText)
-    }
-    if (!window.ethereum) {
-      this.broken = true
-      const errorText = `Metamask wallet don't exist. Please install Metamask and try again`
-      console.error(errorText)
     }
   }
 

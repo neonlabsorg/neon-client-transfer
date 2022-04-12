@@ -13,10 +13,6 @@ class MintPortal extends InstructionService {
     logoURI: ""
   }) {
     events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
     if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
@@ -59,10 +55,6 @@ class MintPortal extends InstructionService {
     logoURI: ""
   }) {
     events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
     const solanaPubkey = this._getSolanaPubkey()
     const recentBlockhash = await this.connection.getRecentBlockhash()
     if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()

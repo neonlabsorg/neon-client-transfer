@@ -70,10 +70,6 @@ class NeonPortal extends InstructionService {
   // #region
   async createNeonTransfer(events = undefined, amount = 0) {
     events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Neon Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
     if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
 
     const { blockhash } = await this.connection.getRecentBlockhash()
@@ -170,10 +166,6 @@ class NeonPortal extends InstructionService {
     logoURI: ""
   }) {
     events  = events === undefined ? this.events : events
-    if (this.broken === true) {
-      console.warn('Create Solana Transfer: You try to transfer after configuring errors. Please, fix it first')
-      return
-    }
     if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
     try {
       const txHash = await window.ethereum.request({
