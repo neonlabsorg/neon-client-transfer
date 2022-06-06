@@ -9,7 +9,7 @@ export default {
     path: path.resolve('.', 'dist'),
     library: 'NeonPortal',
     globalObject: 'this',
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'umd'
   },
   module: {
     rules: [
