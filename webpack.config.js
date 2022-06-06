@@ -4,8 +4,12 @@ export default {
   entry: './src/index.js',
   target: 'web',
   mode: 'production',
+  experiments: {
+    outputModule: true
+  },
   output: {
     filename: 'index.js',
+    module: true,
     path: path.resolve('.', 'dist'),
     library: 'NeonPortal',
     globalObject: 'this',

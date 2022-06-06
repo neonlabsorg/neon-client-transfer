@@ -1,3 +1,3 @@
-export { default as useNeonTransfer } from "./react/index"
-export { default as NeonPortal } from "./core/NeonPortal"
-export { default as MintPortal } from "./core/MintPortal"
+export { useNeonTransfer } from "./react/index"
+export { NeonPortal } from "./core/NeonPortal"
+export { MintPortal } from "./core/MintPortal"
