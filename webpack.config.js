@@ -2,7 +2,6 @@ import path from "path";
 
 export default {
   entry: './src/index.js',
-  target: 'web',
   mode: 'production',
   experiments: {
     outputModule: true
@@ -11,9 +10,6 @@ export default {
     filename: 'index.js',
     module: true,
     path: path.resolve('.', 'dist'),
-    library: 'NeonPortal',
-    globalObject: 'this',
-    libraryTarget: 'commonjs'
   },
   module: {
     rules: [
