@@ -20,7 +20,7 @@ export default {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ["@babel/plugin-proposal-export-default-from"]
+            plugins: ["@babel/plugin-transform-modules-commonjs"]
           }
         }
       }
