@@ -1,14 +1,15 @@
-const path = require('path');
+import path from "path";
 
-module.exports = {
+export default {
   entry: './src/index.js',
   target: 'web',
+  mode: 'production',
   output: {
     filename: 'index.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve('.', 'dist'),
     library: 'NeonPortal',
     globalObject: 'this',
-
+    libraryTarget: 'commonjs2'
   },
   module: {
     rules: [
