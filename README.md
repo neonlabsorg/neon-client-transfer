@@ -24,6 +24,10 @@ npm install neon-portal --save
 After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. Module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you.  So, besides Solana Phantom wallet you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
 
 ```javascript
+import NeonPortal from 'neon-portal/neon'
+//for transfer ERC20 tokens use:
+import MintPortal from 'neon-portal/mint'
+
 const eventParams = {
   onBeforeSignTransaction: () => {
     /* Your state changes here */
