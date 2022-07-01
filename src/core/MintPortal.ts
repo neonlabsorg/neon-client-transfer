@@ -11,7 +11,7 @@ class MintPortal extends InstructionService {
     name: "",
     symbol: "",
     logoURI: ""
-  }) {
+  }): void {
     events  = events === undefined ? this.events : events
     if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()

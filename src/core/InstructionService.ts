@@ -1,23 +1,105 @@
 import {
   clusterApiUrl,
-  Connection
+  Connection,
+  PublicKey, 
+  TransactionInstruction, 
+  SystemProgram, 
+  SYSVAR_RENT_PUBKEY,
+  Transaction
 } from '@solana/web3.js';
-import { PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { hexToBytes } from "web3-utils"
-import ab2str from "arraybuffer-to-string"
+import {hexToBytes} from "web3-utils"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
-const mergeTypedArraysUnsafe = (a, b) => {
+const mergeTypedArraysUnsafe = (a: any, b: any) => {
   const c = new a.constructor(a.length + b.length)
   c.set(a)
   c.set(b, a.length)
   return c
 }
+const getProvider = (): PhantomProvider | undefined => {
+  if ("solana" in window) {
+    const provider = (window as any).solana;
+    if (provider.isPhantom) {
+      return provider;
+    }
+  }
+  window.open("https://phantom.app/", "_blank");
+};
+
+const bufferToString = (buffer: Buffer, encoding?: BufferEncoding): string => {
+  if (!encoding) encoding = 'hex'
+  return Buffer.from(buffer).toString(encoding)
+}
+
+type Events = {
+  onBeforeCreateInstruction: Function
+  onCreateNeonAccountInstruction: Function
+  onBeforeSignTransaction: Function
+  onBeforeNeonSign: Function
+  onSuccessSign: Function
+  onErrorSign: Function
+}
+type AcceptedToken = {
+  address: string,
+  address_spl: string,
+  name: string,
+  symbol: string,
+  decimals: number
+}
+
+interface NeonPortalOptions extends Events {
+  solanaWalletAddress: string,
+  neonWalletAddress: string,
+  customConnection: Connection,
+  network: Network
+}
+
+enum Network {
+  MainnetBeta = 'mainnet-beta',
+  Testnet = 'testnet',
+  Devnet = 'devnet'
+}
+
+type DisplayEncoding = "utf8" | "hex";
+type PhantomEvent = "disconnect" | "connect";
+type PhantomRequestMethod =
+  | "connect"
+  | "disconnect"
+  | "signTransaction"
+  | "signAllTransactions"
+  | "signMessage";
+
+interface ConnectOpts {
+  onlyIfTrusted: boolean;
+}
+
+interface PhantomProvider {
+  publicKey: PublicKey | null;
+  isConnected: boolean | null;
+  autoApprove: boolean | null;
+  signTransaction: (transaction: Transaction) => Promise<Transaction>;
+  signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
+  signMessage: (
+    message: Uint8Array | string,
+    display?: DisplayEncoding
+  ) => Promise<any>;
+  connect: (opts?: Partial<ConnectOpts>) => Promise<void>;
+  disconnect: () => Promise<void>;
+  on: (event: PhantomEvent, handler: (args: any) => void) => void;
+  request: (method: PhantomRequestMethod, params: any) => Promise<any>;
+}
 
 class InstructionService {
-  constructor(options) {
-    this.network = 'mainnet-beta'
+  network: Network
+  solanaWalletAddress: string
+  neonWalletAddress: string
+  connection: Connection
+  events: Events
+  solanaProvider: PhantomProvider
+  constructor(options: NeonPortalOptions) {
+    this.network = Network.MainnetBeta
+    this.solanaProvider = getProvider()
     if (this._isCorrectNetworkOption(options.network)) this.network = options.network
     this.solanaWalletAddress = options.solanaWalletAddress || ''
     this.neonWalletAddress = options.neonWalletAddress || ''
@@ -32,24 +114,25 @@ class InstructionService {
     }
   }
 
-  async _getNeonAccountAddress () {
-    const accountSeed = this._getNeonAccountSeed()
+  private async getNeonAccountAddress () {
+    const accountSeed = this.getNeonAccountSeed()
     const programAddress = await PublicKey.findProgramAddress([new Uint8Array([1]), accountSeed], new PublicKey(NEON_EVM_LOADER_ID))
     const neonAddress = programAddress[0]
     const neonNonce = programAddress[1]
     return {neonAddress, neonNonce}
   }
 
-  _getEthSeed (hex = '') {
-    return hexToBytes(hex)
+  private getEthSeed (hex = ''): Buffer | Uint8Array {
+    const bytes = hexToBytes(hex)
+    return new Uint8Array(bytes)
   }
 
-  _getNeonAccountSeed () {
-    return this._getEthSeed(this.neonWalletAddress)
+  private getNeonAccountSeed (): Buffer | Uint8Array {
+    return this.getEthSeed(this.neonWalletAddress)
   }
 
   async getNeonAccount () {
-    const {neonAddress} = await this._getNeonAccountAddress()
+    const {neonAddress} = await this.getNeonAccountAddress()
     const neonAccount = await this.connection.getAccountInfo(neonAddress)
     return neonAccount
   }
@@ -76,7 +159,7 @@ class InstructionService {
     }
   }
 
-  _getSolanaPubkey (address = '') {
+  _getSolanaPubkey (address = ''): PublicKey {
     if (!address) return this._getSolanaWalletPubkey()
     return new PublicKey(address)
   }
@@ -85,11 +168,11 @@ class InstructionService {
     return this._getSolanaPubkey(NEON_TOKEN_MINT)
   }
 
-  async _getERC20WrapperAddress (splToken) {
+  async _getERC20WrapperAddress (token: AcceptedToken) {
     const enc = new TextEncoder()
-    const tokenPubkey = this._getSolanaPubkey(splToken.address_spl)
-    const erc20Seed = this._getEthSeed(splToken.address)
-    const accountSeed = this._getNeonAccountSeed()
+    const tokenPubkey = this._getSolanaPubkey(token.address_spl)
+    const erc20Seed = this.getEthSeed(token.address)
+    const accountSeed = this.getNeonAccountSeed()
     const erc20addr = await PublicKey.findProgramAddress([
       new Uint8Array([1]),
       enc.encode('ERC20Balance'),
@@ -100,21 +183,21 @@ class InstructionService {
     return {erc20Address: erc20addr[0], erc20Nonce: erc20addr[1]}
   }
 
-  async _getERC20WrapperAccount (splToken) {
-    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
+  async _getERC20WrapperAccount (token: AcceptedToken) {
+    const {erc20Address} = await this._getERC20WrapperAddress(token)
     const ERC20WrapperAccount = await this.connection.getAccountInfo(erc20Address)
     return ERC20WrapperAccount
   }
 
-  async _createERC20AccountInstruction (splToken) {
-    const data = new Uint8Array([0x0f])
+  async _createERC20AccountInstruction (token: AcceptedToken) {
+    const data = new Buffer(0x0f)
     const solanaPubkey = this._getSolanaWalletPubkey()
-    const mintPublicKey = this._getSolanaPubkey(splToken.address_spl)
-    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
-    const {neonAddress} = await this._getNeonAccountAddress()
+    const mintPublicKey = this._getSolanaPubkey(token.address_spl)
+    const {erc20Address} = await this._getERC20WrapperAddress(token)
+    const {neonAddress} = await this.getNeonAccountAddress()
     const contractAddress = await PublicKey.findProgramAddress([
       new Uint8Array([1]),
-      this._getEthSeed(splToken.address)
+      this.getEthSeed(token.address)
     ], new PublicKey(NEON_EVM_LOADER_ID))
     const keys = [
       { pubkey: solanaPubkey, isSigner: true, isWritable: true },
@@ -134,7 +217,7 @@ class InstructionService {
     return instruction
   }
 
-  async _getNeonAccountInstructionKeys (neonAddress = '') {
+  async _getNeonAccountInstructionKeys (neonAddress: PublicKey) {
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
@@ -144,13 +227,13 @@ class InstructionService {
   }
 
   async _createNeonAccountInstruction () {
-    const {neonAddress, neonNonce} = await this._getNeonAccountAddress()
+    const {neonAddress, neonNonce} = await this.getNeonAccountAddress()
     const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    const pattern = this._getEthSeed("0x18")
+    const pattern = this.getEthSeed("0x18")
     const instructionData = mergeTypedArraysUnsafe(
       mergeTypedArraysUnsafe(
         new Uint8Array(pattern),
-        this._getNeonAccountSeed()
+        this.getNeonAccountSeed()
       ),
       new Uint8Array([neonNonce])
     )
@@ -162,18 +245,18 @@ class InstructionService {
     })
   }
 
-  _computeWithdrawEthTransactionData (amount, splToken) {
+  _computeWithdrawEthTransactionData (amount: number, token: AcceptedToken) {
     const approveSolanaMethodID = '0x93e29346'
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = ab2str(solanaPubkey.toBytes(), 'hex')
-    const amountBuffer = new Uint8Array(32)
+    const solanaStr = bufferToString(solanaPubkey.toBuffer(), 'hex')
+    const amountBuffer = new Buffer(32)
     const view = new DataView(amountBuffer.buffer);
-    view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
-    const amountStr = ab2str(amountBuffer, 'hex')
+    view.setUint32(28, Number(amount) * Math.pow(10, token.decimals)) // mutate amountBuffer
+    const amountStr = bufferToString(amountBuffer, 'hex')
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
 
-  getEthereumTransactionParams (amount, token) {
+  getEthereumTransactionParams (amount: number, token: AcceptedToken) {
     return {
       to: token.address, // Required except during contract publications.
       from: this.neonWalletAddress, // must match user's active address.
@@ -182,10 +265,10 @@ class InstructionService {
     }
   }
 
-  async _createTransferInstruction (amount, splToken, toSolana = false) {
-    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
+  async _createTransferInstruction (amount: number, token: AcceptedToken, toSolana = false) {
+    const mintPubkey = this._getSolanaPubkey(token.address_spl)
     const solanaPubkey = this._getSolanaWalletPubkey()
-    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
+    const {erc20Address} = await this._getERC20WrapperAddress(token)
     const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -198,7 +281,7 @@ class InstructionService {
       toSolana ? solanaBalanceAccount : erc20Address,
       solanaPubkey,
       [],
-      Number(amount) * Math.pow(10, splToken.decimals)
+      Number(amount) * Math.pow(10, token.decimals)
     )
   }
 }
