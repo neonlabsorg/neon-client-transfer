@@ -28,7 +28,7 @@ class NeonPortal extends InstructionService {
   }
 
   async _createDepositTransferInstruction (amount, splToken) {
-    const mintPubkey = this._getNeonMintTokenPubkey()
+    const mintPubkey = this.getNeonMintTokenPubkey()
     const solanaPubkey = this._getSolanaWalletPubkey()
     const {erc20Address} = await this._getERC20WrapperAddress(splToken)
     const solanaBalanceAccount = await Token.getAssociatedTokenAddress(

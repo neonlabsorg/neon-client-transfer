@@ -1,21 +1,20 @@
 import InstructionService from "./InstructionService";
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Transaction } from '@solana/web3.js'
+import { AcceptedToken } from "./types";
 
 class MintPortal extends InstructionService {
-  async createNeonTransfer(events = undefined, amount = 0, splToken = {
-    chainId: 0,
+  public async createNeonTransfer(amount:number = 0, splToken: AcceptedToken = {
     address_spl: "",
     address: "",
     decimals: 1,
     name: "",
     symbol: "",
     logoURI: ""
-  }): void {
-    events  = events === undefined ? this.events : events
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
+  }) {
+    if (typeof this.events.onBeforeCreateInstruction === 'function') this.events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()
-    const solanaKey = this._getSolanaWalletPubkey()
+    const solanaKey = this.getSolanaWalletPubkey()
     const transaction = new Transaction({
       recentBlockhash: blockhash,
       feePayer: solanaKey
@@ -24,7 +23,7 @@ class MintPortal extends InstructionService {
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
+      if (typeof this.events.onCreateNeonAccountInstruction === 'function') this.events.onCreateNeonAccountInstruction()
     }
     const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
     if (!ERC20WrapperAccount) {
@@ -33,19 +32,20 @@ class MintPortal extends InstructionService {
     }
     const transferInstruction = await this._createTransferInstruction(amount, splToken)
     transaction.add(transferInstruction)
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
+    if (typeof this.events.onBeforeSignTransaction === 'function') this.events.onBeforeSignTransaction()
     setTimeout(async () => {
       try {
-        const signedTransaction = await window.solana.signTransaction(transaction)
+        if (this.solanaProvider === undefined) throw Error
+        const signedTransaction = await this.solanaProvider.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig)
+        if (typeof this.events.onSuccessSign === 'function') this.events.onSuccessSign(sig)
       } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
+        if (typeof this.events.onErrorSign === 'function') this.events.onErrorSign(e)
       }
     })
   }
 
-  async createSolanaTransfer (events = undefined, amount = 0, splToken = {
+  public async createSolanaTransfer (amount = 0, splToken = {
     chainId: 0,
     address_spl: "",
     address: "",
@@ -54,25 +54,24 @@ class MintPortal extends InstructionService {
     symbol: "",
     logoURI: ""
   }) {
-    events  = events === undefined ? this.events : events
     const solanaPubkey = this._getSolanaPubkey()
-    const recentBlockhash = await this.connection.getRecentBlockhash()
-    if (typeof events.onBeforeNeonSign === 'function') events.onBeforeNeonSign()
+    const { blockhash } = await this.connection.getRecentBlockhash()
+    if (typeof this.events.onBeforeNeonSign === 'function') this.events.onBeforeNeonSign()
     // txHash is a hex string
     // As with any RPC call, it may throw an error
-    let txHash
+    let txHash: any;
     try {
-      txHash = await window.ethereum.request({
+      if (this.ethereumProvider === undefined) throw Error
+      txHash = await this.ethereumProvider.request({
         method: 'eth_sendTransaction',
         params: [this.getEthereumTransactionParams(amount, splToken)],
       })
     } catch (e) {
-      if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
+      if (typeof this.events.onErrorSign === 'function') this.events.onErrorSign(e)
     }
-    if (txHash === undefined) return false
     const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
     const transaction = new Transaction({
-      recentBlockhash: recentBlockhash.blockhash,
+      recentBlockhash: blockhash,
       feePayer: solanaPubkey
     })
     const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
@@ -96,14 +95,15 @@ class MintPortal extends InstructionService {
       transaction.add(createAccountInstruction)
     }
     transaction.add(liquidityInstruction)
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
+    if (typeof this.events.onBeforeSignTransaction === 'function') this.events.onBeforeSignTransaction()
     setTimeout(async () => {
       try {
-        const signedTransaction = await window.solana.signTransaction(transaction)
+        if (this.solanaProvider === undefined) throw Error
+        const signedTransaction = await this.solanaProvider.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig, txHash)
+        if (typeof this.events.onSuccessSign === 'function') this.events.onSuccessSign(sig, txHash)
       } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
+        if (typeof this.events.onErrorSign === 'function') this.events.onErrorSign(e)
       }
     })
   }

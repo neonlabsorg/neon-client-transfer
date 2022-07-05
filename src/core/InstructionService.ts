@@ -4,11 +4,11 @@ import {
   PublicKey, 
   TransactionInstruction, 
   SystemProgram, 
-  SYSVAR_RENT_PUBKEY,
-  Transaction
+  SYSVAR_RENT_PUBKEY
 } from '@solana/web3.js';
+import { Events, PhantomProvider, Network, NeonPortalOptions, AcceptedToken, EthereumProvider } from './types';
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import {hexToBytes} from "web3-utils"
+import { hexToBytes } from "web3-utils"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a: any, b: any) => {
@@ -17,7 +17,7 @@ const mergeTypedArraysUnsafe = (a: any, b: any) => {
   c.set(b, a.length)
   return c
 }
-const getProvider = (): PhantomProvider | undefined => {
+const getSolanaProvider = (): PhantomProvider | undefined => {
   if ("solana" in window) {
     const provider = (window as any).solana;
     if (provider.isPhantom) {
@@ -27,68 +27,17 @@ const getProvider = (): PhantomProvider | undefined => {
   window.open("https://phantom.app/", "_blank");
 };
 
+const getEthereumProvider = (): EthereumProvider | undefined => {
+  if ("ethereum" in window) {
+    return (window as any).ethereum;
+  }
+}
+
 const bufferToString = (buffer: Buffer, encoding?: BufferEncoding): string => {
   if (!encoding) encoding = 'hex'
   return Buffer.from(buffer).toString(encoding)
 }
 
-type Events = {
-  onBeforeCreateInstruction: Function
-  onCreateNeonAccountInstruction: Function
-  onBeforeSignTransaction: Function
-  onBeforeNeonSign: Function
-  onSuccessSign: Function
-  onErrorSign: Function
-}
-type AcceptedToken = {
-  address: string,
-  address_spl: string,
-  name: string,
-  symbol: string,
-  decimals: number
-}
-
-interface NeonPortalOptions extends Events {
-  solanaWalletAddress: string,
-  neonWalletAddress: string,
-  customConnection: Connection,
-  network: Network
-}
-
-enum Network {
-  MainnetBeta = 'mainnet-beta',
-  Testnet = 'testnet',
-  Devnet = 'devnet'
-}
-
-type DisplayEncoding = "utf8" | "hex";
-type PhantomEvent = "disconnect" | "connect";
-type PhantomRequestMethod =
-  | "connect"
-  | "disconnect"
-  | "signTransaction"
-  | "signAllTransactions"
-  | "signMessage";
-
-interface ConnectOpts {
-  onlyIfTrusted: boolean;
-}
-
-interface PhantomProvider {
-  publicKey: PublicKey | null;
-  isConnected: boolean | null;
-  autoApprove: boolean | null;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
-  signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
-  signMessage: (
-    message: Uint8Array | string,
-    display?: DisplayEncoding
-  ) => Promise<any>;
-  connect: (opts?: Partial<ConnectOpts>) => Promise<void>;
-  disconnect: () => Promise<void>;
-  on: (event: PhantomEvent, handler: (args: any) => void) => void;
-  request: (method: PhantomRequestMethod, params: any) => Promise<any>;
-}
 
 class InstructionService {
   network: Network
@@ -96,10 +45,12 @@ class InstructionService {
   neonWalletAddress: string
   connection: Connection
   events: Events
-  solanaProvider: PhantomProvider
+  solanaProvider: PhantomProvider | undefined
+  ethereumProvider: EthereumProvider | undefined
   constructor(options: NeonPortalOptions) {
     this.network = Network.MainnetBeta
-    this.solanaProvider = getProvider()
+    this.solanaProvider = getSolanaProvider()
+    this.ethereumProvider = getEthereumProvider()
     if (this._isCorrectNetworkOption(options.network)) this.network = options.network
     this.solanaWalletAddress = options.solanaWalletAddress || ''
     this.neonWalletAddress = options.neonWalletAddress || ''
@@ -146,7 +97,7 @@ class InstructionService {
     return authority
   }
 
-  _getSolanaWalletPubkey () {
+  protected getSolanaWalletPubkey () {
     return new PublicKey(this.solanaWalletAddress)
   }
 
@@ -160,7 +111,7 @@ class InstructionService {
   }
 
   _getSolanaPubkey (address = ''): PublicKey {
-    if (!address) return this._getSolanaWalletPubkey()
+    if (!address) return this.getSolanaWalletPubkey()
     return new PublicKey(address)
   }
 
@@ -191,7 +142,7 @@ class InstructionService {
 
   async _createERC20AccountInstruction (token: AcceptedToken) {
     const data = new Buffer(0x0f)
-    const solanaPubkey = this._getSolanaWalletPubkey()
+    const solanaPubkey = this.getSolanaWalletPubkey()
     const mintPublicKey = this._getSolanaPubkey(token.address_spl)
     const {erc20Address} = await this._getERC20WrapperAddress(token)
     const {neonAddress} = await this.getNeonAccountAddress()
@@ -218,7 +169,7 @@ class InstructionService {
   }
 
   async _getNeonAccountInstructionKeys (neonAddress: PublicKey) {
-    const solanaWalletPubkey = this._getSolanaWalletPubkey()
+    const solanaWalletPubkey = this.getSolanaWalletPubkey()
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -267,7 +218,7 @@ class InstructionService {
 
   async _createTransferInstruction (amount: number, token: AcceptedToken, toSolana = false) {
     const mintPubkey = this._getSolanaPubkey(token.address_spl)
-    const solanaPubkey = this._getSolanaWalletPubkey()
+    const solanaPubkey = this.getSolanaWalletPubkey()
     const {erc20Address} = await this._getERC20WrapperAddress(token)
     const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
