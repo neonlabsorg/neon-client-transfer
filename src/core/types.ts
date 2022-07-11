@@ -16,6 +16,14 @@ export type Events = {
   onSuccessSign: Function
   onErrorSign: Function
 }
+
+export type EthereumTransactionParams = {
+  to: string,
+  from: string,
+  value: string,
+  data: string
+}
+
 export type AcceptedToken = {
   address: string,
   address_spl: string,

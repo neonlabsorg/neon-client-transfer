@@ -54,7 +54,7 @@ class MintPortal extends InstructionService {
     symbol: "",
     logoURI: ""
   }) {
-    const solanaPubkey = this._getSolanaPubkey()
+    const solanaPubkey = this.getSolanaPubkey()
     const { blockhash } = await this.connection.getRecentBlockhash()
     if (typeof this.events.onBeforeNeonSign === 'function') this.events.onBeforeNeonSign()
     // txHash is a hex string
@@ -74,7 +74,7 @@ class MintPortal extends InstructionService {
       recentBlockhash: blockhash,
       feePayer: solanaPubkey
     })
-    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
+    const mintPubkey = this.getSolanaPubkey(splToken.address_spl)
     const assocTokenAccountAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
