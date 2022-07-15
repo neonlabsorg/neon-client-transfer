@@ -17,7 +17,7 @@ const useNeonTransfer = (events, currentConnection) => {
   const neonPortal = new NeonPortal(options)
   const mintPortal = new MintPortal(options)
 
-  const _getInstance = (addr = '') => NEON_TOKEN_MINT === addr ? neonPortal : mintPortal
+  const _getInstance = (addr = "") => (NEON_TOKEN_MINT === addr ? neonPortal : mintPortal)
 
   const getEthereumTransactionParams = (amount, splToken) => {
     const portal = _getInstance(splToken.address_spl)

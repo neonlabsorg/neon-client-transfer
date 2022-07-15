@@ -1,6 +1,6 @@
-import InstructionService from "./InstructionService";
-import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js'
+import InstructionService from "./InstructionService"
+import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { Transaction, TransactionInstruction, PublicKey } from "@solana/web3.js"
 import ab2str from "arraybuffer-to-string"
 import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../constants"
 
@@ -11,7 +11,7 @@ class NeonPortal extends InstructionService {
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       new PublicKey(NEON_TOKEN_MINT),
-      solanaPubkey
+      solanaPubkey,
     )
     const [authority] = await this.getAuthorityPoolAddress()
 
@@ -27,15 +27,15 @@ class NeonPortal extends InstructionService {
     return instruction
   }
 
-  async _createDepositTransferInstruction (amount, splToken) {
+  async _createDepositTransferInstruction(amount, splToken) {
     const mintPubkey = this._getNeonMintTokenPubkey()
     const solanaPubkey = this._getSolanaWalletPubkey()
-    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
+    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
     const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       mintPubkey,
-      solanaPubkey
+      solanaPubkey,
     )
     return Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
@@ -43,19 +43,19 @@ class NeonPortal extends InstructionService {
       erc20Address,
       solanaPubkey,
       [],
-      Number(amount) * Math.pow(10, splToken.decimals)
+      Number(amount) * Math.pow(10, splToken.decimals),
     )
   }
 
-  async _createWithdrawTransferInstruction (amount, splToken) {
+  async _createWithdrawTransferInstruction(amount, splToken) {
     const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
     const solanaPubkey = this._getSolanaWalletPubkey()
-    const {erc20Address} = await this._getERC20WrapperAddress(splToken)
+    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
     const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       mintPubkey,
-      solanaPubkey
+      solanaPubkey,
     )
     return Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
@@ -63,27 +63,28 @@ class NeonPortal extends InstructionService {
       solanaBalanceAccount,
       solanaPubkey,
       [],
-      Number(amount) * Math.pow(10, splToken.decimals)
+      Number(amount) * Math.pow(10, splToken.decimals),
     )
   }
 
   // #region
   async createNeonTransfer(events = undefined, amount = 0) {
-    events  = events === undefined ? this.events : events
-    if (typeof events.onBeforeCreateInstruction === 'function') events.onBeforeCreateInstruction()
+    events = events === undefined ? this.events : events
+    if (typeof events.onBeforeCreateInstruction === "function") events.onBeforeCreateInstruction()
 
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
     const transaction = new Transaction({
       recentBlockhash: blockhash,
-      feePayer: solanaKey
+      feePayer: solanaKey,
     })
 
     const neonAccount = await this.getNeonAccount()
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      if (typeof events.onCreateNeonAccountInstruction === 'function') events.onCreateNeonAccountInstruction()
+      if (typeof events.onCreateNeonAccountInstruction === "function")
+        events.onCreateNeonAccountInstruction()
     }
 
     const approveInstruction = await this._createApproveDepositInstruction(amount)
@@ -94,7 +95,7 @@ class NeonPortal extends InstructionService {
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       new PublicKey(NEON_TOKEN_MINT),
-      solanaPubkey
+      solanaPubkey,
     )
     const [authority] = await this.getAuthorityPoolAddress()
     const pool = await Token.getAssociatedTokenAddress(
@@ -102,9 +103,9 @@ class NeonPortal extends InstructionService {
       TOKEN_PROGRAM_ID,
       new PublicKey(NEON_TOKEN_MINT),
       authority,
-      true
+      true,
     )
-    const {neonAddress} = await this._getNeonAccountAddress()
+    const { neonAddress } = await this._getNeonAccountAddress()
 
     const keys = [
       { pubkey: source, isSigner: false, isWritable: true },
@@ -116,35 +117,34 @@ class NeonPortal extends InstructionService {
 
     const depositInstruction = new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
-      data: [Number.parseInt('0x19', 16)],
-      keys
+      data: [Number.parseInt("0x19", 16)],
+      keys,
     })
     transaction.add(depositInstruction)
 
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
+    if (typeof events.onBeforeSignTransaction === "function") events.onBeforeSignTransaction()
 
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === 'function') events.onSuccessSign(sig)
+        if (typeof events.onSuccessSign === "function") events.onSuccessSign(sig)
       } catch (e) {
-        if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
+        if (typeof events.onErrorSign === "function") events.onErrorSign(e)
       }
     })
   }
 
-  _computeWithdrawEthTransactionData () {
-    const withdrawMethodID = '0x8e19899e'
+  _computeWithdrawEthTransactionData() {
+    const withdrawMethodID = "0x8e19899e"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = ab2str(solanaPubkey.toBytes(), 'hex')
+    const solanaStr = ab2str(solanaPubkey.toBytes(), "hex")
     return `${withdrawMethodID}${solanaStr}`
   }
 
-
-  _computeWithdrawAmountValue (amount, splToken) {
+  _computeWithdrawAmountValue(amount, splToken) {
     const result = Number(amount) * Math.pow(10, splToken.decimals)
-    return '0x' + result.toString(16)
+    return "0x" + result.toString(16)
   }
 
   getEthereumTransactionParams(amount, token) {
@@ -152,29 +152,33 @@ class NeonPortal extends InstructionService {
       to: "0x053e3d1b12726f648B2e45CEAbDF9078B742576D",
       from: this.neonWalletAddress,
       value: this._computeWithdrawAmountValue(amount, token),
-      data: this._computeWithdrawEthTransactionData()
+      data: this._computeWithdrawEthTransactionData(),
     }
   }
 
-  async createSolanaTransfer (events = undefined, amount = 0, splToken = {
-    chainId: 0,
-    address_spl: "",
-    address: "",
-    decimals: 1,
-    name: "",
-    symbol: "",
-    logoURI: ""
-  }) {
-    events  = events === undefined ? this.events : events
-    if (typeof events.onBeforeSignTransaction === 'function') events.onBeforeSignTransaction()
+  async createSolanaTransfer(
+    events = undefined,
+    amount = 0,
+    splToken = {
+      chainId: 0,
+      address_spl: "",
+      address: "",
+      decimals: 1,
+      name: "",
+      symbol: "",
+      logoURI: "",
+    },
+  ) {
+    events = events === undefined ? this.events : events
+    if (typeof events.onBeforeSignTransaction === "function") events.onBeforeSignTransaction()
     try {
       const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
+        method: "eth_sendTransaction",
         params: [this.getEthereumTransactionParams(amount, splToken)],
       })
-      if (typeof events.onSuccessSign === 'function') events.onSuccessSign(undefined, txHash)
+      if (typeof events.onSuccessSign === "function") events.onSuccessSign(undefined, txHash)
     } catch (e) {
-      if (typeof events.onErrorSign === 'function') events.onErrorSign(e)
+      if (typeof events.onErrorSign === "function") events.onErrorSign(e)
     }
   }
 }

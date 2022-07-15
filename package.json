@@ -21,7 +21,6 @@
     "spl",
     "token-transfering"
   ],
-  "author": "https://github.com/WebKieth",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/neonlabsorg/neon-client-transfer/issues"
@@ -36,6 +35,8 @@
     "@solana/web3.js": "^1.31.0",
     "@web3-react/core": "^6.1.9",
     "arraybuffer-to-string": "^1.0.2",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
     "web3-utils": "^1.7.4"
   },
   "devDependencies": {
