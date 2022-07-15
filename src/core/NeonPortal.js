@@ -1,7 +1,6 @@
 import InstructionService from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Transaction, TransactionInstruction, PublicKey } from "@solana/web3.js"
-import ab2str from "arraybuffer-to-string"
 import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../constants"
 
 // Neon-token
@@ -145,7 +144,7 @@ class NeonPortal extends InstructionService {
   _computeWithdrawEthTransactionData() {
     const withdrawMethodID = "0x8e19899e"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = ab2str(solanaPubkey.toBytes(), "hex")
+    const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
 
     return `${withdrawMethodID}${solanaStr}`
   }

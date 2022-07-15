@@ -5,8 +5,6 @@ import {
   TransactionInstruction,
   SystemProgram,
 } from "@solana/web3.js"
-import { hexToBytes } from "web3-utils"
-import ab2str from "arraybuffer-to-string"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a, b) => {
@@ -47,7 +45,22 @@ class InstructionService {
   }
 
   _getEthSeed(hex = "") {
-    return hexToBytes(hex)
+    // packages/web3-utils/src/utils.js
+    hex = hex.toString(16)
+
+    const isHexStrict =
+      (typeof hex === "string" || typeof hex === "number") && /^(-)?0x[0-9a-f]*$/i.test(hex)
+
+    if (!isHexStrict) {
+      throw new Error('Given value "' + hex + '" is not a valid hex string.')
+    }
+
+    hex = hex.replace(/^0x/i, "")
+
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+      bytes.push(parseInt(hex.slice(c, c + 2), 16))
+
+    return bytes
   }
 
   _getNeonAccountSeed() {
@@ -115,11 +128,11 @@ class InstructionService {
   _computeWithdrawEthTransactionData(amount, splToken) {
     const approveSolanaMethodID = "0x93e29346"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = ab2str(solanaPubkey.toBytes(), "hex")
+    const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
     const amountBuffer = new Uint8Array(32)
     const view = new DataView(amountBuffer.buffer)
     view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
-    const amountStr = ab2str(amountBuffer, "hex")
+    const amountStr = this.arrayBufferToString(amountBuffer, "hex")
 
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
@@ -131,6 +144,10 @@ class InstructionService {
       value: "0x00", // Only required to send ether to the recipient from the initiating external account.
       data: this._computeWithdrawEthTransactionData(amount, token),
     }
+  }
+
+  arrayBufferToString(buffer, encoding) {
+    return Buffer.from(buffer).toString(encoding || "utf8")
   }
 }
 
