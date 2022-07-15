@@ -1,4 +1,3 @@
-examples
-.editorconfig
 .prettierrc.json
 .eslintrc.js
+webpack.config.js
