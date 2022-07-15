@@ -1,8 +1,17 @@
 import InstructionService from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
-import { Transaction } from "@solana/web3.js"
+import {
+  Transaction,
+  PublicKey,
+  TransactionInstruction,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js"
+import { NEON_EVM_LOADER_ID } from "../constants"
 
+// ERC-20 tokens
 class MintPortal extends InstructionService {
+  // #region Neon -> Solana
   async createNeonTransfer(
     events = undefined,
     amount = 0,
@@ -50,6 +59,42 @@ class MintPortal extends InstructionService {
     })
   }
 
+  async _createERC20AccountInstruction(splToken) {
+    const data = new Uint8Array([0x0f])
+    const solanaPubkey = this._getSolanaWalletPubkey()
+    const mintPublicKey = this._getSolanaPubkey(splToken.address_spl)
+    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
+    const { neonAddress } = await this._getNeonAccountAddress()
+    const contractAddress = await PublicKey.findProgramAddress(
+      [new Uint8Array([1]), this._getEthSeed(splToken.address)],
+      new PublicKey(NEON_EVM_LOADER_ID),
+    )
+    const keys = [
+      { pubkey: solanaPubkey, isSigner: true, isWritable: true },
+      { pubkey: erc20Address, isSigner: false, isWritable: true },
+      { pubkey: neonAddress, isSigner: false, isWritable: true },
+      { pubkey: contractAddress[0], isSigner: false, isWritable: true },
+      { pubkey: mintPublicKey, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ]
+    const instruction = new TransactionInstruction({
+      programId: new PublicKey(NEON_EVM_LOADER_ID),
+      data,
+      keys,
+    })
+    return instruction
+  }
+
+  async _getERC20WrapperAccount(splToken) {
+    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
+    const ERC20WrapperAccount = await this.connection.getAccountInfo(erc20Address)
+    return ERC20WrapperAccount
+  }
+  // #endregion
+
+  // #region Solana -> Neon
   async createSolanaTransfer(
     events = undefined,
     amount = 0,
@@ -115,6 +160,45 @@ class MintPortal extends InstructionService {
         if (typeof events.onErrorSign === "function") events.onErrorSign(e)
       }
     })
+  }
+  // #endregion
+
+  async _createTransferInstruction(amount, splToken, toSolana = false) {
+    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
+    const solanaPubkey = this._getSolanaWalletPubkey()
+    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
+    const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mintPubkey,
+      solanaPubkey,
+    )
+    return Token.createTransferInstruction(
+      TOKEN_PROGRAM_ID,
+      toSolana ? erc20Address : solanaBalanceAccount,
+      toSolana ? solanaBalanceAccount : erc20Address,
+      solanaPubkey,
+      [],
+      Number(amount) * Math.pow(10, splToken.decimals),
+    )
+  }
+
+  async _getERC20WrapperAddress(splToken) {
+    const enc = new TextEncoder()
+    const tokenPubkey = this._getSolanaPubkey(splToken.address_spl)
+    const erc20Seed = this._getEthSeed(splToken.address)
+    const accountSeed = this._getNeonAccountSeed()
+    const erc20addr = await PublicKey.findProgramAddress(
+      [
+        new Uint8Array([1]),
+        enc.encode("ERC20Balance"),
+        tokenPubkey.toBytes(),
+        erc20Seed,
+        accountSeed,
+      ],
+      new PublicKey(NEON_EVM_LOADER_ID),
+    )
+    return { erc20Address: erc20addr[0], erc20Nonce: erc20addr[1] }
   }
 }
 
