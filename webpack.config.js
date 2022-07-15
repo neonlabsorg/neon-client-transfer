@@ -3,7 +3,7 @@ const webpack = require("webpack")
 
 module.exports = {
   entry: {
-    NeonPortal: path.resolve(__dirname, "src", "core", "NeonPortal.js"),
+    NeonPortal: "./src/core/NeonPortal.js",
     MintPortal: "./src/core/MintPortal.js",
   },
   mode: "production",
