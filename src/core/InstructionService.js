@@ -1,5 +1,10 @@
-import { clusterApiUrl, Connection } from "@solana/web3.js"
-import { PublicKey, TransactionInstruction, SystemProgram } from "@solana/web3.js"
+import {
+  clusterApiUrl,
+  Connection,
+  PublicKey,
+  TransactionInstruction,
+  SystemProgram,
+} from "@solana/web3.js"
 import { hexToBytes } from "web3-utils"
 import ab2str from "arraybuffer-to-string"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
@@ -8,6 +13,7 @@ const mergeTypedArraysUnsafe = (a, b) => {
   const c = new a.constructor(a.length + b.length)
   c.set(a)
   c.set(b, a.length)
+
   return c
 }
 
@@ -36,6 +42,7 @@ class InstructionService {
     )
     const neonAddress = programAddress[0]
     const neonNonce = programAddress[1]
+
     return { neonAddress, neonNonce }
   }
 
@@ -49,8 +56,8 @@ class InstructionService {
 
   async getNeonAccount() {
     const { neonAddress } = await this._getNeonAccountAddress()
-    const neonAccount = await this.connection.getAccountInfo(neonAddress)
-    return neonAccount
+
+    return this.connection.getAccountInfo(neonAddress)
   }
 
   _getSolanaWalletPubkey() {
@@ -59,17 +66,19 @@ class InstructionService {
 
   _isCorrectNetworkOption(network = "") {
     if (!network.length) return false
-    if (network === "mainnet-beta" || network === "testnet" || network === "devnet") return true
-    else {
-      console.warn(
-        `Your network property ${network} is wrong. Please, apply right name of network: 'devnet', 'testnet' or 'mainnet-beta'.\n Network will fallback to mainnet-beta`,
-      )
-      return false
-    }
+
+    if (["mainnet-beta", "testnet", "devnet"].includes(network)) return true
+
+    console.warn(
+      `Your network property ${network} is wrong. Please, apply right name of network: 'devnet', 'testnet' or 'mainnet-beta'.\n Network will fallback to mainnet-beta`,
+    )
+
+    return false
   }
 
   _getSolanaPubkey(address = "") {
     if (!address) return this._getSolanaWalletPubkey()
+
     return new PublicKey(address)
   }
 
@@ -79,6 +88,7 @@ class InstructionService {
 
   async _getNeonAccountInstructionKeys(neonAddress = "") {
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
+
     return [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -110,6 +120,7 @@ class InstructionService {
     const view = new DataView(amountBuffer.buffer)
     view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
     const amountStr = ab2str(amountBuffer, "hex")
+
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
 

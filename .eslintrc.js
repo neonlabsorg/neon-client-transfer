@@ -13,5 +13,7 @@ module.exports = {
   plugins: ["prettier"],
   rules: {
     "prettier/prettier": "error",
+    "newline-before-return": "error",
+    "curly": ["error", "multi-line"],
   },
 }

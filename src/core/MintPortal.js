@@ -11,7 +11,7 @@ import { NEON_EVM_LOADER_ID } from "../constants"
 
 // ERC-20 tokens
 class MintPortal extends InstructionService {
-  // #region Neon -> Solana
+  // #region Solana -> Neon
   async createNeonTransfer(
     events = undefined,
     amount = 0,
@@ -33,28 +33,34 @@ class MintPortal extends InstructionService {
       recentBlockhash: blockhash,
       feePayer: solanaKey,
     })
+
     const neonAccount = await this.getNeonAccount()
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      if (typeof events.onCreateNeonAccountInstruction === "function")
+      if (typeof events.onCreateNeonAccountInstruction === "function") {
         events.onCreateNeonAccountInstruction()
+      }
     }
+
     const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
     if (!ERC20WrapperAccount) {
       const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
       transaction.add(ERC20WrapperInstruction)
     }
+
     const transferInstruction = await this._createTransferInstruction(amount, splToken)
     transaction.add(transferInstruction)
+
     if (typeof events.onBeforeSignTransaction === "function") events.onBeforeSignTransaction()
+
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
         if (typeof events.onSuccessSign === "function") events.onSuccessSign(sig)
-      } catch (e) {
-        if (typeof events.onErrorSign === "function") events.onErrorSign(e)
+      } catch (error) {
+        if (typeof events.onErrorSign === "function") events.onErrorSign(error)
       }
     })
   }
@@ -69,6 +75,7 @@ class MintPortal extends InstructionService {
       [new Uint8Array([1]), this._getEthSeed(splToken.address)],
       new PublicKey(NEON_EVM_LOADER_ID),
     )
+
     const keys = [
       { pubkey: solanaPubkey, isSigner: true, isWritable: true },
       { pubkey: erc20Address, isSigner: false, isWritable: true },
@@ -79,22 +86,22 @@ class MintPortal extends InstructionService {
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     ]
-    const instruction = new TransactionInstruction({
+
+    return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
       data,
       keys,
     })
-    return instruction
   }
 
   async _getERC20WrapperAccount(splToken) {
     const { erc20Address } = await this._getERC20WrapperAddress(splToken)
-    const ERC20WrapperAccount = await this.connection.getAccountInfo(erc20Address)
-    return ERC20WrapperAccount
+
+    return this.connection.getAccountInfo(erc20Address)
   }
   // #endregion
 
-  // #region Solana -> Neon
+  // #region Neon -> Solana
   async createSolanaTransfer(
     events = undefined,
     amount = 0,
@@ -112,6 +119,7 @@ class MintPortal extends InstructionService {
     const solanaPubkey = this._getSolanaPubkey()
     const recentBlockhash = await this.connection.getRecentBlockhash()
     if (typeof events.onBeforeNeonSign === "function") events.onBeforeNeonSign()
+
     // txHash is a hex string
     // As with any RPC call, it may throw an error
     let txHash
@@ -120,11 +128,11 @@ class MintPortal extends InstructionService {
         method: "eth_sendTransaction",
         params: [this.getEthereumTransactionParams(amount, splToken)],
       })
-    } catch (e) {
-      if (typeof events.onErrorSign === "function") events.onErrorSign(e)
+    } catch (error) {
+      if (typeof events.onErrorSign === "function") events.onErrorSign(error)
     }
     if (txHash === undefined) return false
-    const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
+
     const transaction = new Transaction({
       recentBlockhash: recentBlockhash.blockhash,
       feePayer: solanaPubkey,
@@ -149,15 +157,19 @@ class MintPortal extends InstructionService {
       )
       transaction.add(createAccountInstruction)
     }
+
+    const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
     transaction.add(liquidityInstruction)
+
     if (typeof events.onBeforeSignTransaction === "function") events.onBeforeSignTransaction()
+
     setTimeout(async () => {
       try {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
         if (typeof events.onSuccessSign === "function") events.onSuccessSign(sig, txHash)
-      } catch (e) {
-        if (typeof events.onErrorSign === "function") events.onErrorSign(e)
+      } catch (error) {
+        if (typeof events.onErrorSign === "function") events.onErrorSign(error)
       }
     })
   }
@@ -173,6 +185,7 @@ class MintPortal extends InstructionService {
       mintPubkey,
       solanaPubkey,
     )
+
     return Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
       toSolana ? erc20Address : solanaBalanceAccount,
@@ -198,6 +211,7 @@ class MintPortal extends InstructionService {
       ],
       new PublicKey(NEON_EVM_LOADER_ID),
     )
+
     return { erc20Address: erc20addr[0], erc20Nonce: erc20addr[1] }
   }
 }

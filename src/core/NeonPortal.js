@@ -6,7 +6,7 @@ import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../con
 
 // Neon-token
 class NeonPortal extends InstructionService {
-  // #region Neon -> Solana
+  // #region Solana -> Neon
   async createNeonTransfer(events = undefined, amount = 0) {
     events = events === undefined ? this.events : events
     if (typeof events.onBeforeCreateInstruction === "function") events.onBeforeCreateInstruction()
@@ -22,8 +22,9 @@ class NeonPortal extends InstructionService {
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
-      if (typeof events.onCreateNeonAccountInstruction === "function")
+      if (typeof events.onCreateNeonAccountInstruction === "function") {
         events.onCreateNeonAccountInstruction()
+      }
     }
 
     const approveInstruction = await this._createApproveDepositInstruction(amount)
@@ -36,7 +37,7 @@ class NeonPortal extends InstructionService {
       new PublicKey(NEON_TOKEN_MINT),
       solanaPubkey,
     )
-    const [authority] = await this._getAuthorityPoolAddress()
+    const authority = await this._getAuthorityPoolAddress()
     const pool = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -68,8 +69,8 @@ class NeonPortal extends InstructionService {
         const signedTransaction = await window.solana.signTransaction(transaction)
         const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
         if (typeof events.onSuccessSign === "function") events.onSuccessSign(sig)
-      } catch (e) {
-        if (typeof events.onErrorSign === "function") events.onErrorSign(e)
+      } catch (error) {
+        if (typeof events.onErrorSign === "function") events.onErrorSign(error)
       }
     })
   }
@@ -82,9 +83,9 @@ class NeonPortal extends InstructionService {
       new PublicKey(NEON_TOKEN_MINT),
       solanaPubkey,
     )
-    const [authority] = await this._getAuthorityPoolAddress()
+    const authority = await this._getAuthorityPoolAddress()
 
-    const instruction = Token.createApproveInstruction(
+    return Token.createApproveInstruction(
       TOKEN_PROGRAM_ID,
       source,
       authority,
@@ -92,22 +93,20 @@ class NeonPortal extends InstructionService {
       [],
       Number(amount) * Math.pow(10, NEON_TOKEN_DECIMALS),
     )
-
-    return instruction
   }
 
   async _getAuthorityPoolAddress() {
     const enc = new TextEncoder()
-    const authority = await PublicKey.findProgramAddress(
+    const [authority] = await PublicKey.findProgramAddress(
       [enc.encode("Deposit")],
       new PublicKey(NEON_EVM_LOADER_ID),
     )
+
     return authority
   }
-
   // #endregion
 
-  // #region Solana -> Neon
+  // #region Neon -> Solana
   async createSolanaTransfer(
     events = undefined,
     amount = 0,
@@ -129,8 +128,8 @@ class NeonPortal extends InstructionService {
         params: [this.getEthereumTransactionParams(amount, splToken)],
       })
       if (typeof events.onSuccessSign === "function") events.onSuccessSign(undefined, txHash)
-    } catch (e) {
-      if (typeof events.onErrorSign === "function") events.onErrorSign(e)
+    } catch (error) {
+      if (typeof events.onErrorSign === "function") events.onErrorSign(error)
     }
   }
 
@@ -147,11 +146,13 @@ class NeonPortal extends InstructionService {
     const withdrawMethodID = "0x8e19899e"
     const solanaPubkey = this._getSolanaPubkey()
     const solanaStr = ab2str(solanaPubkey.toBytes(), "hex")
+
     return `${withdrawMethodID}${solanaStr}`
   }
 
   _computeWithdrawAmountValue(amount, splToken) {
     const result = Number(amount) * Math.pow(10, splToken.decimals)
+
     return "0x" + result.toString(16)
   }
   // #endregion
