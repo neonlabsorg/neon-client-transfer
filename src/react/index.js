@@ -1,10 +1,9 @@
 import { useWallet, useConnection } from "@solana/wallet-adapter-react"
 import { useWeb3React } from "@web3-react/core"
-import MintPortal from "../core/MintPortal"
-import NeonPortal from "../core/NeonPortal"
+import { NeonPortal, MintPortal } from "../core/index"
 import { NEON_TOKEN_MINT } from "../constants"
 
-const useNeonTransfer = (events, currentConnection) => {
+export const useNeonTransfer = (events, currentConnection) => {
   const { connection } = useConnection()
   const { account } = useWeb3React()
   const { publicKey } = useWallet()
@@ -39,5 +38,3 @@ const useNeonTransfer = (events, currentConnection) => {
 
   return { deposit, withdraw, getEthereumTransactionParams }
 }
-
-export default useNeonTransfer

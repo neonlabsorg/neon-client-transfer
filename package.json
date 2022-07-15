@@ -2,10 +2,7 @@
   "name": "neon-portal",
   "version": "1.4.1",
   "description": "Javasript client-side module for creating transfer transactions from solana EVM to Neon EVM",
-  "exports": {
-    "./mint": "./dist/MintPortal.js",
-    "./neon": "./dist/NeonPortal.js"
-  },
+  "main": "./dist/neon-portal.js",
   "scripts": {
     "test": "eslint src",
     "build": "webpack"

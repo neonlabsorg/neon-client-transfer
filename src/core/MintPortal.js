@@ -1,4 +1,4 @@
-import InstructionService from "./InstructionService"
+import { InstructionService } from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
   Transaction,
@@ -10,7 +10,7 @@ import {
 import { NEON_EVM_LOADER_ID } from "../constants"
 
 // ERC-20 tokens
-class MintPortal extends InstructionService {
+export class MintPortal extends InstructionService {
   // #region Solana -> Neon
   async createNeonTransfer(
     events = undefined,
@@ -215,5 +215,3 @@ class MintPortal extends InstructionService {
     return { erc20Address: erc20addr[0], erc20Nonce: erc20addr[1] }
   }
 }
-
-export default MintPortal

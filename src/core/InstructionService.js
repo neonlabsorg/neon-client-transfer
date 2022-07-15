@@ -15,7 +15,7 @@ const mergeTypedArraysUnsafe = (a, b) => {
   return c
 }
 
-class InstructionService {
+export class InstructionService {
   constructor(options) {
     this.network = "mainnet-beta"
     if (this._isCorrectNetworkOption(options.network)) this.network = options.network
@@ -150,5 +150,3 @@ class InstructionService {
     return Buffer.from(buffer).toString(encoding || "utf8")
   }
 }
-
-export default InstructionService

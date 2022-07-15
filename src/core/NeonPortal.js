@@ -1,10 +1,10 @@
-import InstructionService from "./InstructionService"
+import { InstructionService } from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Transaction, TransactionInstruction, PublicKey } from "@solana/web3.js"
 import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../constants"
 
 // Neon-token
-class NeonPortal extends InstructionService {
+export class NeonPortal extends InstructionService {
   // #region Solana -> Neon
   async createNeonTransfer(events = undefined, amount = 0) {
     events = events === undefined ? this.events : events
@@ -156,5 +156,3 @@ class NeonPortal extends InstructionService {
   }
   // #endregion
 }
-
-export default NeonPortal

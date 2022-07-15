@@ -9,7 +9,7 @@ You can use clean core, but all important requirements you need to provide as pa
 
 ---
 
-Module was used by the react wrapper `import {useNeonTransfer} from "neon-portal/src/react"`
+Module was used by the react wrapper `import { useNeonTransfer } from "neon-portal/src/react"`
 For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
 
 ## Installation and setup
@@ -17,7 +17,7 @@ For clean working configuration example we have to rebuild connect status button
 Firstly, install the package:
 
 ```sh
-npm install neon-portal --save
+npm install neon-portal
 ```
 
 ### For native
@@ -25,9 +25,9 @@ npm install neon-portal --save
 After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. Module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you. So, besides Solana Phantom wallet you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
 
 ```javascript
-import NeonPortal from "neon-portal/neon"
+import { NeonPortal } from "neon-portal"
 //for transfer ERC20 tokens use:
-import MintPortal from "neon-portal/mint"
+import { MintPortal } from "neon-portal"
 
 const eventParams = {
   onBeforeSignTransaction: () => {
