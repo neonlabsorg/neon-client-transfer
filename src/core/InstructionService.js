@@ -57,8 +57,9 @@ export class InstructionService {
 
     hex = hex.replace(/^0x/i, "")
 
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
+    for (var bytes = [], c = 0; c < hex.length; c += 2) {
       bytes.push(parseInt(hex.slice(c, c + 2), 16))
+    }
 
     return bytes
   }
