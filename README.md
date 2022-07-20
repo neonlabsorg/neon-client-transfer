@@ -1,5 +1,8 @@
 # Neon Transfer module for JavaScript client
 
+[![workflows](https://github.com/neonlabsorg/neon-client-transfer/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/neonlabsorg/neon-client-transfer/actions)
+[![npm](https://img.shields.io/npm/v/neon-portal.svg)](https://www.npmjs.com/package/neon-portal)
+
 ---
 
 **NOTE**
