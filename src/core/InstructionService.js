@@ -127,7 +127,8 @@ export class InstructionService {
   }
 
   _computeWithdrawEthTransactionData(amount, splToken) {
-    const approveSolanaMethodID = "0x93e29346"
+    // function transferSolana(bytes32 to, uint64 amount) public returns (bool)
+    const approveSolanaMethodID = "0xe583d1a6"
     const solanaPubkey = this._getSolanaPubkey()
     const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
     const amountBuffer = new Uint8Array(32)

@@ -1,5 +1,5 @@
 import { InstructionService } from "./InstructionService"
-import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
   Transaction,
   PublicKey,
@@ -116,85 +116,18 @@ export class MintPortal extends InstructionService {
     },
   ) {
     events = events === undefined ? this.events : events
-    const solanaPubkey = this._getSolanaPubkey()
-    const recentBlockhash = await this.connection.getRecentBlockhash()
     if (typeof events.onBeforeNeonSign === "function") events.onBeforeNeonSign()
-
-    // txHash is a hex string
-    // As with any RPC call, it may throw an error
-    let txHash
     try {
-      txHash = await window.ethereum.request({
+      const txHash = await window.ethereum.request({
         method: "eth_sendTransaction",
         params: [this.getEthereumTransactionParams(amount, splToken)],
       })
+      if (typeof events.onSuccessSign === "function") events.onSuccessSign(txHash)
     } catch (error) {
       if (typeof events.onErrorSign === "function") events.onErrorSign(error)
     }
-    if (txHash === undefined) return false
-
-    const transaction = new Transaction({
-      recentBlockhash: recentBlockhash.blockhash,
-      feePayer: solanaPubkey,
-    })
-    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
-    const assocTokenAccountAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintPubkey,
-      solanaPubkey,
-    )
-    const associatedTokenAccount = await this.connection.getAccountInfo(assocTokenAccountAddress)
-    if (!associatedTokenAccount) {
-      // Create token account if it not exists
-      const createAccountInstruction = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mintPubkey, // token mint
-        assocTokenAccountAddress, // account to create
-        solanaPubkey, // new account owner
-        solanaPubkey, // payer
-      )
-      transaction.add(createAccountInstruction)
-    }
-
-    const liquidityInstruction = await this._createTransferInstruction(amount, splToken, true)
-    transaction.add(liquidityInstruction)
-
-    if (typeof events.onBeforeSignTransaction === "function") events.onBeforeSignTransaction()
-
-    setTimeout(async () => {
-      try {
-        const signedTransaction = await window.solana.signTransaction(transaction)
-        const sig = await this.connection.sendRawTransaction(signedTransaction.serialize())
-        if (typeof events.onSuccessSign === "function") events.onSuccessSign(sig, txHash)
-      } catch (error) {
-        if (typeof events.onErrorSign === "function") events.onErrorSign(error)
-      }
-    })
   }
   // #endregion
-
-  async _createTransferInstruction(amount, splToken, toSolana = false) {
-    const mintPubkey = this._getSolanaPubkey(splToken.address_spl)
-    const solanaPubkey = this._getSolanaWalletPubkey()
-    const { erc20Address } = await this._getERC20WrapperAddress(splToken)
-    const solanaBalanceAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mintPubkey,
-      solanaPubkey,
-    )
-
-    return Token.createTransferInstruction(
-      TOKEN_PROGRAM_ID,
-      toSolana ? erc20Address : solanaBalanceAccount,
-      toSolana ? solanaBalanceAccount : erc20Address,
-      solanaPubkey,
-      [],
-      Number(amount) * Math.pow(10, splToken.decimals),
-    )
-  }
 
   async _getERC20WrapperAddress(splToken) {
     const enc = new TextEncoder()
