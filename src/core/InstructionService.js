@@ -5,7 +5,6 @@ import {
   TransactionInstruction,
   SystemProgram,
 } from "@solana/web3.js"
-import BN from "bn.js"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a, b) => {
@@ -131,9 +130,8 @@ export class InstructionService {
     const approveSolanaMethodID = "0x93e29346"
     const solanaPubkey = this._getSolanaPubkey()
     const solanaStr = solanaPubkey.toBytes().toString("hex")
-    const left = new BN(amount)
-    const right = new BN(10).pow(new BN(splToken.decimals))
-    const amountStr = left.mul(right).toString(16, 64)
+    const amountUnit = amount * Math.pow(10, splToken.decimals)
+    const amountStr = amountUnit.toString(16).padStart(64, "0")
 
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
