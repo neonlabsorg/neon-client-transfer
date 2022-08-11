@@ -144,7 +144,7 @@ export class NeonPortal extends InstructionService {
   _computeWithdrawEthTransactionData() {
     const withdrawMethodID = "0x8e19899e"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
+    const solanaStr = solanaPubkey.toBytes().toString("hex")
 
     return `${withdrawMethodID}${solanaStr}`
   }

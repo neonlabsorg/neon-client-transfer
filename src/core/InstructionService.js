@@ -129,11 +129,9 @@ export class InstructionService {
   _computeWithdrawEthTransactionData(amount, splToken) {
     const approveSolanaMethodID = "0x93e29346"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
-    const amountBuffer = new Uint8Array(32)
-    const view = new DataView(amountBuffer.buffer)
-    view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
-    const amountStr = this.arrayBufferToString(amountBuffer, "hex")
+    const solanaStr = solanaPubkey.toBytes().toString("hex")
+    const amountUnit = amount * Math.pow(10, splToken.decimals)
+    const amountStr = amountUnit.toString(16).padStart(64, "0")
 
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
@@ -145,9 +143,5 @@ export class InstructionService {
       value: "0x00", // Only required to send ether to the recipient from the initiating external account.
       data: this._computeWithdrawEthTransactionData(amount, token),
     }
-  }
-
-  arrayBufferToString(buffer, encoding) {
-    return Buffer.from(buffer).toString(encoding || "utf8")
   }
 }
