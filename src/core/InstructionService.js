@@ -5,6 +5,7 @@ import {
   TransactionInstruction,
   SystemProgram,
 } from "@solana/web3.js"
+import BN from "bn.js"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 const mergeTypedArraysUnsafe = (a, b) => {
@@ -129,11 +130,10 @@ export class InstructionService {
   _computeWithdrawEthTransactionData(amount, splToken) {
     const approveSolanaMethodID = "0x93e29346"
     const solanaPubkey = this._getSolanaPubkey()
-    const solanaStr = this.arrayBufferToString(solanaPubkey.toBytes(), "hex")
-    const amountBuffer = new Uint8Array(32)
-    const view = new DataView(amountBuffer.buffer)
-    view.setUint32(28, Number(amount) * Math.pow(10, splToken.decimals))
-    const amountStr = this.arrayBufferToString(amountBuffer, "hex")
+    const solanaStr = solanaPubkey.toBytes().toString("hex")
+    const left = new BN(amount)
+    const right = new BN(10).pow(new BN(splToken.decimals))
+    const amountStr = left.mul(right).toString(16, 64)
 
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`
   }
@@ -145,9 +145,5 @@ export class InstructionService {
       value: "0x00", // Only required to send ether to the recipient from the initiating external account.
       data: this._computeWithdrawEthTransactionData(amount, token),
     }
-  }
-
-  arrayBufferToString(buffer, encoding) {
-    return Buffer.from(buffer).toString(encoding || "utf8")
   }
 }
