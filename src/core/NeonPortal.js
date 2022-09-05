@@ -1,7 +1,8 @@
-import { InstructionService } from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Transaction, TransactionInstruction, PublicKey } from "@solana/web3.js"
+import Big from "big.js"
 import { NEON_EVM_LOADER_ID, NEON_TOKEN_DECIMALS, NEON_TOKEN_MINT } from "../constants"
+import { InstructionService } from "./InstructionService"
 
 // Neon-token
 export class NeonPortal extends InstructionService {
@@ -90,7 +91,7 @@ export class NeonPortal extends InstructionService {
       authority,
       solanaPubkey,
       [],
-      Number(amount) * Math.pow(10, NEON_TOKEN_DECIMALS),
+      Big(amount).times(Big(10).pow(NEON_TOKEN_DECIMALS)).toString(),
     )
   }
 
@@ -149,10 +150,10 @@ export class NeonPortal extends InstructionService {
     return `${withdrawMethodID}${solanaStr}`
   }
 
-  _computeWithdrawAmountValue(amount, splToken) {
-    const result = Number(amount) * Math.pow(10, splToken.decimals)
+  _computeWithdrawAmountValue(amount, { decimals }) {
+    const result = Big(amount).times(Big(10).pow(decimals))
 
-    return "0x" + result.toString(16)
+    return "0x" + BigInt(result).toString(16)
   }
   // #endregion
 }

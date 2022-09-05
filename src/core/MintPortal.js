@@ -1,4 +1,3 @@
-import { InstructionService } from "./InstructionService"
 import { Token, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
   Transaction,
@@ -7,7 +6,9 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js"
+import Big from "big.js"
 import { NEON_EVM_LOADER_ID } from "../constants"
+import { InstructionService } from "./InstructionService"
 
 // ERC-20 tokens
 export class MintPortal extends InstructionService {
@@ -192,7 +193,7 @@ export class MintPortal extends InstructionService {
       toSolana ? solanaBalanceAccount : erc20Address,
       solanaPubkey,
       [],
-      Number(amount) * Math.pow(10, splToken.decimals),
+      Big(amount).times(Big(10).pow(splToken.decimals)).toString(),
     )
   }
 
