@@ -1,6 +1,6 @@
 {
   "name": "neon-portal",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Javasript client-side module for creating transfer transactions from solana EVM to Neon EVM",
   "main": "./dist/neon-portal.js",
   "engines": {
