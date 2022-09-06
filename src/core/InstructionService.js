@@ -8,6 +8,8 @@ import {
 import Big from "big.js"
 import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
+Big.PE = 42
+
 const mergeTypedArraysUnsafe = (a, b) => {
   const c = new a.constructor(a.length + b.length)
   c.set(a)
