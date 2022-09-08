@@ -130,7 +130,9 @@ export class InstructionService {
   }
 
   _computeWithdrawEthTransactionData(amount, splToken) {
-    const approveSolanaMethodID = "0x93e29346"
+    // transferSolana(bytes32 to, uint64 amount)
+    // https://github.com/neonlabsorg/neon-evm/blob/develop/evm_loader/solidity/contracts/erc20_for_spl.sol#L161
+    const approveSolanaMethodID = "0xe583d1a6"
     const solanaPubkey = this._getSolanaPubkey()
     const solanaStr = solanaPubkey.toBytes().toString("hex")
     const amountUnit = Big(amount).times(Big(10).pow(splToken.decimals))
