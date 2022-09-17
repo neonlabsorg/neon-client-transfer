@@ -10,14 +10,6 @@ import { NEON_TOKEN_MINT, NEON_EVM_LOADER_ID } from "../constants"
 
 Big.PE = 42
 
-const mergeTypedArraysUnsafe = (a, b) => {
-  const c = new a.constructor(a.length + b.length)
-  c.set(a)
-  c.set(b, a.length)
-
-  return c
-}
-
 export class InstructionService {
   constructor(options) {
     this.network = "mainnet-beta"
@@ -47,7 +39,7 @@ export class InstructionService {
     return { neonAddress, neonNonce }
   }
 
-  _getEthSeed(hex = "") {
+  _getBytesFromHex(hex = "") {
     // packages/web3-utils/src/utils.js
     hex = hex.toString(16)
 
@@ -68,7 +60,7 @@ export class InstructionService {
   }
 
   _getNeonAccountSeed() {
-    return this._getEthSeed(this.neonWalletAddress)
+    return this._getBytesFromHex(this.neonWalletAddress)
   }
 
   async getNeonAccount() {
@@ -103,22 +95,19 @@ export class InstructionService {
     return this._getSolanaPubkey(NEON_TOKEN_MINT)
   }
 
-  async _getNeonAccountInstructionKeys(neonAddress = "") {
+  async _createNeonAccountInstruction() {
+    const { neonAddress, neonNonce } = await this._getNeonAccountAddress()
     const solanaWalletPubkey = this._getSolanaWalletPubkey()
 
-    return [
+    const keys = [
       { pubkey: solanaWalletPubkey, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
       { pubkey: neonAddress, isSigner: false, isWritable: true },
     ]
-  }
 
-  async _createNeonAccountInstruction() {
-    const { neonAddress, neonNonce } = await this._getNeonAccountAddress()
-    const keys = await this._getNeonAccountInstructionKeys(neonAddress)
-    const pattern = this._getEthSeed("0x18")
-    const instructionData = mergeTypedArraysUnsafe(
-      mergeTypedArraysUnsafe(new Uint8Array(pattern), this._getNeonAccountSeed()),
+    const pattern = this._getBytesFromHex("0x18")
+    const instructionData = this.mergeTypedArraysUnsafe(
+      this.mergeTypedArraysUnsafe(new Uint8Array(pattern), this._getNeonAccountSeed()),
       new Uint8Array([neonNonce]),
     )
 
@@ -127,6 +116,14 @@ export class InstructionService {
       data: instructionData,
       keys,
     })
+  }
+
+  _mergeTypedArraysUnsafe(a, b) {
+    const c = new a.constructor(a.length + b.length)
+    c.set(a)
+    c.set(b, a.length)
+
+    return c
   }
 
   _computeWithdrawEthTransactionData(amount, splToken) {

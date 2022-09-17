@@ -1,4 +1,4 @@
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { TOKEN_PROGRAM_ID, Token, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
   Transaction,
   PublicKey,
@@ -6,7 +6,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js"
-import { NEON_EVM_LOADER_ID } from "../constants"
+import { NEON_EVM_LOADER_ID, COMPUTE_BUDGET_ID } from "../constants"
 import { InstructionService } from "./InstructionService"
 
 // ERC-20 tokens
@@ -29,20 +29,65 @@ export class MintPortal extends InstructionService {
     if (typeof events.onBeforeCreateInstruction === "function") events.onBeforeCreateInstruction()
     const { blockhash } = await this.connection.getRecentBlockhash()
     const solanaKey = this._getSolanaWalletPubkey()
+
     const transaction = new Transaction({
       recentBlockhash: blockhash,
       feePayer: solanaKey,
     })
 
+    const computeBudgetUnits = new TransactionInstruction({
+      programId: new PublicKey(COMPUTE_BUDGET_ID),
+      data: this.mergeTypedArraysUnsafe(
+        this.mergeTypedArraysUnsafe(
+          new Uint8Array(this._getBytesFromHex("0x00")),
+          new Uint8Array([0]), // NEON_ADDITIONAL_FEE
+        ),
+        new Uint8Array([500000]), // NEON_COMPUTE_UNITS
+      ),
+      keys: [],
+    })
+
+    const computeBudgetHeapFrame = new TransactionInstruction({
+      programId: new PublicKey(COMPUTE_BUDGET_ID),
+      data: this.mergeTypedArraysUnsafe(
+        new Uint8Array(this._getBytesFromHex("0x01")),
+        new Uint8Array([262144]), // NEON_HEAP_FRAME
+      ),
+      keys: [],
+    })
+
+    transaction.add(computeBudgetUnits)
+    transaction.add(computeBudgetHeapFrame)
+
     const neonAccount = await this.getNeonAccount()
     if (!neonAccount) {
       const neonAccountInstruction = await this._createNeonAccountInstruction()
       transaction.add(neonAccountInstruction)
+
       if (typeof events.onCreateNeonAccountInstruction === "function") {
         events.onCreateNeonAccountInstruction()
       }
     }
 
+    const account = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      new PublicKey(splToken.address_spl),
+      this._getSolanaWalletPubkey(),
+    )
+    const { neonAddress } = await this._getNeonAccountAddress()
+
+    const approveInstrution = await Token().approve(
+      // programId?
+      account, // source
+      neonAddress, // delegate
+      this._getSolanaWalletPubkey(), // owner
+      [], // multiSigners
+      amount,
+    )
+    transaction.add(approveInstrution)
+
+    // -------------------------------
     const ERC20WrapperAccount = await this._getERC20WrapperAccount(splToken)
     if (!ERC20WrapperAccount) {
       const ERC20WrapperInstruction = await this._createERC20AccountInstruction(splToken)
@@ -72,7 +117,7 @@ export class MintPortal extends InstructionService {
     const { erc20Address } = await this._getERC20WrapperAddress(splToken)
     const { neonAddress } = await this._getNeonAccountAddress()
     const contractAddress = await PublicKey.findProgramAddress(
-      [new Uint8Array([1]), this._getEthSeed(splToken.address)],
+      [new Uint8Array([1]), this._getBytesFromHex(splToken.address)],
       new PublicKey(NEON_EVM_LOADER_ID),
     )
 
@@ -133,7 +178,7 @@ export class MintPortal extends InstructionService {
   async _getERC20WrapperAddress(splToken) {
     const enc = new TextEncoder()
     const tokenPubkey = this._getSolanaPubkey(splToken.address_spl)
-    const erc20Seed = this._getEthSeed(splToken.address)
+    const erc20Seed = this._getBytesFromHex(splToken.address)
     const accountSeed = this._getNeonAccountSeed()
     const erc20addr = await PublicKey.findProgramAddress(
       [
