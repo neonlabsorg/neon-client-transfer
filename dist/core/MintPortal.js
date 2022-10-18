@@ -84,7 +84,7 @@ export class MintPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const nonce = yield this.web3.eth.getTransactionCount(emulateSigner.address);
             try {
-                const claimTransaction = this.contract.methods.claimTo(from.toBytes(), to, amount).encodeABI();
+                const claimTransaction = this.erc20ForSPLContract.methods.claimTo(from.toBytes(), to, amount).encodeABI();
                 const transaction = {
                     nonce: nonce,
                     gas: `0x5F5E100`,
@@ -131,7 +131,8 @@ export class MintPortal extends InstructionService {
     makeTrExecFromDataIx(neonAddress, neonRawTransaction, neonKeys) {
         return __awaiter(this, void 0, void 0, function* () {
             const programId = new PublicKey(NEON_EVM_LOADER_ID);
-            const count = 10; // Number(this.proxyStatus.NEON_POOL_COUNT);
+            const count = 10;
+            // const count = Number(this.proxyStatus.NEON_POOL_COUNT);
             const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
             const treasuryPoolAddress = yield this.createCollateralPoolAddress(treasuryPoolIndex);
             const a = Buffer.from([31 /* EvmInstruction.TransactionExecuteFromData */]);
@@ -160,7 +161,7 @@ export class MintPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const nonce = yield this.web3.eth.getTransactionCount(neonWallet);
             const fullAmount = toFullAmount(amount, splToken.decimals);
-            const data = this.contract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+            const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
             const transaction = {
                 nonce,
                 from: neonWallet,
@@ -183,7 +184,7 @@ export class MintPortal extends InstructionService {
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
-            const mintPubkey = this.solanaPubkey(splToken.address_spl);
+            const mintPubkey = new PublicKey(splToken.address_spl);
             const assocTokenAccountAddress = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mintPubkey, solanaWallet);
             const { blockhash } = yield this.connection.getRecentBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });

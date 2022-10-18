@@ -1,10 +1,10 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
-import Big from 'big.js';
 import { TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
 import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL, SPL_TOKEN_DEFAULT } from '../data';
 import { EvmInstruction, SPLToken } from '../models';
+import { toFullAmount } from '../utils';
 
 // Neon-token
 export class NeonPortal extends InstructionService {
@@ -24,7 +24,6 @@ export class NeonPortal extends InstructionService {
       this.emitFunction(events.onCreateNeonAccountInstruction);
     }
 
-    // console.log(this.proxyStatus);
     const neonToken: SPLToken = {
       ...token,
       decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS)
@@ -96,26 +95,18 @@ export class NeonPortal extends InstructionService {
     }
   }
 
+  createWithdrawEthTransactionData(): string {
+    const solanaWallet = this.solanaWalletAddress;
+    return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
+  }
+
   getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig {
+    const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: NEON_WRAPPER_SOL,
       from: this.neonWalletAddress,
-      value: this._computeWithdrawAmountValue(amount, token),
-      data: this._computeWithdrawEthTransactionData()
+      value: `0x${fullAmount.toString(16)}`,
+      data: this.createWithdrawEthTransactionData()
     };
-  }
-
-  _computeWithdrawEthTransactionData(): string {
-    const withdrawMethodID = '0x8e19899e';
-    const solanaPubkey = this.solanaPubkey();
-    // @ts-ignore
-    const solanaStr = solanaPubkey.toBytes().toString('hex');
-    return `${withdrawMethodID}${solanaStr}`;
-  }
-
-  _computeWithdrawAmountValue(amount: any, { decimals }: SPLToken): string {
-    const result = Big(amount).times(Big(10).pow(decimals));
-    // @ts-ignore
-    return `0x${BigInt(result).toString(16)}`;
   }
 }

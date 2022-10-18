@@ -58,11 +58,11 @@ button.addEventListener("onClick", (e) => {
 ```
 
 |                  Property name |   Type   |                                                                                                            Description                                                                                                            | is required |
-| -----------------------------: | :------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | ----------: |
+|-------------------------------:| :------: |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|------------:|
 |            solanaWalletAddress |  String  |                                                                                                    Address from solana wallet                                                                                                     |        true |
 |              neonWalletAddress |  String  |                                                                                     Address of preconfigured for neon network metamask wallet                                                                                     |        true |
-|                     connection |  Object  |                       connection module of solana web3 framework. You have to provide your own connection, if it exists. Cause of context, if you won't, it should start working for other solana networks.                       |       false |
-|                        network |  String  | If you have your own connection, but have no access for it, you can just pass the name of using network. It can be only 'devnet', 'testnet' or 'mainnet-beta'. It provides to 'clusterApiUrl' for transforming into right RPC URL |       false |
+|                           web3 |  Object  |                                                                    Connection module of ethereum web3 framework. It needs for use Neon SDK network connection.                                                                    |        true |
+|                     connection |  Object  |                       connection module of solana web3 framework. You have to provide your own connection, if it exists. Cause of context, if you won't, it should start working for other solana networks.                       |        true |
 |     onBeforeCreateInstructions | function |                                                                   Function, which calls on start of init transfer functions. It uses in both transfer functions                                                                   |       false |
 | onCreateNeonAccountInstruction | function |                                                       Function, which calls on instructions building, if neon account didn't find. It uses in transfer to neon from solana.                                                       |       false |
 |        onBeforeSignTransaction | function |                                                                 Function, which calls before transaction will be sign by solana wallet. It uses in both transfers                                                                 |       false |
@@ -80,7 +80,7 @@ There is example:
 export const useTransfering = () => {
   const { setPending, setSign, setError } = useStates()
   const { publicKey } = useWallet()
-  const { account } = useWeb3React()
+  const { account, library } = useWeb3React();
   // please, add your own custom solana connection, if you use it in the context of your app. Pass it as second argument at neon transfer hook.
   const connection = useConnection()
   const { createNeonTransfer, createSolanaTransfer } = useNeonTransfer(
@@ -107,6 +107,9 @@ export const useTransfering = () => {
       // yes, there
     },
     connection,
+    library, // Web3 Library instance  
+    publicKey, // you Phantom wallet public key
+    account // you Metamask wallet public key
   )
   return { createNeonTransfer, createSolanaTransfer }
 }

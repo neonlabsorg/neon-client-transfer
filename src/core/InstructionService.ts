@@ -6,6 +6,7 @@ import {
   TransactionInstruction
 } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { AbiItem } from 'web3-utils';
 import Big from 'big.js';
 import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
@@ -13,8 +14,7 @@ import { Contract } from 'web3-eth-contract';
 import { SHA256 } from 'crypto-js';
 import { NeonProxyRpcApi } from '../api';
 import { etherToProgram, toFullAmount } from '../utils';
-import { NEON_EVM_LOADER_ID } from '../data';
-import ERC20SPL from '../data/abi/erc20.json';
+import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
 import {
   EvmInstruction,
   InstructionEvents,
@@ -53,8 +53,12 @@ export class InstructionService {
     };
   }
 
-  get contract(): Contract {
-    return new this.web3.eth.Contract(ERC20SPL as any);
+  get erc20ForSPLContract(): Contract {
+    return new this.web3.eth.Contract(erc20Abi as AbiItem[]);
+  }
+
+  get neonWrapperContract(): Contract {
+    return new this.web3.eth.Contract(neonWrapperAbi as AbiItem[]);
   }
 
   get solana(): any {
@@ -69,7 +73,9 @@ export class InstructionService {
   }
 
   get solanaWalletSigner(): Account {
-    const emulateSignerPrivateKey = `0x${SHA256(this.solanaWalletPubkey.toBase58()).toString()}`;
+    const solanaWallet = this.solanaWalletPubkey.toBase58();
+    const neonWallet = this.neonWalletAddress;
+    const emulateSignerPrivateKey = `0x${SHA256(solanaWallet + neonWallet).toString()}`;
     return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
   }
 
@@ -79,17 +85,6 @@ export class InstructionService {
 
   async getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null> {
     return this.connection.getAccountInfo(neonAssociatedKey);
-  }
-
-  solanaPubkey(address?: string): PublicKey {
-    if (address?.length) {
-      try {
-        return new PublicKey(address);
-      } catch (e) {
-        //
-      }
-    }
-    return this.solanaWalletPubkey;
   }
 
   async neonAccountInstruction(): Promise<TransactionInstruction> {
@@ -125,8 +120,7 @@ export class InstructionService {
       neonPDAPubkey,
       solanaPubkey,
       [],
-      // @ts-ignore
-      fullAmount.toString(10)
+      Number(fullAmount.toString(10))
     );
 
     return { associatedTokenAddress, createApproveInstruction };
@@ -144,12 +138,18 @@ export class InstructionService {
     return `${approveSolanaMethodID}${solanaStr}${amountStr}`;
   }
 
+  createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string {
+    const fullAmount = toFullAmount(amount, splToken.decimals);
+    return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+  }
+
   getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig {
+    const solanaWallet = this.solanaWalletPubkey;
     return {
       to: token.address, // Required except during contract publications.
       from: this.neonWalletAddress, // must match user's active address.
       value: '0x00', // Only required to send ether to the recipient from the initiating external account.
-      data: this._computeWithdrawEthTransactionData(amount, token)
+      data: this.createApproveSolanaData(solanaWallet, token, amount)
     };
   }
 

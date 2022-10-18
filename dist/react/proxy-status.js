@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 export const proxyStatus = 'proxyStatus';
-export function useProxyInfo(api) {
+export function getProxyInfo(api) {
     const [status, setStatus] = useState({});
     useEffect(() => {
         if ('localStorage' in window) {

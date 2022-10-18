@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { NeonProgramStatus, RPCResponse, SettingsFormState } from '../models/api';
+import { NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
 
 export class NeonProxyRpcApi {
   neonProxyRpcApi = '';

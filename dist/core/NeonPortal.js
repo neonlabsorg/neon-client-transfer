@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
-import Big from 'big.js';
 import { InstructionService } from './InstructionService';
 import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL, SPL_TOKEN_DEFAULT } from '../data';
+import { toFullAmount } from '../utils';
 // Neon-token
 export class NeonPortal extends InstructionService {
     // #region Solana -> Neon
@@ -29,7 +29,6 @@ export class NeonPortal extends InstructionService {
                 transaction.add(neonAccountInstruction);
                 this.emitFunction(events.onCreateNeonAccountInstruction);
             }
-            // console.log(this.proxyStatus);
             const neonToken = Object.assign(Object.assign({}, token), { decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS) });
             const { createApproveInstruction } = yield this.approveDepositInstruction(solanaWallet, neonWallet, neonToken, amount);
             transaction.add(createApproveInstruction);
@@ -89,25 +88,18 @@ export class NeonPortal extends InstructionService {
             }
         });
     }
+    createWithdrawEthTransactionData() {
+        const solanaWallet = this.solanaWalletAddress;
+        return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
+    }
     getEthereumTransactionParams(amount, token) {
+        const fullAmount = toFullAmount(amount, token.decimals);
         return {
             to: NEON_WRAPPER_SOL,
             from: this.neonWalletAddress,
-            value: this._computeWithdrawAmountValue(amount, token),
-            data: this._computeWithdrawEthTransactionData()
+            value: `0x${fullAmount.toString(16)}`,
+            data: this.createWithdrawEthTransactionData()
         };
-    }
-    _computeWithdrawEthTransactionData() {
-        const withdrawMethodID = '0x8e19899e';
-        const solanaPubkey = this.solanaPubkey();
-        // @ts-ignore
-        const solanaStr = solanaPubkey.toBytes().toString('hex');
-        return `${withdrawMethodID}${solanaStr}`;
-    }
-    _computeWithdrawAmountValue(amount, { decimals }) {
-        const result = Big(amount).times(Big(10).pow(decimals));
-        // @ts-ignore
-        return `0x${BigInt(result).toString(16)}`;
     }
 }
 //# sourceMappingURL=NeonPortal.js.map

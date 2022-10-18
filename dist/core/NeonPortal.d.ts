@@ -15,7 +15,6 @@ export declare class NeonPortal extends InstructionService {
         symbol: string;
         logoURI: string;
     }): Promise<void>;
+    createWithdrawEthTransactionData(): string;
     getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig;
-    _computeWithdrawEthTransactionData(): string;
-    _computeWithdrawAmountValue(amount: any, { decimals }: SPLToken): string;
 }

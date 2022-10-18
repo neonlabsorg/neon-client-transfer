@@ -14,19 +14,20 @@ export declare class InstructionService {
     connection: Connection;
     events: InstructionEvents;
     constructor(options: InstructionParams);
-    get contract(): Contract;
+    get erc20ForSPLContract(): Contract;
+    get neonWrapperContract(): Contract;
     get solana(): any;
     get solanaWalletPubkey(): PublicKey;
     get solanaWalletSigner(): Account;
     get neonAccountAddress(): Promise<[PublicKey, number]>;
     getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null>;
-    solanaPubkey(address?: string): PublicKey;
     neonAccountInstruction(): Promise<TransactionInstruction>;
     approveDepositInstruction(solanaPubkey: PublicKey, neonPDAPubkey: PublicKey, token: SPLToken, amount: number): Promise<{
         associatedTokenAddress: PublicKey;
         createApproveInstruction: TransactionInstruction;
     }>;
     _computeWithdrawEthTransactionData(amount: number, splToken: SPLToken): string;
+    createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string;
     getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig;
     emitFunction: (functionName?: Function, ...args: any[]) => void;
 }

@@ -12,8 +12,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/sp
 import Big from 'big.js';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, toFullAmount } from '../utils';
-import { NEON_EVM_LOADER_ID } from '../data';
-import ERC20SPL from '../data/abi/erc20.json';
+import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
 Big.PE = 42;
 const noop = new Function();
 export class InstructionService {
@@ -38,8 +37,11 @@ export class InstructionService {
             onErrorSign: options.onErrorSign || noop
         };
     }
-    get contract() {
-        return new this.web3.eth.Contract(ERC20SPL);
+    get erc20ForSPLContract() {
+        return new this.web3.eth.Contract(erc20Abi);
+    }
+    get neonWrapperContract() {
+        return new this.web3.eth.Contract(neonWrapperAbi);
     }
     get solana() {
         if ('solana' in window) {
@@ -51,7 +53,9 @@ export class InstructionService {
         return new PublicKey(this.solanaWalletAddress);
     }
     get solanaWalletSigner() {
-        const emulateSignerPrivateKey = `0x${SHA256(this.solanaWalletPubkey.toBase58()).toString()}`;
+        const solanaWallet = this.solanaWalletPubkey.toBase58();
+        const neonWallet = this.neonWalletAddress;
+        const emulateSignerPrivateKey = `0x${SHA256(solanaWallet + neonWallet).toString()}`;
         return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
     }
     get neonAccountAddress() {
@@ -61,17 +65,6 @@ export class InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             return this.connection.getAccountInfo(neonAssociatedKey);
         });
-    }
-    solanaPubkey(address) {
-        if (address === null || address === void 0 ? void 0 : address.length) {
-            try {
-                return new PublicKey(address);
-            }
-            catch (e) {
-                //
-            }
-        }
-        return this.solanaWalletPubkey;
     }
     neonAccountInstruction() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -96,9 +89,7 @@ export class InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const fullAmount = toFullAmount(amount, token.decimals);
             const associatedTokenAddress = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, new PublicKey(token.address_spl), solanaPubkey);
-            const createApproveInstruction = Token.createApproveInstruction(TOKEN_PROGRAM_ID, associatedTokenAddress, neonPDAPubkey, solanaPubkey, [], 
-            // @ts-ignore
-            fullAmount.toString(10));
+            const createApproveInstruction = Token.createApproveInstruction(TOKEN_PROGRAM_ID, associatedTokenAddress, neonPDAPubkey, solanaPubkey, [], Number(fullAmount.toString(10)));
             return { associatedTokenAddress, createApproveInstruction };
         });
     }
@@ -112,12 +103,17 @@ export class InstructionService {
         const amountStr = BigInt(amountUnit).toString(16).padStart(64, '0');
         return `${approveSolanaMethodID}${solanaStr}${amountStr}`;
     }
+    createApproveSolanaData(solanaWallet, splToken, amount) {
+        const fullAmount = toFullAmount(amount, splToken.decimals);
+        return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+    }
     getEthereumTransactionParams(amount, token) {
+        const solanaWallet = this.solanaWalletPubkey;
         return {
             to: token.address,
             from: this.neonWalletAddress,
             value: '0x00',
-            data: this._computeWithdrawEthTransactionData(amount, token)
+            data: this.createApproveSolanaData(solanaWallet, token, amount)
         };
     }
 }

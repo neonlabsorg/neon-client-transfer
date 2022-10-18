@@ -4,7 +4,7 @@ import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../api';
 import { MintPortal, NeonPortal } from '../core';
 import { InstructionEvents, InstructionParams, SPLToken } from '../models';
-import { useProxyInfo } from './proxy-status';
+import { getProxyInfo } from './proxy-status';
 
 const urls = process.env.REACT_APP_URLS ? JSON.parse(process.env.REACT_APP_URLS) : {
   solanaRpcApi: 'https://api.devnet.solana.com',
@@ -17,7 +17,7 @@ export const proxyApi = new NeonProxyRpcApi({
 });
 
 export function useNeonTransfer(events: InstructionEvents, connection: Connection, web3: Web3, publicKey: PublicKey, neonWalletAddress: string) {
-  const proxyStatus = useProxyInfo(proxyApi);
+  const proxyStatus = getProxyInfo(proxyApi);
   const options: InstructionParams = {
     connection: connection,
     solanaWalletAddress: publicKey,

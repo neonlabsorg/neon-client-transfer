@@ -102,7 +102,7 @@ export class MintPortal extends InstructionService {
   async createClaimInstruction(owner: PublicKey, from: PublicKey, to: string, splToken: SPLToken, emulateSigner: Account, amount: any): Promise<{ neonKeys: AccountMeta[], neonTransaction: SignedTransaction, emulateSigner: Account, nonce: number }> {
     const nonce = await this.web3.eth.getTransactionCount(emulateSigner.address);
     try {
-      const claimTransaction = this.contract.methods.claimTo(from.toBytes(), to, amount).encodeABI();
+      const claimTransaction = this.erc20ForSPLContract.methods.claimTo(from.toBytes(), to, amount).encodeABI();
       const transaction: TransactionConfig = {
         nonce: nonce,
         gas: `0x5F5E100`, // 100000000
@@ -151,7 +151,8 @@ export class MintPortal extends InstructionService {
 
   async makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): Promise<TransactionInstruction> {
     const programId = new PublicKey(NEON_EVM_LOADER_ID);
-    const count = 10; // Number(this.proxyStatus.NEON_POOL_COUNT);
+    const count = 10;
+    // const count = Number(this.proxyStatus.NEON_POOL_COUNT);
     const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
     const treasuryPoolAddress = await this.createCollateralPoolAddress(treasuryPoolIndex);
     const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
@@ -179,7 +180,7 @@ export class MintPortal extends InstructionService {
   async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionReceipt> {
     const nonce = await this.web3.eth.getTransactionCount(neonWallet);
     const fullAmount = toFullAmount(amount, splToken.decimals);
-    const data = this.contract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+    const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
     const transaction: TransactionConfig = {
       nonce,
       from: neonWallet,
@@ -202,7 +203,7 @@ export class MintPortal extends InstructionService {
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
     const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
 
-    const mintPubkey = this.solanaPubkey(splToken.address_spl);
+    const mintPubkey = new PublicKey(splToken.address_spl);
     const assocTokenAccountAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
