@@ -1,19 +1,19 @@
-const path = require("path")
-const webpack = require("webpack")
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    "neon-portal": "./src/core/index.js",
+    'neon-portal': './src/core/index.js'
   },
-  mode: "production",
+  mode: 'production',
   output: {
-    filename: "[name].js",
-    path: path.resolve(".", "dist"),
+    filename: '[name].js',
+    path: path.resolve('.', 'dist'),
     library: {
-      name: "NeonPortal",
-      type: "umd",
-      umdNamedDefine: true,
-    },
+      name: 'NeonPortal',
+      type: 'umd',
+      umdNamedDefine: true
+    }
   },
   module: {
     rules: [
@@ -22,30 +22,30 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         use: [
           {
-            loader: "babel-loader",
+            loader: 'babel-loader',
             options: {
-              presets: ["@babel/preset-env"],
-              plugins: ["@babel/plugin-transform-modules-commonjs"],
-            },
-          },
-        ],
-      },
-    ],
+              presets: ['@babel/preset-env'],
+              plugins: ['@babel/plugin-transform-modules-commonjs']
+            }
+          }
+        ]
+      }
+    ]
   },
   resolve: {
     fallback: {
-      stream: require.resolve("stream-browserify"),
-      os: false,
-    },
+      stream: require.resolve('stream-browserify'),
+      os: false
+    }
   },
   plugins: [
     // Work around for Buffer is undefined:
     // https://github.com/webpack/changelog-v5/issues/10
     new webpack.ProvidePlugin({
-      Buffer: ["buffer", "Buffer"],
+      Buffer: ['buffer', 'Buffer']
     }),
     new webpack.ProvidePlugin({
-      process: "process/browser",
-    }),
-  ],
-}
+      process: 'process/browser'
+    })
+  ]
+};

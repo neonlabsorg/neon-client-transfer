@@ -7,13 +7,10 @@ module.exports = {
   parserOptions: {
     sourceType: "module",
   },
-
-  extends: ["eslint:recommended"],
-
-  plugins: ["prettier"],
+  extends: ['eslint:recommended'],
+  plugins: ['prettier'],
+  parser: '@typescript-eslint/parser',
   rules: {
-    "prettier/prettier": "error",
-    "newline-before-return": "error",
-    "curly": ["error", "multi-line"],
-  },
-}
+    'no-unused-vars': 'off'
+  }
+};
