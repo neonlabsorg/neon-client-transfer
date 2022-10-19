@@ -1,6 +1,17 @@
 {
+  "semi": true,
+  "tabWidth": 2,
   "printWidth": 100,
-  "semi": false,
-  "quoteProps": "consistent",
-  "trailingComma": "all"
+  "singleQuote": true,
+  "trailingComma": "none",
+  "jsxSingleQuote": true,
+  "bracketSpacing": true,
+  "importOrder": [
+    "^@core/(.*)$",
+    "^@server/(.*)$",
+    "^@ui/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
