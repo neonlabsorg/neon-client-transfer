@@ -23,7 +23,7 @@ export class MintPortal extends InstructionService {
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const solanaWallet = this.solanaWalletPubkey;
     const emulateSigner = this.solanaWalletSigner;
-    const [neonAddress] = await this.neonAccountAddress;
+    const [neonAddress] = await this.neonAccountAddress(this.neonWalletAddress);
     const [accountPDA] = await etherToProgram(emulateSigner.address);
 
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
@@ -50,7 +50,8 @@ export class MintPortal extends InstructionService {
     transaction.add(createApproveInstruction);
 
     if (nonce === 0) {
-      transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner));
+      transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner.address));
+      this.emitFunction(events.onCreateNeonAccountInstruction);
     }
 
     // 4
@@ -67,21 +68,6 @@ export class MintPortal extends InstructionService {
     } catch (e) {
       this.emitFunction(events.onErrorSign, e);
     }
-  }
-
-  createAccountV3Instruction(solanaWallet: PublicKey, emulateSignerPDA: PublicKey, emulateSigner: Account): TransactionInstruction {
-    const a = new Buffer([EvmInstruction.CreateAccountV03]);
-    const b = new Buffer(emulateSigner.address.slice(2), 'hex');
-    const data = Buffer.concat([a, b]);
-    return new TransactionInstruction({
-      programId: new PublicKey(NEON_EVM_LOADER_ID),
-      keys: [
-        { pubkey: solanaWallet, isWritable: true, isSigner: true },
-        { pubkey: SystemProgram.programId, isWritable: false, isSigner: false },
-        { pubkey: emulateSignerPDA, isWritable: true, isSigner: false }
-      ],
-      data
-    });
   }
 
   computeBudgetUtilsInstruction(programId: PublicKey): TransactionInstruction {

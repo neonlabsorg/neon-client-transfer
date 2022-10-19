@@ -19,14 +19,13 @@ export class NeonPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             this.emitFunction(events.onBeforeCreateInstruction);
             const solanaWallet = this.solanaWalletPubkey;
-            const [neonWallet] = yield this.neonAccountAddress;
+            const [neonWallet] = yield this.neonAccountAddress(this.neonWalletAddress);
             const neonAccount = yield this.getNeonAccount(neonWallet);
             const [authorityPoolPubkey] = yield this.getAuthorityPoolAddress();
             const { blockhash } = yield this.connection.getRecentBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
             if (!neonAccount) {
-                const neonAccountInstruction = yield this.neonAccountInstruction();
-                transaction.add(neonAccountInstruction);
+                transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));
                 this.emitFunction(events.onCreateNeonAccountInstruction);
             }
             const neonToken = Object.assign(Object.assign({}, token), { decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS) });

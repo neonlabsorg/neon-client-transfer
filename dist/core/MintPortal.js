@@ -23,7 +23,7 @@ export class MintPortal extends InstructionService {
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const solanaWallet = this.solanaWalletPubkey;
             const emulateSigner = this.solanaWalletSigner;
-            const [neonAddress] = yield this.neonAccountAddress;
+            const [neonAddress] = yield this.neonAccountAddress(this.neonWalletAddress);
             const [accountPDA] = yield etherToProgram(emulateSigner.address);
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
@@ -36,7 +36,8 @@ export class MintPortal extends InstructionService {
             transaction.add(computeBudgetHeapFrameInstruction);
             transaction.add(createApproveInstruction);
             if (nonce === 0) {
-                transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner));
+                transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner.address));
+                this.emitFunction(events.onCreateNeonAccountInstruction);
             }
             // 4
             if (neonTransaction === null || neonTransaction === void 0 ? void 0 : neonTransaction.rawTransaction) {
@@ -51,20 +52,6 @@ export class MintPortal extends InstructionService {
             catch (e) {
                 this.emitFunction(events.onErrorSign, e);
             }
-        });
-    }
-    createAccountV3Instruction(solanaWallet, emulateSignerPDA, emulateSigner) {
-        const a = new Buffer([40 /* EvmInstruction.CreateAccountV03 */]);
-        const b = new Buffer(emulateSigner.address.slice(2), 'hex');
-        const data = Buffer.concat([a, b]);
-        return new TransactionInstruction({
-            programId: new PublicKey(NEON_EVM_LOADER_ID),
-            keys: [
-                { pubkey: solanaWallet, isWritable: true, isSigner: true },
-                { pubkey: SystemProgram.programId, isWritable: false, isSigner: false },
-                { pubkey: emulateSignerPDA, isWritable: true, isSigner: false }
-            ],
-            data
         });
     }
     computeBudgetUtilsInstruction(programId) {

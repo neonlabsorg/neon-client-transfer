@@ -12,7 +12,6 @@ export declare class MintPortal extends InstructionService {
         symbol: string;
         logoURI: string;
     }): Promise<void>;
-    createAccountV3Instruction(solanaWallet: PublicKey, emulateSignerPDA: PublicKey, emulateSigner: Account): TransactionInstruction;
     computeBudgetUtilsInstruction(programId: PublicKey): TransactionInstruction;
     computeBudgetHeapFrameInstruction(programId: PublicKey): TransactionInstruction;
     createClaimInstruction(owner: PublicKey, from: PublicKey, to: string, splToken: SPLToken, emulateSigner: Account, amount: any): Promise<{

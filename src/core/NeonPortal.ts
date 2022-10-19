@@ -12,15 +12,14 @@ export class NeonPortal extends InstructionService {
   async createNeonTransfer(events = this.events, amount = 0, token: SPLToken) {
     this.emitFunction(events.onBeforeCreateInstruction);
     const solanaWallet = this.solanaWalletPubkey;
-    const [neonWallet] = await this.neonAccountAddress;
+    const [neonWallet] = await this.neonAccountAddress(this.neonWalletAddress);
     const neonAccount = await this.getNeonAccount(neonWallet);
     const [authorityPoolPubkey] = await this.getAuthorityPoolAddress();
     const { blockhash } = await this.connection.getRecentBlockhash();
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
 
     if (!neonAccount) {
-      const neonAccountInstruction = await this.neonAccountInstruction();
-      transaction.add(neonAccountInstruction);
+      transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));
       this.emitFunction(events.onCreateNeonAccountInstruction);
     }
 

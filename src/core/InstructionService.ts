@@ -22,6 +22,7 @@ import {
   NeonProgramStatus,
   SPLToken
 } from '../models';
+import { Buffer } from 'buffer';
 
 Big.PE = 42;
 
@@ -79,29 +80,27 @@ export class InstructionService {
     return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
   }
 
-  get neonAccountAddress(): Promise<[PublicKey, number]> {
-    return etherToProgram(this.neonWalletAddress);
+  async neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]> {
+    return etherToProgram(neonWallet);
   }
 
   async getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null> {
     return this.connection.getAccountInfo(neonAssociatedKey);
   }
 
-  async neonAccountInstruction(): Promise<TransactionInstruction> {
-    const [neonAddress, neonNonce] = await this.neonAccountAddress;
+  createAccountV3Instruction(solanaWallet: PublicKey, emulateSignerPDA: PublicKey, neonWallet: string): TransactionInstruction {
     const keys = [
-      { pubkey: this.solanaWalletPubkey, isSigner: true, isWritable: true },
+      { pubkey: solanaWallet, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: neonAddress, isSigner: false, isWritable: true }
+      { pubkey: emulateSignerPDA, isSigner: false, isWritable: true }
     ];
-    const a = new Buffer([EvmInstruction.CreateAccountV02]);
-    const b = Buffer.from(this.neonWalletAddress, 'hex');
-    const c = new Buffer([neonNonce]);
-    const data = Buffer.concat([a, b, c]);
+    const a = new Buffer([EvmInstruction.CreateAccountV03]);
+    const b = new Buffer(neonWallet.slice(2), 'hex');
+    const data = Buffer.concat([a, b]);
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
-      data,
-      keys
+      keys,
+      data
     });
   }
 
@@ -124,18 +123,6 @@ export class InstructionService {
     );
 
     return { associatedTokenAddress, createApproveInstruction };
-  }
-
-  _computeWithdrawEthTransactionData(amount: number, splToken: SPLToken): string {
-    const approveSolanaMethodID = '0x93e29346';
-    const solanaPubkey = this.solanaWalletPubkey;
-    // @ts-ignore
-    const solanaStr = solanaPubkey.toBytes().toString('hex');
-    const amountUnit = Big(amount).times(Big(10).pow(splToken.decimals));
-    // @ts-ignore
-    const amountStr = BigInt(amountUnit).toString(16).padStart(64, '0');
-
-    return `${approveSolanaMethodID}${solanaStr}${amountStr}`;
   }
 
   createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string {

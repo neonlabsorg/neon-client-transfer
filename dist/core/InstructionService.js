@@ -13,6 +13,7 @@ import Big from 'big.js';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, toFullAmount } from '../utils';
 import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
+import { Buffer } from 'buffer';
 Big.PE = 42;
 const noop = new Function();
 export class InstructionService {
@@ -58,31 +59,29 @@ export class InstructionService {
         const emulateSignerPrivateKey = `0x${SHA256(solanaWallet + neonWallet).toString()}`;
         return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
     }
-    get neonAccountAddress() {
-        return etherToProgram(this.neonWalletAddress);
+    neonAccountAddress(neonWallet) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return etherToProgram(neonWallet);
+        });
     }
     getNeonAccount(neonAssociatedKey) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.connection.getAccountInfo(neonAssociatedKey);
         });
     }
-    neonAccountInstruction() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const [neonAddress, neonNonce] = yield this.neonAccountAddress;
-            const keys = [
-                { pubkey: this.solanaWalletPubkey, isSigner: true, isWritable: true },
-                { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-                { pubkey: neonAddress, isSigner: false, isWritable: true }
-            ];
-            const a = new Buffer([24 /* EvmInstruction.CreateAccountV02 */]);
-            const b = Buffer.from(this.neonWalletAddress, 'hex');
-            const c = new Buffer([neonNonce]);
-            const data = Buffer.concat([a, b, c]);
-            return new TransactionInstruction({
-                programId: new PublicKey(NEON_EVM_LOADER_ID),
-                data,
-                keys
-            });
+    createAccountV3Instruction(solanaWallet, emulateSignerPDA, neonWallet) {
+        const keys = [
+            { pubkey: solanaWallet, isSigner: true, isWritable: true },
+            { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: emulateSignerPDA, isSigner: false, isWritable: true }
+        ];
+        const a = new Buffer([40 /* EvmInstruction.CreateAccountV03 */]);
+        const b = new Buffer(neonWallet.slice(2), 'hex');
+        const data = Buffer.concat([a, b]);
+        return new TransactionInstruction({
+            programId: new PublicKey(NEON_EVM_LOADER_ID),
+            keys,
+            data
         });
     }
     approveDepositInstruction(solanaPubkey, neonPDAPubkey, token, amount) {
@@ -92,16 +91,6 @@ export class InstructionService {
             const createApproveInstruction = Token.createApproveInstruction(TOKEN_PROGRAM_ID, associatedTokenAddress, neonPDAPubkey, solanaPubkey, [], Number(fullAmount.toString(10)));
             return { associatedTokenAddress, createApproveInstruction };
         });
-    }
-    _computeWithdrawEthTransactionData(amount, splToken) {
-        const approveSolanaMethodID = '0x93e29346';
-        const solanaPubkey = this.solanaWalletPubkey;
-        // @ts-ignore
-        const solanaStr = solanaPubkey.toBytes().toString('hex');
-        const amountUnit = Big(amount).times(Big(10).pow(splToken.decimals));
-        // @ts-ignore
-        const amountStr = BigInt(amountUnit).toString(16).padStart(64, '0');
-        return `${approveSolanaMethodID}${solanaStr}${amountStr}`;
     }
     createApproveSolanaData(solanaWallet, splToken, amount) {
         const fullAmount = toFullAmount(amount, splToken.decimals);
