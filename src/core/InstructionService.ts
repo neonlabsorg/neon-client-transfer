@@ -88,11 +88,11 @@ export class InstructionService {
     return this.connection.getAccountInfo(neonAssociatedKey);
   }
 
-  createAccountV3Instruction(solanaWallet: PublicKey, emulateSignerPDA: PublicKey, neonWallet: string): TransactionInstruction {
+  createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction {
     const keys = [
       { pubkey: solanaWallet, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: emulateSignerPDA, isSigner: false, isWritable: true }
+      { pubkey: neonWalletPDA, isSigner: false, isWritable: true }
     ];
     const a = new Buffer([EvmInstruction.CreateAccountV03]);
     const b = new Buffer(neonWallet.slice(2), 'hex');

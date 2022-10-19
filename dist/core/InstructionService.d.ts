@@ -22,7 +22,7 @@ export declare class InstructionService {
     get solanaWalletSigner(): Account;
     neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]>;
     getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null>;
-    createAccountV3Instruction(solanaWallet: PublicKey, emulateSignerPDA: PublicKey, neonWallet: string): TransactionInstruction;
+    createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction;
     approveDepositInstruction(solanaPubkey: PublicKey, neonPDAPubkey: PublicKey, token: SPLToken, amount: number): Promise<{
         associatedTokenAddress: PublicKey;
         createApproveInstruction: TransactionInstruction;

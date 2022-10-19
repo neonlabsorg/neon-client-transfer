@@ -12,7 +12,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionI
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
 import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID, SPL_TOKEN_DEFAULT } from '../data';
-import { etherToProgram, toBytesInt32, toFullAmount } from '../utils';
+import { toBytesInt32, toFullAmount } from '../utils';
 // ERC-20 tokens
 export class MintPortal extends InstructionService {
     // #region Solana -> Neon
@@ -23,25 +23,30 @@ export class MintPortal extends InstructionService {
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const solanaWallet = this.solanaWalletPubkey;
             const emulateSigner = this.solanaWalletSigner;
-            const [neonAddress] = yield this.neonAccountAddress(this.neonWalletAddress);
-            const [accountPDA] = yield etherToProgram(emulateSigner.address);
+            const [neonWalletPDA] = yield this.neonAccountAddress(this.neonWalletAddress);
+            const [emulateSignerPDA] = yield this.neonAccountAddress(emulateSigner.address);
+            const emulateSignerPDAAccount = yield this.getNeonAccount(emulateSignerPDA);
+            const neonWalletAccount = yield this.getNeonAccount(neonWalletPDA);
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
-            const { createApproveInstruction, associatedTokenAddress } = yield this.approveDepositInstruction(solanaWallet, accountPDA, splToken, amount);
-            const { neonKeys, neonTransaction, nonce } = yield this.createClaimInstruction(solanaWallet, associatedTokenAddress, this.neonWalletAddress, splToken, emulateSigner, fullAmount);
+            const { createApproveInstruction, associatedTokenAddress } = yield this.approveDepositInstruction(solanaWallet, emulateSignerPDA, splToken, amount);
+            const { neonKeys, neonTransaction } = yield this.createClaimInstruction(solanaWallet, associatedTokenAddress, this.neonWalletAddress, splToken, emulateSigner, fullAmount);
             const { blockhash } = yield this.connection.getRecentBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
             // 0, 1, 2, 3
             transaction.add(computeBudgetUtilsInstruction);
             transaction.add(computeBudgetHeapFrameInstruction);
             transaction.add(createApproveInstruction);
-            if (nonce === 0) {
-                transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner.address));
+            if (!neonWalletAccount) {
+                transaction.add(this.createAccountV3Instruction(solanaWallet, neonWalletPDA, this.neonWalletAddress));
                 this.emitFunction(events.onCreateNeonAccountInstruction);
+            }
+            if (!emulateSignerPDAAccount) {
+                transaction.add(this.createAccountV3Instruction(solanaWallet, emulateSignerPDA, emulateSigner.address));
             }
             // 4
             if (neonTransaction === null || neonTransaction === void 0 ? void 0 : neonTransaction.rawTransaction) {
-                transaction.add(yield this.makeTrExecFromDataIx(neonAddress, neonTransaction.rawTransaction, neonKeys));
+                transaction.add(yield this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
             }
             this.emitFunction(events.onBeforeSignTransaction);
             try {

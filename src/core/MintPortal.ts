@@ -11,7 +11,7 @@ import { Account, SignedTransaction, TransactionConfig, TransactionReceipt } fro
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
 import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID, SPL_TOKEN_DEFAULT } from '../data';
-import { etherToProgram, toBytesInt32, toFullAmount } from '../utils';
+import { toBytesInt32, toFullAmount } from '../utils';
 import { EvmInstruction, SPLToken } from '../models';
 
 // ERC-20 tokens
@@ -23,17 +23,19 @@ export class MintPortal extends InstructionService {
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const solanaWallet = this.solanaWalletPubkey;
     const emulateSigner = this.solanaWalletSigner;
-    const [neonAddress] = await this.neonAccountAddress(this.neonWalletAddress);
-    const [accountPDA] = await etherToProgram(emulateSigner.address);
+    const [neonWalletPDA] = await this.neonAccountAddress(this.neonWalletAddress);
+    const [emulateSignerPDA] = await this.neonAccountAddress(emulateSigner.address);
+    const emulateSignerPDAAccount = await this.getNeonAccount(emulateSignerPDA);
+    const neonWalletAccount = await this.getNeonAccount(neonWalletPDA);
 
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
     const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
     const {
       createApproveInstruction,
       associatedTokenAddress
-    } = await this.approveDepositInstruction(solanaWallet, accountPDA, splToken, amount);
+    } = await this.approveDepositInstruction(solanaWallet, emulateSignerPDA, splToken, amount);
 
-    const { neonKeys, neonTransaction, nonce } = await this.createClaimInstruction(
+    const { neonKeys, neonTransaction } = await this.createClaimInstruction(
       solanaWallet,
       associatedTokenAddress,
       this.neonWalletAddress,
@@ -49,14 +51,18 @@ export class MintPortal extends InstructionService {
     transaction.add(computeBudgetHeapFrameInstruction);
     transaction.add(createApproveInstruction);
 
-    if (nonce === 0) {
-      transaction.add(this.createAccountV3Instruction(solanaWallet, accountPDA, emulateSigner.address));
+    if (!neonWalletAccount) {
+      transaction.add(this.createAccountV3Instruction(solanaWallet, neonWalletPDA, this.neonWalletAddress));
       this.emitFunction(events.onCreateNeonAccountInstruction);
+    }
+
+    if (!emulateSignerPDAAccount) {
+      transaction.add(this.createAccountV3Instruction(solanaWallet, emulateSignerPDA, emulateSigner.address));
     }
 
     // 4
     if (neonTransaction?.rawTransaction) {
-      transaction.add(await this.makeTrExecFromDataIx(neonAddress, neonTransaction.rawTransaction, neonKeys));
+      transaction.add(await this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
     }
 
     this.emitFunction(events.onBeforeSignTransaction);
