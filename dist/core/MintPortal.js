@@ -123,10 +123,9 @@ export class MintPortal extends InstructionService {
     makeTrExecFromDataIx(neonAddress, neonRawTransaction, neonKeys) {
         return __awaiter(this, void 0, void 0, function* () {
             const programId = new PublicKey(NEON_EVM_LOADER_ID);
-            const count = 10;
-            // const count = Number(this.proxyStatus.NEON_POOL_COUNT);
+            const count = Number(this.proxyStatus.NEON_POOL_COUNT);
             const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
-            const treasuryPoolAddress = yield this.createCollateralPoolAddress(treasuryPoolIndex);
+            const [treasuryPoolAddress] = yield this.getCollateralPoolAddress(treasuryPoolIndex);
             const a = Buffer.from([31 /* EvmInstruction.TransactionExecuteFromData */]);
             const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
             const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
@@ -142,11 +141,11 @@ export class MintPortal extends InstructionService {
             return new TransactionInstruction({ programId, keys, data });
         });
     }
-    createCollateralPoolAddress(collateralPoolIndex) {
+    getCollateralPoolAddress(collateralPoolIndex) {
         return __awaiter(this, void 0, void 0, function* () {
-            const seed = `collateral_seed_${collateralPoolIndex}`;
-            const collateralPoolBase = new PublicKey(this.proxyStatus.NEON_POOL_BASE);
-            return PublicKey.createWithSeed(collateralPoolBase, seed, new PublicKey(NEON_EVM_LOADER_ID));
+            const a = Buffer.from('treasury_pool', 'utf8');
+            const b = Buffer.from(toBytesInt32(collateralPoolIndex));
+            return PublicKey.findProgramAddress([a, b], new PublicKey(NEON_EVM_LOADER_ID));
         });
     }
     createNeonTransaction(neonWallet, solanaWallet, splToken, amount) {
