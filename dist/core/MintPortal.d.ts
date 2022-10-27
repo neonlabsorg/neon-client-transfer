@@ -21,7 +21,7 @@ export declare class MintPortal extends InstructionService {
         nonce: number;
     }>;
     makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): Promise<TransactionInstruction>;
-    createCollateralPoolAddress(collateralPoolIndex: number): Promise<PublicKey>;
+    getCollateralPoolAddress(collateralPoolIndex: number): Promise<[PublicKey, number]>;
     createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionReceipt>;
     createSolanaTransfer(events?: import("../models").InstructionEvents, amount?: number, splToken?: {
         chainId: number;
