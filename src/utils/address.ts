@@ -25,9 +25,8 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   return arrayBuffer;
 }
 
-export function toFullAmount(amount: number, decimals: number): BigInt {
+export function toFullAmount(amount: number, decimals: number): bigint {
   const data = Big(amount).times(Big(10).pow(decimals));
   // @ts-ignore
   return BigInt(data);
 }
-

@@ -4,7 +4,7 @@ import { NeonProgramStatus } from '../models';
 
 export const proxyStatus = 'proxyStatus';
 
-export function getProxyInfo(api: NeonProxyRpcApi): NeonProgramStatus {
+export function useProxyInfo(api: NeonProxyRpcApi): NeonProgramStatus {
   const [status, setStatus] = useState<NeonProgramStatus>({} as NeonProgramStatus);
 
   useEffect(() => {

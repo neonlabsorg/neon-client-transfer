@@ -5,9 +5,8 @@ import {
   SystemProgram,
   TransactionInstruction
 } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { AbiItem } from 'web3-utils';
-import Big from 'big.js';
 import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -23,8 +22,6 @@ import {
   SPLToken
 } from '../models';
 import { Buffer } from 'buffer';
-
-Big.PE = 42;
 
 const noop = new Function();
 
@@ -104,25 +101,12 @@ export class InstructionService {
     });
   }
 
-  async approveDepositInstruction(solanaPubkey: PublicKey, neonPDAPubkey: PublicKey, token: SPLToken, amount: number): Promise<{ associatedTokenAddress: PublicKey, createApproveInstruction: TransactionInstruction }> {
-    const fullAmount = toFullAmount(amount, token.decimals);
-    const associatedTokenAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      new PublicKey(token.address_spl),
-      solanaPubkey
-    );
+  async getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey> {
+    return await getAssociatedTokenAddress(mintPubkey, walletPubkey);
+  }
 
-    const createApproveInstruction = Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      associatedTokenAddress,
-      neonPDAPubkey,
-      solanaPubkey,
-      [],
-      Number(fullAmount.toString(10))
-    );
-
-    return { associatedTokenAddress, createApproveInstruction };
+  approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction {
+    return createApproveInstruction(associatedTokenPubkey, neonPDAPubkey, walletPubkey, amount);
   }
 
   createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string {
