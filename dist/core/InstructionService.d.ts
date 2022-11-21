@@ -23,10 +23,8 @@ export declare class InstructionService {
     neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]>;
     getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null>;
     createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction;
-    approveDepositInstruction(solanaPubkey: PublicKey, neonPDAPubkey: PublicKey, token: SPLToken, amount: number): Promise<{
-        associatedTokenAddress: PublicKey;
-        createApproveInstruction: TransactionInstruction;
-    }>;
+    getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey>;
+    approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction;
     createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string;
     getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig;
     emitFunction: (functionName?: Function, ...args: any[]) => void;

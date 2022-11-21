@@ -7,48 +7,70 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { InstructionService } from './InstructionService';
-import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL, SPL_TOKEN_DEFAULT } from '../data';
+import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
 import { toFullAmount } from '../utils';
 // Neon-token
 export class NeonPortal extends InstructionService {
-    // #region Solana -> Neon
-    createNeonTransfer(events = this.events, amount = 0, token) {
+    // Solana -> Neon
+    createNeonTransfer(amount, splToken, events = this.events) {
         return __awaiter(this, void 0, void 0, function* () {
             this.emitFunction(events.onBeforeCreateInstruction);
-            const solanaWallet = this.solanaWalletPubkey;
-            const [neonWallet] = yield this.neonAccountAddress(this.neonWalletAddress);
-            const neonAccount = yield this.getNeonAccount(neonWallet);
-            const [authorityPoolPubkey] = yield this.getAuthorityPoolAddress();
-            const { blockhash } = yield this.connection.getRecentBlockhash();
-            const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
-            if (!neonAccount) {
-                transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));
-                this.emitFunction(events.onCreateNeonAccountInstruction);
-            }
-            const neonToken = Object.assign(Object.assign({}, token), { decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS) });
-            const { createApproveInstruction } = yield this.approveDepositInstruction(solanaWallet, neonWallet, neonToken, amount);
-            transaction.add(createApproveInstruction);
-            const depositInstruction = yield this.createDepositInstruction(solanaWallet, neonWallet, authorityPoolPubkey, this.neonWalletAddress);
-            transaction.add(depositInstruction);
+            const transaction = yield this.neonTransferTransaction(amount, splToken);
             this.emitFunction(events.onBeforeSignTransaction);
             try {
                 const signedTransaction = yield this.solana.signTransaction(transaction);
-                const sig = yield this.connection.sendRawTransaction(signedTransaction.serialize());
-                this.emitFunction(events.onSuccessSign, sig);
+                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize());
+                this.emitFunction(events.onSuccessSign, signature);
             }
             catch (error) {
                 this.emitFunction(events.onErrorSign, error);
             }
         });
     }
+    // Neon -> Solana
+    createSolanaTransfer(amount, splToken, events = this.events) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.emitFunction(events.onBeforeCreateInstruction);
+            const transaction = this.getEthereumTransactionParams(amount, splToken);
+            this.emitFunction(events.onBeforeSignTransaction);
+            try {
+                const neonTransaction = yield this.web3.eth.sendTransaction(transaction);
+                this.emitFunction(events.onSuccessSign, undefined, neonTransaction.transactionHash);
+            }
+            catch (error) {
+                this.emitFunction(events.onErrorSign, error);
+            }
+        });
+    }
+    neonTransferTransaction(amount, token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solanaWallet = this.solanaWalletPubkey;
+            const [neonWallet] = yield this.neonAccountAddress(this.neonWalletAddress);
+            const neonAccount = yield this.getNeonAccount(neonWallet);
+            const [authorityPoolPubkey] = yield this.getAuthorityPoolAddress();
+            const { blockhash } = yield this.connection.getLatestBlockhash();
+            const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
+            if (!neonAccount) {
+                transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));
+            }
+            const neonToken = Object.assign(Object.assign({}, token), { decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS) });
+            const fullAmount = toFullAmount(amount, neonToken.decimals);
+            const associatedTokenAddress = yield this.getAssociatedTokenAddress(new PublicKey(neonToken.address_spl), solanaWallet);
+            const approveInstruction = yield this.approveDepositInstruction(solanaWallet, neonWallet, associatedTokenAddress, fullAmount);
+            const depositInstruction = yield this.createDepositInstruction(solanaWallet, neonWallet, authorityPoolPubkey, this.neonWalletAddress);
+            transaction.add(approveInstruction);
+            transaction.add(depositInstruction);
+            return transaction;
+        });
+    }
     createDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWalletAddress) {
         return __awaiter(this, void 0, void 0, function* () {
             const neonTokenMint = new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
-            const solanaAssociatedTokenAddress = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, neonTokenMint, solanaPubkey);
-            const poolKey = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, neonTokenMint, depositPubkey, true);
+            const solanaAssociatedTokenAddress = yield getAssociatedTokenAddress(neonTokenMint, solanaPubkey);
+            const poolKey = yield getAssociatedTokenAddress(neonTokenMint, depositPubkey, true);
             const keys = [
                 { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true },
                 { pubkey: poolKey, isSigner: false, isWritable: true },
@@ -72,19 +94,6 @@ export class NeonPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const enc = new TextEncoder();
             return yield PublicKey.findProgramAddress([enc.encode('Deposit')], new PublicKey(NEON_EVM_LOADER_ID));
-        });
-    }
-    // #region Neon -> Solana
-    createSolanaTransfer(events = this.events, amount = 0, splToken = SPL_TOKEN_DEFAULT) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.emitFunction(events.onBeforeSignTransaction);
-            try {
-                const transaction = yield this.web3.eth.sendTransaction(this.getEthereumTransactionParams(amount, splToken));
-                this.emitFunction(events.onSuccessSign, undefined, transaction.transactionHash);
-            }
-            catch (error) {
-                this.emitFunction(events.onErrorSign, error);
-            }
         });
     }
     createWithdrawEthTransactionData() {

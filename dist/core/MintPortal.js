@@ -7,18 +7,51 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
-import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID, SPL_TOKEN_DEFAULT } from '../data';
+import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID } from '../data';
 import { toBytesInt32, toFullAmount } from '../utils';
 // ERC-20 tokens
 export class MintPortal extends InstructionService {
-    // #region Solana -> Neon
-    createNeonTransfer(events = this.events, amount, splToken = SPL_TOKEN_DEFAULT) {
+    // Solana -> Neon
+    createNeonTransfer(amount, splToken, events = this.events) {
         return __awaiter(this, void 0, void 0, function* () {
             this.emitFunction(events.onBeforeCreateInstruction);
+            const transaction = yield this.neonTransferTransaction(amount, splToken);
+            this.emitFunction(events.onBeforeSignTransaction);
+            try {
+                const signedTransaction = yield this.solana.signTransaction(transaction);
+                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: true });
+                this.emitFunction(events.onSuccessSign, signature);
+            }
+            catch (e) {
+                this.emitFunction(events.onErrorSign, e);
+            }
+        });
+    }
+    // Neon -> Solana
+    createSolanaTransfer(amount, splToken, events = this.events) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const mintPubkey = new PublicKey(splToken.address_spl);
+            const walletPubkey = this.solanaWalletPubkey;
+            const associatedTokenPubkey = yield this.getAssociatedTokenAddress(mintPubkey, walletPubkey);
+            const transaction = yield this.solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey);
+            this.emitFunction(events.onBeforeSignTransaction);
+            try {
+                const signedTransaction = yield this.solana.signTransaction(transaction);
+                const neonTransaction = yield this.createNeonTransaction(this.neonWalletAddress, associatedTokenPubkey, splToken, amount);
+                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize());
+                this.emitFunction(events.onSuccessSign, signature, neonTransaction.transactionHash);
+            }
+            catch (error) {
+                this.emitFunction(events.onErrorSign, error);
+            }
+        });
+    }
+    neonTransferTransaction(amount, splToken) {
+        return __awaiter(this, void 0, void 0, function* () {
             const fullAmount = toFullAmount(amount, splToken.decimals);
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const solanaWallet = this.solanaWalletPubkey;
@@ -27,19 +60,19 @@ export class MintPortal extends InstructionService {
             const [emulateSignerPDA] = yield this.neonAccountAddress(emulateSigner.address);
             const emulateSignerPDAAccount = yield this.getNeonAccount(emulateSignerPDA);
             const neonWalletAccount = yield this.getNeonAccount(neonWalletPDA);
-            const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
-            const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
-            const { createApproveInstruction, associatedTokenAddress } = yield this.approveDepositInstruction(solanaWallet, emulateSignerPDA, splToken, amount);
+            const associatedTokenAddress = yield this.getAssociatedTokenAddress(new PublicKey(splToken.address_spl), solanaWallet);
             const { neonKeys, neonTransaction } = yield this.createClaimInstruction(solanaWallet, associatedTokenAddress, this.neonWalletAddress, splToken, emulateSigner, fullAmount);
-            const { blockhash } = yield this.connection.getRecentBlockhash();
+            const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
-            // 0, 1, 2, 3
+            // 0
+            const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             transaction.add(computeBudgetUtilsInstruction);
+            const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
             transaction.add(computeBudgetHeapFrameInstruction);
+            const createApproveInstruction = yield this.approveDepositInstruction(solanaWallet, emulateSignerPDA, associatedTokenAddress, fullAmount);
             transaction.add(createApproveInstruction);
             if (!neonWalletAccount) {
                 transaction.add(this.createAccountV3Instruction(solanaWallet, neonWalletPDA, this.neonWalletAddress));
-                this.emitFunction(events.onCreateNeonAccountInstruction);
             }
             if (!emulateSignerPDAAccount) {
                 transaction.add(this.createAccountV3Instruction(solanaWallet, emulateSignerPDA, emulateSigner.address));
@@ -48,15 +81,7 @@ export class MintPortal extends InstructionService {
             if (neonTransaction === null || neonTransaction === void 0 ? void 0 : neonTransaction.rawTransaction) {
                 transaction.add(yield this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
             }
-            this.emitFunction(events.onBeforeSignTransaction);
-            try {
-                const signedTransaction = yield this.solana.signTransaction(transaction);
-                const sign = yield this.connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: true });
-                this.emitFunction(events.onSuccessSign, sign);
-            }
-            catch (e) {
-                this.emitFunction(events.onErrorSign, e);
-            }
+            return transaction;
         });
     }
     computeBudgetUtilsInstruction(programId) {
@@ -168,35 +193,22 @@ export class MintPortal extends InstructionService {
             return this.web3.eth.sendTransaction(transaction);
         });
     }
-    // #endregion
-    createSolanaTransfer(events = this.events, amount = 0, splToken = SPL_TOKEN_DEFAULT) {
+    solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey) {
         return __awaiter(this, void 0, void 0, function* () {
-            const solanaWallet = this.solanaWalletAddress;
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
-            const mintPubkey = new PublicKey(splToken.address_spl);
-            const assocTokenAccountAddress = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mintPubkey, solanaWallet);
-            const { blockhash } = yield this.connection.getRecentBlockhash();
-            const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
+            const { blockhash } = yield this.connection.getLatestBlockhash();
+            const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: walletPubkey });
             transaction.add(computeBudgetUtilsInstruction);
             transaction.add(computeBudgetHeapFrameInstruction);
             const createAccountInstruction = this.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mintPubkey, // token mint
-            assocTokenAccountAddress, // account to create
-            solanaWallet, // new account owner
-            solanaWallet // payer
+            associatedTokenPubkey, // account to create
+            walletPubkey, // new account owner
+            walletPubkey // payer
             );
             transaction.add(createAccountInstruction);
-            this.emitFunction(events.onBeforeSignTransaction);
-            try {
-                const signedTransaction = yield this.solana.signTransaction(transaction);
-                const sig = yield this.connection.sendRawTransaction(signedTransaction.serialize());
-                const tr = yield this.createNeonTransaction(this.neonWalletAddress, assocTokenAccountAddress, splToken, amount);
-                this.emitFunction(events.onSuccessSign, sig, tr.transactionHash);
-            }
-            catch (error) {
-                this.emitFunction(events.onErrorSign, error);
-            }
+            return transaction;
         });
     }
     // #region Neon -> Solana
@@ -211,7 +223,11 @@ export class MintPortal extends InstructionService {
             { pubkey: programId, isSigner: false, isWritable: false },
             { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
         ];
-        return new TransactionInstruction({ keys, programId: associatedProgramId, data });
+        return new TransactionInstruction({
+            programId: associatedProgramId,
+            keys,
+            data
+        });
     }
 }
 //# sourceMappingURL=MintPortal.js.map

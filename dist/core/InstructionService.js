@@ -8,13 +8,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import Big from 'big.js';
+import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, toFullAmount } from '../utils';
 import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
 import { Buffer } from 'buffer';
-Big.PE = 42;
 const noop = new Function();
 export class InstructionService {
     constructor(options) {
@@ -84,13 +82,13 @@ export class InstructionService {
             data
         });
     }
-    approveDepositInstruction(solanaPubkey, neonPDAPubkey, token, amount) {
+    getAssociatedTokenAddress(mintPubkey, walletPubkey) {
         return __awaiter(this, void 0, void 0, function* () {
-            const fullAmount = toFullAmount(amount, token.decimals);
-            const associatedTokenAddress = yield Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, new PublicKey(token.address_spl), solanaPubkey);
-            const createApproveInstruction = Token.createApproveInstruction(TOKEN_PROGRAM_ID, associatedTokenAddress, neonPDAPubkey, solanaPubkey, [], Number(fullAmount.toString(10)));
-            return { associatedTokenAddress, createApproveInstruction };
+            return yield getAssociatedTokenAddress(mintPubkey, walletPubkey);
         });
+    }
+    approveDepositInstruction(walletPubkey, neonPDAPubkey, associatedTokenPubkey, amount) {
+        return createApproveInstruction(associatedTokenPubkey, neonPDAPubkey, walletPubkey, amount);
     }
     createApproveSolanaData(solanaWallet, splToken, amount) {
         const fullAmount = toFullAmount(amount, splToken.decimals);
