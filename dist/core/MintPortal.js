@@ -62,7 +62,7 @@ export class MintPortal extends InstructionService {
             const neonWalletAccount = yield this.getNeonAccount(neonWalletPDA);
             const associatedTokenAddress = yield this.getAssociatedTokenAddress(new PublicKey(splToken.address_spl), solanaWallet);
             const { neonKeys, neonTransaction } = yield this.createClaimInstruction(solanaWallet, associatedTokenAddress, this.neonWalletAddress, splToken, emulateSigner, fullAmount);
-            const { blockhash } = yield this.connection.getRecentBlockhash();
+            const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
             // 0
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
@@ -198,7 +198,7 @@ export class MintPortal extends InstructionService {
             const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
             const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
-            const { blockhash } = yield this.connection.getRecentBlockhash();
+            const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: walletPubkey });
             transaction.add(computeBudgetUtilsInstruction);
             transaction.add(computeBudgetHeapFrameInstruction);

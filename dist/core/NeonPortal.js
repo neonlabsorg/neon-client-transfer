@@ -51,7 +51,7 @@ export class NeonPortal extends InstructionService {
             const [neonWallet] = yield this.neonAccountAddress(this.neonWalletAddress);
             const neonAccount = yield this.getNeonAccount(neonWallet);
             const [authorityPoolPubkey] = yield this.getAuthorityPoolAddress();
-            const { blockhash } = yield this.connection.getRecentBlockhash();
+            const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
             if (!neonAccount) {
                 transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));

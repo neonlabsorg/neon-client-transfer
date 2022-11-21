@@ -68,7 +68,7 @@ export class MintPortal extends InstructionService {
       fullAmount
     );
 
-    const { blockhash } = await this.connection.getRecentBlockhash();
+    const { blockhash } = await this.connection.getLatestBlockhash();
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
     // 0
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
@@ -210,7 +210,7 @@ export class MintPortal extends InstructionService {
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
     const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
 
-    const { blockhash } = await this.connection.getRecentBlockhash();
+    const { blockhash } = await this.connection.getLatestBlockhash();
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: walletPubkey });
     transaction.add(computeBudgetUtilsInstruction);
     transaction.add(computeBudgetHeapFrameInstruction);
