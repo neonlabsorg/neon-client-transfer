@@ -23,7 +23,7 @@ export class MintPortal extends InstructionService {
             this.emitFunction(events.onBeforeSignTransaction);
             try {
                 const signedTransaction = yield this.solana.signTransaction(transaction);
-                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: true });
+                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize());
                 this.emitFunction(events.onSuccessSign, signature);
             }
             catch (e) {
@@ -92,7 +92,7 @@ export class MintPortal extends InstructionService {
         return new TransactionInstruction({ programId, data, keys: [] });
     }
     computeBudgetHeapFrameInstruction(programId) {
-        const a = new Buffer([0x01]);
+        const a = Buffer.from([0x01]);
         const b = Buffer.from(toBytesInt32(parseInt(this.proxyStatus.NEON_HEAP_FRAME)));
         const data = Buffer.concat([a, b]);
         return new TransactionInstruction({ programId, data, keys: [] });
@@ -112,11 +112,12 @@ export class MintPortal extends InstructionService {
                     chainId: splToken.chainId
                 };
                 const signedTransaction = yield this.solanaWalletSigner.signTransaction(transaction);
-                // @ts-ignore
-                const neonEmulate = yield this.proxyApi.neonEmulate([signedTransaction.rawTransaction.slice(2)]);
+                let neonEmulate;
+                if (signedTransaction.rawTransaction) {
+                    neonEmulate = yield this.proxyApi.neonEmulate([signedTransaction.rawTransaction.slice(2)]);
+                }
                 const accountsMap = new Map();
                 if (neonEmulate) {
-                    // @ts-ignore
                     for (const account of neonEmulate['accounts']) {
                         const key = account['account'];
                         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
@@ -125,7 +126,6 @@ export class MintPortal extends InstructionService {
                             accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
                         }
                     }
-                    // @ts-ignore
                     for (const account of neonEmulate['solana_accounts']) {
                         const key = account['pubkey'];
                         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
@@ -213,7 +213,7 @@ export class MintPortal extends InstructionService {
     }
     // #region Neon -> Solana
     createAssociatedTokenAccountInstruction(associatedProgramId, programId, mint, associatedAccount, owner, payer) {
-        const data = new Buffer([0x1]);
+        const data = Buffer.from([0x1]);
         const keys = [
             { pubkey: payer, isSigner: true, isWritable: true },
             { pubkey: associatedAccount, isSigner: false, isWritable: true },

@@ -75,8 +75,8 @@ export class NeonPortal extends InstructionService {
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
     ];
 
-    const a = new Buffer([EvmInstruction.DepositV03]);
-    const b = new Buffer(neonWalletAddress.slice(2), 'hex');
+    const a = Buffer.from([EvmInstruction.DepositV03]);
+    const b = Buffer.from(neonWalletAddress.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),

@@ -13,5 +13,5 @@ export declare const enum EvmInstruction {
     CreateAccountV03 = 40
 }
 export declare const enum AccountHex {
-    SeedVersion = 2
+    SeedVersion = 3
 }

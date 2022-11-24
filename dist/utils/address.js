@@ -21,7 +21,7 @@ export function isValidHex(hex) {
 export function etherToProgram(etherKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
-        const seed = [new Uint8Array([2 /* AccountHex.SeedVersion */]), new Uint8Array(keyBuffer)];
+        const seed = [new Uint8Array([3 /* AccountHex.SeedVersion */]), new Uint8Array(keyBuffer)];
         return PublicKey.findProgramAddress(seed, new PublicKey(NEON_EVM_LOADER_ID));
     });
 }

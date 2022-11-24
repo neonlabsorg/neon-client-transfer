@@ -91,8 +91,8 @@ export class InstructionService {
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
       { pubkey: neonWalletPDA, isSigner: false, isWritable: true }
     ];
-    const a = new Buffer([EvmInstruction.CreateAccountV03]);
-    const b = new Buffer(neonWallet.slice(2), 'hex');
+    const a = Buffer.from([EvmInstruction.CreateAccountV03]);
+    const b = Buffer.from(neonWallet.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({
       programId: new PublicKey(NEON_EVM_LOADER_ID),
