@@ -2,6 +2,7 @@ import {
   AccountInfo,
   Connection,
   PublicKey,
+  SendOptions,
   SystemProgram,
   TransactionInstruction
 } from '@solana/web3.js';
@@ -33,6 +34,7 @@ export class InstructionService {
   proxyStatus: NeonProgramStatus;
   connection: Connection;
   events: InstructionEvents;
+  solanaOptions: SendOptions;
 
   constructor(options: InstructionParams) {
     this.web3 = options.web3;
@@ -41,6 +43,7 @@ export class InstructionService {
     this.solanaWalletAddress = options.solanaWalletAddress || '';
     this.neonWalletAddress = options.neonWalletAddress || '';
     this.connection = options.connection;
+    this.solanaOptions = options.solanaOptions ?? { skipPreflight: false };
     this.events = {
       onBeforeCreateInstruction: options.onBeforeCreateInstruction || noop,
       onCreateNeonAccountInstruction: options.onCreateNeonAccountInstruction || noop,
@@ -114,7 +117,7 @@ export class InstructionService {
     return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
   }
 
-  getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig {
+  ethereumTransaction(amount: number, token: SPLToken): TransactionConfig {
     const solanaWallet = this.solanaWalletPubkey;
     return {
       to: token.address, // Required except during contract publications.

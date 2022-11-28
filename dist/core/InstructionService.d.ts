@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { AccountInfo, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { AccountInfo, Connection, PublicKey, SendOptions, TransactionInstruction } from '@solana/web3.js';
 import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -14,6 +14,7 @@ export declare class InstructionService {
     proxyStatus: NeonProgramStatus;
     connection: Connection;
     events: InstructionEvents;
+    solanaOptions: SendOptions;
     constructor(options: InstructionParams);
     get erc20ForSPLContract(): Contract;
     get neonWrapperContract(): Contract;
@@ -26,6 +27,6 @@ export declare class InstructionService {
     getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey>;
     approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction;
     createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number): string;
-    getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig;
+    ethereumTransaction(amount: number, token: SPLToken): TransactionConfig;
     emitFunction: (functionName?: Function, ...args: any[]) => void;
 }

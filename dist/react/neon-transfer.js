@@ -3,7 +3,7 @@ import { MintPortal, NeonPortal } from '../core';
 import { useProxyInfo } from './proxy-status';
 const urls = process.env.REACT_APP_URLS ? JSON.parse(process.env.REACT_APP_URLS) : {
     solanaRpcApi: 'https://api.devnet.solana.com',
-    neonProxyRpcApi: 'https://proxy.devnet.neonlabs.org/solana'
+    neonProxyRpcApi: 'https://devnet.neonevm.org'
 };
 export const proxyApi = new NeonProxyRpcApi({
     solanaRpcApi: urls.solanaRpcApi,
@@ -26,7 +26,7 @@ export function useNeonTransfer(events, connection, web3, publicKey, neonWalletA
     };
     const getEthereumTransactionParams = (amount, splToken) => {
         const portal = portalInstance(splToken.address_spl);
-        return portal.getEthereumTransactionParams.call(portal, amount, splToken);
+        return portal.ethereumTransaction.call(portal, amount, splToken);
     };
     const deposit = (amount, splToken) => {
         const portal = portalInstance(splToken.address_spl);

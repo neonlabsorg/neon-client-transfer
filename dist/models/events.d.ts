@@ -1,4 +1,4 @@
-import { Cluster, Connection, PublicKey } from '@solana/web3.js';
+import { Cluster, Connection, PublicKey, SendOptions } from '@solana/web3.js';
 import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../api';
 import { NeonProgramStatus } from './api';
@@ -18,4 +18,5 @@ export interface InstructionParams extends InstructionEvents {
     proxyStatus: NeonProgramStatus;
     connection: Connection;
     network?: Cluster;
+    solanaOptions?: SendOptions;
 }

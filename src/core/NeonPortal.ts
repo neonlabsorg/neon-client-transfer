@@ -6,7 +6,7 @@ import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
 import { EvmInstruction, SPLToken } from '../models';
 import { toFullAmount } from '../utils';
 
-// Neon-token
+// Neon Token Transfer
 export class NeonPortal extends InstructionService {
   // Solana -> Neon
   async createNeonTransfer(amount: number, splToken: SPLToken, events = this.events) {
@@ -15,7 +15,7 @@ export class NeonPortal extends InstructionService {
     this.emitFunction(events.onBeforeSignTransaction);
     try {
       const signedTransaction = await this.solana.signTransaction(transaction);
-      const signature = await this.connection.sendRawTransaction(signedTransaction.serialize());
+      const signature = await this.connection.sendRawTransaction(signedTransaction.serialize(), this.solanaOptions);
       this.emitFunction(events.onSuccessSign, signature);
     } catch (error) {
       this.emitFunction(events.onErrorSign, error);
@@ -25,7 +25,7 @@ export class NeonPortal extends InstructionService {
   // Neon -> Solana
   async createSolanaTransfer(amount: number, splToken: SPLToken, events = this.events) {
     this.emitFunction(events.onBeforeCreateInstruction);
-    const transaction = this.getEthereumTransactionParams(amount, splToken);
+    const transaction = this.ethereumTransaction(amount, splToken);
     this.emitFunction(events.onBeforeSignTransaction);
     try {
       const neonTransaction = await this.web3.eth.sendTransaction(transaction);
@@ -96,7 +96,7 @@ export class NeonPortal extends InstructionService {
     return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
   }
 
-  getEthereumTransactionParams(amount: number, token: SPLToken): TransactionConfig {
+  ethereumTransaction(amount: number, token: SPLToken): TransactionConfig {
     const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: NEON_WRAPPER_SOL,

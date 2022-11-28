@@ -1,4 +1,4 @@
-export async function post<T>(url = '', data = {}): Promise<T> {
+export async function post(url = '', data = {}): Promise<any> {
   const response = await fetch(url, {
     method: 'POST',
     mode: 'cors',
@@ -9,5 +9,9 @@ export async function post<T>(url = '', data = {}): Promise<T> {
     referrerPolicy: 'no-referrer',
     body: JSON.stringify(data)
   });
-  return response.json();
+  const result = await response.text();
+  if (result) {
+    return response.json();
+  }
+  return {};
 }

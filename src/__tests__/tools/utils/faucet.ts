@@ -16,16 +16,16 @@ export class FaucetDropper {
     this.tokens = (tokenList?.tokens as SPLToken[] ?? []).filter(t => t.chainId === this.chainId);
   }
 
-  async requestERC20(amount: number, wallet: string, { address_spl }: SPLToken): Promise<any> {
-    const data = post(`${FAUCET_URL}/request_erc20`, { amount, wallet, address_spl });
-    console.log(data);
-    return data;
+  async requestERC20(wallet: string, { address_spl }: SPLToken, amount: number): Promise<any> {
+    return post(`${FAUCET_URL}/request_erc20`, { amount, wallet, address_spl });
   }
 
-  async requestNeon(amount: number, wallet: string): Promise<any> {
-    const data = await post(`${FAUCET_URL}/request_neon`, { amount, wallet });
-    console.log(data);
-    return data;
+  async requestNeon(wallet: string, amount: number): Promise<any> {
+    try {
+      return await post(`${FAUCET_URL}/request_neon`, { amount, wallet });
+    } catch (e) {
+      return 0;
+    }
   }
 
   async tokenList(): Promise<SPLToken[]> {

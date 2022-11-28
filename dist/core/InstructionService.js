@@ -16,6 +16,7 @@ import { Buffer } from 'buffer';
 const noop = new Function();
 export class InstructionService {
     constructor(options) {
+        var _a;
         this.emitFunction = (functionName, ...args) => {
             if (typeof functionName === 'function') {
                 functionName(...args);
@@ -27,6 +28,7 @@ export class InstructionService {
         this.solanaWalletAddress = options.solanaWalletAddress || '';
         this.neonWalletAddress = options.neonWalletAddress || '';
         this.connection = options.connection;
+        this.solanaOptions = (_a = options.solanaOptions) !== null && _a !== void 0 ? _a : { skipPreflight: false };
         this.events = {
             onBeforeCreateInstruction: options.onBeforeCreateInstruction || noop,
             onCreateNeonAccountInstruction: options.onCreateNeonAccountInstruction || noop,
@@ -94,7 +96,7 @@ export class InstructionService {
         const fullAmount = toFullAmount(amount, splToken.decimals);
         return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
     }
-    getEthereumTransactionParams(amount, token) {
+    ethereumTransaction(amount, token) {
         const solanaWallet = this.solanaWalletPubkey;
         return {
             to: token.address,

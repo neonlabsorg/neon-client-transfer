@@ -8,7 +8,7 @@ import { useProxyInfo } from './proxy-status';
 
 const urls = process.env.REACT_APP_URLS ? JSON.parse(process.env.REACT_APP_URLS) : {
   solanaRpcApi: 'https://api.devnet.solana.com',
-  neonProxyRpcApi: 'https://proxy.devnet.neonlabs.org/solana'
+  neonProxyRpcApi: 'https://devnet.neonevm.org'
 };
 
 export const proxyApi = new NeonProxyRpcApi({
@@ -36,7 +36,7 @@ export function useNeonTransfer(events: InstructionEvents, connection: Connectio
 
   const getEthereumTransactionParams = (amount: number, splToken: SPLToken): TransactionConfig => {
     const portal = portalInstance(splToken.address_spl);
-    return portal.getEthereumTransactionParams.call(portal, amount, splToken);
+    return portal.ethereumTransaction.call(portal, amount, splToken);
   };
 
   const deposit = (amount: number, splToken: SPLToken): any => {

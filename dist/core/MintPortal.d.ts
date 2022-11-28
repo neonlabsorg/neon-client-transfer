@@ -1,5 +1,5 @@
 import { AccountMeta, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { Account, SignedTransaction, TransactionReceipt } from 'web3-core';
+import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
 import { SPLToken } from '../models';
 export declare class MintPortal extends InstructionService {
@@ -16,7 +16,7 @@ export declare class MintPortal extends InstructionService {
     }>;
     makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): Promise<TransactionInstruction>;
     getCollateralPoolAddress(collateralPoolIndex: number): Promise<[PublicKey, number]>;
-    createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionReceipt>;
+    createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionConfig>;
     solanaTransferTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey): Promise<Transaction>;
     createAssociatedTokenAccountInstruction(associatedProgramId: PublicKey, programId: PublicKey, mint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey): TransactionInstruction;
 }

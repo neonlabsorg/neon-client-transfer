@@ -12,7 +12,7 @@ import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@
 import { InstructionService } from './InstructionService';
 import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
 import { toFullAmount } from '../utils';
-// Neon-token
+// Neon Token Transfer
 export class NeonPortal extends InstructionService {
     // Solana -> Neon
     createNeonTransfer(amount, splToken, events = this.events) {
@@ -22,7 +22,7 @@ export class NeonPortal extends InstructionService {
             this.emitFunction(events.onBeforeSignTransaction);
             try {
                 const signedTransaction = yield this.solana.signTransaction(transaction);
-                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize());
+                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize(), this.solanaOptions);
                 this.emitFunction(events.onSuccessSign, signature);
             }
             catch (error) {
@@ -34,7 +34,7 @@ export class NeonPortal extends InstructionService {
     createSolanaTransfer(amount, splToken, events = this.events) {
         return __awaiter(this, void 0, void 0, function* () {
             this.emitFunction(events.onBeforeCreateInstruction);
-            const transaction = this.getEthereumTransactionParams(amount, splToken);
+            const transaction = this.ethereumTransaction(amount, splToken);
             this.emitFunction(events.onBeforeSignTransaction);
             try {
                 const neonTransaction = yield this.web3.eth.sendTransaction(transaction);
@@ -100,7 +100,7 @@ export class NeonPortal extends InstructionService {
         const solanaWallet = this.solanaWalletAddress;
         return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
     }
-    getEthereumTransactionParams(amount, token) {
+    ethereumTransaction(amount, token) {
         const fullAmount = toFullAmount(amount, token.decimals);
         return {
             to: NEON_WRAPPER_SOL,
