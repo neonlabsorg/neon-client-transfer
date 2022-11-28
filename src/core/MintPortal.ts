@@ -7,14 +7,14 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js';
-import { Account, SignedTransaction, TransactionConfig, TransactionReceipt } from 'web3-core';
+import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
 import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID } from '../data';
 import { toBytesInt32, toFullAmount } from '../utils';
 import { EvmInstruction, SPLToken } from '../models';
 
-// ERC-20 tokens
+// ERC-20 Tokens Transfer
 export class MintPortal extends InstructionService {
   // Solana -> Neon
   async createNeonTransfer(amount: number, splToken: SPLToken, events = this.events) {
@@ -23,7 +23,7 @@ export class MintPortal extends InstructionService {
     this.emitFunction(events.onBeforeSignTransaction);
     try {
       const signedTransaction = await this.solana.signTransaction(transaction);
-      const signature = await this.connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: true });
+      const signature = await this.connection.sendRawTransaction(signedTransaction.serialize(), this.solanaOptions);
       this.emitFunction(events.onSuccessSign, signature);
     } catch (e) {
       this.emitFunction(events.onErrorSign, e);
@@ -35,13 +35,15 @@ export class MintPortal extends InstructionService {
     const mintPubkey = new PublicKey(splToken.address_spl);
     const walletPubkey = this.solanaWalletPubkey;
     const associatedTokenPubkey = await this.getAssociatedTokenAddress(mintPubkey, walletPubkey);
-    const transaction = await this.solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey);
+    const solanaTransaction = await this.solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey);
+    const neonTransaction = await this.createNeonTransaction(this.neonWalletAddress, associatedTokenPubkey, splToken, amount);
+    neonTransaction.nonce = await this.web3.eth.getTransactionCount(this.neonWalletAddress);
     this.emitFunction(events.onBeforeSignTransaction);
     try {
-      const signedTransaction = await this.solana.signTransaction(transaction);
-      const neonTransaction = await this.createNeonTransaction(this.neonWalletAddress, associatedTokenPubkey, splToken, amount);
-      const signature = await this.connection.sendRawTransaction(signedTransaction.serialize());
-      this.emitFunction(events.onSuccessSign, signature, neonTransaction.transactionHash);
+      const signedSolanaTransaction = await this.solana.signTransaction(solanaTransaction);
+      const signature = await this.connection.sendRawTransaction(signedSolanaTransaction.serialize(), this.solanaOptions);
+      const { transactionHash } = await this.web3.eth.sendTransaction(neonTransaction);
+      this.emitFunction(events.onSuccessSign, signature, transactionHash);
     } catch (error) {
       this.emitFunction(events.onErrorSign, error);
     }
@@ -70,7 +72,6 @@ export class MintPortal extends InstructionService {
 
     const { blockhash } = await this.connection.getLatestBlockhash();
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
-    // 0
     const computeBudgetUtilsInstruction = this.computeBudgetUtilsInstruction(computedBudgetProgram);
     transaction.add(computeBudgetUtilsInstruction);
     const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
@@ -86,7 +87,6 @@ export class MintPortal extends InstructionService {
       transaction.add(this.createAccountV3Instruction(solanaWallet, emulateSignerPDA, emulateSigner.address));
     }
 
-    // 4
     if (neonTransaction?.rawTransaction) {
       transaction.add(await this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
     }
@@ -103,7 +103,7 @@ export class MintPortal extends InstructionService {
   }
 
   computeBudgetHeapFrameInstruction(programId: PublicKey): TransactionInstruction {
-    const a = new Buffer([0x01]);
+    const a = Buffer.from([0x01]);
     const b = Buffer.from(toBytesInt32(parseInt(this.proxyStatus.NEON_HEAP_FRAME)));
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({ programId, data, keys: [] });
@@ -111,25 +111,27 @@ export class MintPortal extends InstructionService {
 
   async createClaimInstruction(owner: PublicKey, from: PublicKey, to: string, splToken: SPLToken, emulateSigner: Account, amount: any): Promise<{ neonKeys: AccountMeta[], neonTransaction: SignedTransaction, emulateSigner: Account, nonce: number }> {
     const nonce = await this.web3.eth.getTransactionCount(emulateSigner.address);
+    const chainId = await this.web3.eth.getChainId();
     try {
-      const claimTransaction = this.erc20ForSPLContract.methods.claimTo(from.toBytes(), to, amount).encodeABI();
+      const claimTo = this.erc20ForSPLContract.methods.claimTo(from.toBytes(), to, amount);
+      const data = claimTo.encodeABI();
       const transaction: TransactionConfig = {
-        nonce: nonce,
+        chainId,
+        data,
+        nonce,
         gas: `0x5F5E100`, // 100000000
         gasPrice: `0x0`,
         from: this.neonWalletAddress,
-        to: splToken.address, // contract address
-        data: claimTransaction,
-        chainId: splToken.chainId
+        to: splToken.address // contract address
       };
 
       const signedTransaction = await this.solanaWalletSigner.signTransaction(transaction);
-      // @ts-ignore
-      const neonEmulate = await this.proxyApi.neonEmulate([signedTransaction.rawTransaction.slice(2)]);
-
+      let neonEmulate: any;
+      if (signedTransaction.rawTransaction) {
+        neonEmulate = await this.proxyApi.neonEmulate([signedTransaction.rawTransaction.slice(2)]);
+      }
       const accountsMap = new Map<string, AccountMeta>();
       if (neonEmulate) {
-        // @ts-ignore
         for (const account of neonEmulate['accounts']) {
           const key = account['account'];
           accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
@@ -139,7 +141,6 @@ export class MintPortal extends InstructionService {
           }
         }
 
-        // @ts-ignore
         for (const account of neonEmulate['solana_accounts']) {
           const key = account['pubkey'];
           accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
@@ -186,23 +187,22 @@ export class MintPortal extends InstructionService {
     return PublicKey.findProgramAddress([a, b], new PublicKey(NEON_EVM_LOADER_ID));
   }
 
-  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionReceipt> {
+  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionConfig> {
     const nonce = await this.web3.eth.getTransactionCount(neonWallet);
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
     const transaction: TransactionConfig = {
+      data,
       nonce,
       from: neonWallet,
       to: splToken.address,
-      data: data,
       value: `0x0`,
       chainId: splToken.chainId
     };
-    const gasPrice = await this.web3.eth.getGasPrice();
-    const gas = await this.web3.eth.estimateGas(transaction);
-    transaction['gasPrice'] = gasPrice;
-    transaction['gas'] = gas;
-    return this.web3.eth.sendTransaction(transaction);
+    transaction.gasPrice = await this.web3.eth.getGasPrice();
+    transaction.gas = await this.web3.eth.estimateGas(transaction);
+
+    return transaction;
   }
 
   async solanaTransferTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey): Promise<Transaction> {
@@ -229,7 +229,7 @@ export class MintPortal extends InstructionService {
 
   // #region Neon -> Solana
   createAssociatedTokenAccountInstruction(associatedProgramId: PublicKey, programId: PublicKey, mint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey): TransactionInstruction {
-    const data = new Buffer([0x1]);
+    const data = Buffer.from([0x01]);
     const keys = [
       { pubkey: payer, isSigner: true, isWritable: true },
       { pubkey: associatedAccount, isSigner: false, isWritable: true },

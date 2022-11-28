@@ -14,5 +14,5 @@ export const enum EvmInstruction {
 }
 
 export const enum AccountHex {
-  SeedVersion = 0x02
+  SeedVersion = 0x03
 }
