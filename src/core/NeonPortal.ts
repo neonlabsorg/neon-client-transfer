@@ -35,7 +35,7 @@ export class NeonPortal extends InstructionService {
     }
   }
 
-  async neonTransferTransaction(amount: number, token: SPLToken): Promise<Transaction> {
+  async neonTransferTransaction(amount: number | bigint | string, token: SPLToken): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
     const [neonWallet] = await this.neonAccountAddress(this.neonWalletAddress);
     const neonAccount = await this.getNeonAccount(neonWallet);
@@ -96,7 +96,7 @@ export class NeonPortal extends InstructionService {
     return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
   }
 
-  ethereumTransaction(amount: number, token: SPLToken): TransactionConfig {
+  ethereumTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig {
     const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: NEON_WRAPPER_SOL,

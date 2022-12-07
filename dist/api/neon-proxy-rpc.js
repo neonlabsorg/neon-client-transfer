@@ -7,14 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const W3 = require('web3');
 export class NeonProxyRpcApi {
     constructor(params) {
         var _a, _b;
         this.neonProxyRpcApi = '';
         this.solanaRpcApi = '';
-        const web3Provider = new W3.providers.HttpProvider(this.neonProxyRpcApi);
-        this.web3 = new W3(web3Provider);
         this.neonProxyRpcApi = (_a = params.neonProxyRpcApi) !== null && _a !== void 0 ? _a : '';
         this.solanaRpcApi = (_b = params.solanaRpcApi) !== null && _b !== void 0 ? _b : '';
     }

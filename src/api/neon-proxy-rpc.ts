@@ -1,16 +1,10 @@
-import Web3 from 'web3';
 import { NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
-
-const W3 = require('web3');
 
 export class NeonProxyRpcApi {
   neonProxyRpcApi = '';
   solanaRpcApi = '';
-  web3: Web3;
 
   constructor(params: SettingsFormState) {
-    const web3Provider = new W3.providers.HttpProvider(this.neonProxyRpcApi);
-    this.web3 = new W3(web3Provider);
     this.neonProxyRpcApi = params.neonProxyRpcApi ?? '';
     this.solanaRpcApi = params.solanaRpcApi ?? '';
   }

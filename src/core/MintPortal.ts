@@ -49,7 +49,7 @@ export class MintPortal extends InstructionService {
     }
   }
 
-  async neonTransferTransaction(amount: number, splToken: SPLToken): Promise<Transaction> {
+  async neonTransferTransaction(amount: number | bigint | string, splToken: SPLToken): Promise<Transaction> {
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const solanaWallet = this.solanaWalletPubkey;
@@ -187,7 +187,7 @@ export class MintPortal extends InstructionService {
     return PublicKey.findProgramAddress([a, b], new PublicKey(NEON_EVM_LOADER_ID));
   }
 
-  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number): Promise<TransactionConfig> {
+  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number | bigint | string): Promise<TransactionConfig> {
     const nonce = await this.web3.eth.getTransactionCount(neonWallet);
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
