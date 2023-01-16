@@ -4994,9 +4994,9 @@ toidentifier@1.0.1:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
-"token-list@https://github.com/neonlabsorg/token-list.git#v2.0.0":
+"token-list@https://github.com/neonlabsorg/token-list.git#v2.1.1":
   version "0.0.0"
-  resolved "https://github.com/neonlabsorg/token-list.git#e4dfabe81bfe397fa990286a115735aeb2ecb567"
+  resolved "https://github.com/neonlabsorg/token-list.git#45b5533e68ac024d027b3f177ee4f5f8d3d3c7e1"
 
 tough-cookie@~2.5.0:
   version "2.5.0"

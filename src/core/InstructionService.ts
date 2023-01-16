@@ -14,7 +14,7 @@ import { Contract } from 'web3-eth-contract';
 import { SHA256 } from 'crypto-js';
 import { NeonProxyRpcApi } from '../api';
 import { etherToProgram, toFullAmount } from '../utils';
-import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
+import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import {
   EvmInstruction,
   InstructionEvents,
@@ -60,6 +60,10 @@ export class InstructionService {
 
   get neonWrapperContract(): Contract {
     return new this.web3.eth.Contract(neonWrapperAbi as AbiItem[]);
+  }
+
+  public neonWrapper2Contract(address: string): Contract {
+    return new this.web3.eth.Contract(neonWrapper2Abi as AbiItem[], address);
   }
 
   get solana(): any {

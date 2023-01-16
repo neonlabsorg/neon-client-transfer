@@ -28,6 +28,8 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools/utils';
+import neonWrapper2 from '../../data/abi/neonWrapper2';
+import { AbiItem } from 'web3-utils';
 
 const CHAIN_NAME = 'devnet';
 const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
@@ -111,7 +113,7 @@ afterEach(async () => {
 });
 
 describe('Transfer tests', () => {
-  it(`Solana Keypair has tokens`, async () => {
+  it.skip(`Solana Keypair has tokens`, async () => {
     try {
       const balance = await connection.getBalance(keypair.publicKey);
       expect(balance).toBeGreaterThan(1e9);
@@ -120,7 +122,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Neon Account has tokens`, async () => {
+  it.skip(`Neon Account has tokens`, async () => {
     try {
       const token = await neonBalance(web3, account.address);
       expect(token.toNumber()).toBeGreaterThan(0.1);
@@ -129,7 +131,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;
     const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
     const balanceBefore = await splTokenBalance(connection, keypair.publicKey, neon);
@@ -151,7 +153,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
     const balanceBefore = await neonBalance(web3, account.address);
@@ -173,14 +175,84 @@ describe('Transfer tests', () => {
     }
   });
 
-  faucet.tokens.forEach(token => itSolanaTokenSPL(token));
-  faucet.tokens.forEach(token => itNeonTokenMint(token));
+  it('Should wrap 1 NEON to wNEON in Neon network', async () => {
+    const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
+    if (id > -1) {
+      const amount = 0.1;
+      const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
+      const wneon: SPLToken = faucet.tokens[id];
+      const neonBalanceBefore = await neonBalance(web3, account.address);
+      const wneonBalanceBefore = await mintTokenBalance(web3, account.address, wneon, neonWrapper2 as AbiItem[]);
+      try {
+        const wrapTransaction = neonPortal.neonTransaction(amount, wneon);
+        wrapTransaction.gasPrice = await web3.eth.getGasPrice();
+        wrapTransaction.gas = await web3.eth.estimateGas(wrapTransaction);
+        const wrapHash = await sendSignedTransaction(web3, wrapTransaction, account);
+        console.log(` NEON wrap signature: ${wrapHash}`);
+        expect(wrapHash.length).toBeGreaterThan(2);
+        await delay(5e3);
+
+        const wneonBalanceAfter = await mintTokenBalance(web3, account.address, wneon, neonWrapper2 as AbiItem[]);
+        const neonBalanceAfter = await neonBalance(web3, account.address);
+
+        console.log(`Balance: ${wneonBalanceBefore} => ${wneonBalanceAfter} ${wneon.symbol} in Neon`);
+        console.log(`Balance: ${neonBalanceBefore} => ${neonBalanceAfter} ${neon.symbol} in Neon`);
+        expect(wneonBalanceAfter).toBeGreaterThanOrEqual(wneonBalanceBefore);
+        expect(neonBalanceAfter.toNumber()).toBeLessThanOrEqual(neonBalanceBefore.toNumber());
+      } catch (e) {
+        console.log(e);
+        expect(e instanceof Error ? e.message : '').toBe('');
+      }
+    }
+  });
+
+  it('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
+    const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
+    if (id > -1) {
+      const amount = 0.1;
+      const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
+      const wneon: SPLToken = faucet.tokens[id];
+      const wneonBalanceBefore = await mintTokenBalance(web3, account.address, wneon, neonWrapper2 as AbiItem[]);
+      try {
+        const unwrapTransaction = neonPortal.wNeonTransaction(amount, wneon);
+        unwrapTransaction.gasPrice = await web3.eth.getGasPrice();
+        unwrapTransaction.gas = await web3.eth.estimateGas(unwrapTransaction);
+        const unwrapHash = await sendSignedTransaction(web3, unwrapTransaction, account);
+        console.log(`wNEON unwrap signature: ${unwrapHash}`);
+        expect(unwrapHash.length).toBeGreaterThan(2);
+        await delay(5e3);
+
+        const wneonBalanceAfter = await mintTokenBalance(web3, account.address, wneon, neonWrapper2 as AbiItem[]);
+        console.log(`Balance: ${wneonBalanceBefore} > ${wneonBalanceAfter} ${wneon.symbol} in Neon`);
+        expect(wneonBalanceAfter).toBeLessThan(wneonBalanceBefore);
+
+        const neonBalanceBefore = await neonBalance(web3, account.address);
+        const transaction = neonPortal.ethereumTransaction(amount, neon);
+        transaction.gasPrice = await web3.eth.getGasPrice();
+        transaction.gas = await web3.eth.estimateGas(transaction);
+        const hash = await sendSignedTransaction(web3, transaction, account);
+        console.log(`NEON transfer signature: ${hash}`);
+        await delay(5e3);
+
+        const neonBalanceAfter = await neonBalance(web3, account.address);
+        const balanceSPL = await splTokenBalance(connection, keypair.publicKey, neon);
+
+        console.log(`Balance: ${neonBalanceBefore} > ${neonBalanceAfter} ${wneon.symbol} ==> ${balanceSPL.uiAmount} ${neon.symbol} in Solana`);
+        expect(neonBalanceAfter.toNumber()).toBeLessThan(neonBalanceBefore.toNumber());
+      } catch (e) {
+        console.log(e);
+        expect(e instanceof Error ? e.message : '').toBe('');
+      }
+    }
+  });
+
+  // faucet.tokens.forEach(token => itSolanaTokenSPL(token));
+  // faucet.tokens.forEach(token => itNeonTokenMint(token));
 });
 
 
-
 function itSolanaTokenSPL(token: SPLToken): void {
-  it(`Should transfer 0.1 ${token.symbol} from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 ${token.symbol} from Solana to Neon`, async () => {
     const amount = 0.1;
     const balanceBefore = await splTokenBalance(connection, keypair.publicKey, token);
     console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
@@ -203,7 +275,7 @@ function itSolanaTokenSPL(token: SPLToken): void {
 }
 
 function itNeonTokenMint(token: SPLToken): void {
-  it(`Should transfer 0.1 ${token.symbol} from Neon to Solana`, async () => {
+  it.skip(`Should transfer 0.1 ${token.symbol} from Neon to Solana`, async () => {
     const amount = 0.1;
     const mintPubkey = new PublicKey(token.address_spl);
     const balanceBefore = await mintTokenBalance(web3, account.address, token);

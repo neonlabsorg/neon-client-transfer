@@ -61,8 +61,8 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken): Promise<any> {
-  const tokenInstance = new web3.eth.Contract(erc20Abi as AbiItem[], token.address);
+export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<any> {
+  const tokenInstance = new web3.eth.Contract(contractAbi, token.address);
   const balance = await tokenInstance.methods.balanceOf(account).call();
   return balance / Math.pow(10, token.decimals);
 }
