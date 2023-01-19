@@ -66,3 +66,11 @@ export async function mintTokenBalance(web3: Web3, account: string, token: SPLTo
   const balance = await tokenInstance.methods.balanceOf(account).call();
   return balance / Math.pow(10, token.decimals);
 }
+
+export function solanaSignature(comment: string, signature: string): void {
+  console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?cluster=devnet`)
+}
+
+export function neonSignature(comment: string, signature: string): void {
+  console.log(`${comment}: ${signature}; url: https://neonscan.org/tx/${signature}?cluster=devnet`)
+}
