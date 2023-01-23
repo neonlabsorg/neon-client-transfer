@@ -7,3 +7,4 @@ export interface SPLToken {
     name: string;
     symbol: string;
 }
+export type Amount = number | bigint | string;

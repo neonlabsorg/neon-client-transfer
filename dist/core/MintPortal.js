@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, createSyncNativeInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
@@ -227,6 +227,48 @@ export class MintPortal extends InstructionService {
             programId: associatedProgramId,
             keys,
             data
+        });
+    }
+    wrapSOLTransaction(amount, splToken) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const lamports = toFullAmount(amount, splToken.decimals);
+            const solanaWallet = this.solanaWalletPubkey;
+            const mintPubkey = new PublicKey(splToken.address_spl);
+            const associatedToken = yield this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+            const wSOLAccount = yield this.connection.getAccountInfo(associatedToken);
+            const transaction = new Transaction({ feePayer: solanaWallet });
+            const instructions = [];
+            if (!wSOLAccount) {
+                instructions.push(createAssociatedTokenAccountInstruction(solanaWallet, associatedToken, solanaWallet, mintPubkey, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID));
+            }
+            instructions.push(SystemProgram.transfer({
+                fromPubkey: solanaWallet,
+                toPubkey: associatedToken,
+                lamports
+            }));
+            instructions.push(createSyncNativeInstruction(associatedToken, TOKEN_PROGRAM_ID));
+            transaction.add(...instructions);
+            const { blockhash } = yield this.connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            return transaction;
+        });
+    }
+    unwrapSOLTransaction(amount, splToken) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solanaWallet = this.solanaWalletPubkey;
+            const mintPubkey = new PublicKey(splToken.address_spl);
+            const associatedToken = yield this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+            const wSOLAccount = yield this.connection.getAccountInfo(associatedToken);
+            if (!wSOLAccount) {
+                throw new Error(`Error: ${associatedToken.toBase58()} haven't created account...`);
+            }
+            const transaction = new Transaction({ feePayer: solanaWallet });
+            const instructions = [];
+            instructions.push(createCloseAccountInstruction(associatedToken, solanaWallet, solanaWallet));
+            transaction.add(...instructions);
+            const { blockhash } = yield this.connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            return transaction;
         });
     }
 }

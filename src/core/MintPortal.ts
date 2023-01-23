@@ -18,7 +18,7 @@ import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
 import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID } from '../data';
 import { toBytesInt32, toFullAmount } from '../utils';
-import { EvmInstruction, SPLToken } from '../models';
+import { Amount, EvmInstruction, SPLToken } from '../models';
 
 // ERC-20 Tokens Transfer
 export class MintPortal extends InstructionService {
@@ -55,7 +55,7 @@ export class MintPortal extends InstructionService {
     }
   }
 
-  async neonTransferTransaction(amount: number | bigint | string, splToken: SPLToken): Promise<Transaction> {
+  async neonTransferTransaction(amount: Amount, splToken: SPLToken): Promise<Transaction> {
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const solanaWallet = this.solanaWalletPubkey;
@@ -193,7 +193,7 @@ export class MintPortal extends InstructionService {
     return PublicKey.findProgramAddress([a, b], new PublicKey(NEON_EVM_LOADER_ID));
   }
 
-  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: number | bigint | string): Promise<TransactionConfig> {
+  async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): Promise<TransactionConfig> {
     const nonce = await this.web3.eth.getTransactionCount(neonWallet);
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
@@ -252,7 +252,7 @@ export class MintPortal extends InstructionService {
     });
   }
 
-  async wrapSOLTransaction(amount: number | bigint | string, splToken: SPLToken): Promise<Transaction> {
+  async wrapSOLTransaction(amount: Amount, splToken: SPLToken): Promise<Transaction> {
     const lamports = toFullAmount(amount, splToken.decimals);
     const solanaWallet = this.solanaWalletPubkey;
     const mintPubkey = new PublicKey(splToken.address_spl);
@@ -288,7 +288,7 @@ export class MintPortal extends InstructionService {
     return transaction;
   }
 
-  async unwrapSOLTransaction(amount: number | bigint | string, splToken: SPLToken): Promise<Transaction> {
+  async unwrapSOLTransaction(amount: Amount, splToken: SPLToken): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
     const mintPubkey = new PublicKey(splToken.address_spl);
     const associatedToken = await this.getAssociatedTokenAddress(mintPubkey, solanaWallet);

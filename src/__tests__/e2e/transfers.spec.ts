@@ -8,7 +8,9 @@ import {
   Signer
 } from '@solana/web3.js';
 import { Account } from 'web3-core';
+import { AbiItem } from 'web3-utils';
 import Web3 from 'web3';
+
 import { NeonProxyRpcApi } from '../../api';
 import { MintPortal, NeonPortal } from '../../core';
 import { InstructionParams, SPLToken } from '../../models';
@@ -30,7 +32,6 @@ import {
   toSigner
 } from '../tools/utils';
 import neonWrapper2 from '../../data/abi/neonWrapper2';
-import { AbiItem } from 'web3-utils';
 
 const wSOL: SPLToken = {
   chainId: 111,
@@ -403,7 +404,7 @@ function itNeonTokenMint(token: SPLToken): void {
     const signer: Signer = toSigner(keypair);
     try {
       const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
-      solanaSignature(`Signature Signature`, signedSolanaTransaction);
+      solanaSignature(`Solana Signature`, signedSolanaTransaction);
 
       expect(signedSolanaTransaction.length).toBeGreaterThan(0);
       await delay(1e3);

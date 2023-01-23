@@ -2,7 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import Big from 'big.js';
 import { NEON_EVM_LOADER_ID } from '../data';
-import { AccountHex } from '../models';
+import { AccountHex, Amount } from '../models';
 
 export function isValidHex(hex: string | number): boolean {
   const isHexStrict = /^(0x)?[0-9a-f]*$/i.test(hex.toString());
@@ -25,7 +25,7 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   return arrayBuffer;
 }
 
-export function toFullAmount(amount: number | bigint | string, decimals: number): bigint {
+export function toFullAmount(amount: Amount, decimals: number): bigint {
   const data = Big(amount.toString()).times(Big(10).pow(decimals));
   return BigInt(data.toString());
 }

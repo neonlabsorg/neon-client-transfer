@@ -16,6 +16,7 @@ import { NeonProxyRpcApi } from '../api';
 import { etherToProgram, toFullAmount } from '../utils';
 import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import {
+  Amount,
   EvmInstruction,
   InstructionEvents,
   InstructionParams,
@@ -116,12 +117,12 @@ export class InstructionService {
     return createApproveInstruction(associatedTokenPubkey, neonPDAPubkey, walletPubkey, amount);
   }
 
-  createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number | bigint | string): string {
+  createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): string {
     const fullAmount = toFullAmount(amount, splToken.decimals);
     return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
   }
 
-  ethereumTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig {
+  ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {
     const solanaWallet = this.solanaWalletPubkey;
     return {
       to: token.address, // Required except during contract publications.

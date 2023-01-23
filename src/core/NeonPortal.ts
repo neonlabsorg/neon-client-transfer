@@ -3,7 +3,7 @@ import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@
 import { TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
 import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
-import { EvmInstruction, SPLToken } from '../models';
+import { Amount, EvmInstruction, SPLToken } from '../models';
 import { toFullAmount } from '../utils';
 
 // Neon Token Transfer
@@ -35,7 +35,7 @@ export class NeonPortal extends InstructionService {
     }
   }
 
-  async neonTransferTransaction(amount: number | bigint | string, token: SPLToken): Promise<Transaction> {
+  async neonTransferTransaction(amount: Amount, token: SPLToken): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
     const [neonWallet] = await this.neonAccountAddress(this.neonWalletAddress);
     const neonAccount = await this.getNeonAccount(neonWallet);
@@ -96,7 +96,7 @@ export class NeonPortal extends InstructionService {
     return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
   }
 
-  ethereumTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig {
+  ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {
     const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: NEON_WRAPPER_SOL,
@@ -106,12 +106,12 @@ export class NeonPortal extends InstructionService {
     };
   }
 
-  createWithdrawWNeonTransaction(amount: number | bigint | string, address: string): string {
+  createWithdrawWNeonTransaction(amount: Amount, address: string): string {
     const contract = this.neonWrapper2Contract(address);
     return contract.methods.withdraw(amount).encodeABI();
   }
 
-  wNeonTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig {
+  wNeonTransaction(amount: Amount, token: SPLToken): TransactionConfig {
     const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: token.address,
@@ -121,7 +121,7 @@ export class NeonPortal extends InstructionService {
     };
   }
 
-  neonTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig {
+  neonTransaction(amount: Amount, token: SPLToken): TransactionConfig {
     const fullAmount = toFullAmount(amount, token.decimals);
     return {
       to: token.address,

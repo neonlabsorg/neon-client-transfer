@@ -11,7 +11,7 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, toFullAmount } from '../utils';
-import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapperAbi } from '../data';
+import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import { Buffer } from 'buffer';
 const noop = new Function();
 export class InstructionService {
@@ -43,6 +43,9 @@ export class InstructionService {
     }
     get neonWrapperContract() {
         return new this.web3.eth.Contract(neonWrapperAbi);
+    }
+    neonWrapper2Contract(address) {
+        return new this.web3.eth.Contract(neonWrapper2Abi, address);
     }
     get solana() {
         if ('solana' in window) {

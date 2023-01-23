@@ -109,5 +109,27 @@ export class NeonPortal extends InstructionService {
             data: this.createWithdrawEthTransactionData()
         };
     }
+    createWithdrawWNeonTransaction(amount, address) {
+        const contract = this.neonWrapper2Contract(address);
+        return contract.methods.withdraw(amount).encodeABI();
+    }
+    wNeonTransaction(amount, token) {
+        const fullAmount = toFullAmount(amount, token.decimals);
+        return {
+            to: token.address,
+            from: this.neonWalletAddress,
+            value: `0x0`,
+            data: this.createWithdrawWNeonTransaction(fullAmount, token.address)
+        };
+    }
+    neonTransaction(amount, token) {
+        const fullAmount = toFullAmount(amount, token.decimals);
+        return {
+            to: token.address,
+            from: this.neonWalletAddress,
+            value: `0x${fullAmount.toString(16)}`,
+            data: this.createWithdrawEthTransactionData()
+        };
+    }
 }
 //# sourceMappingURL=NeonPortal.js.map

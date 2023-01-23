@@ -4,7 +4,7 @@ import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { NeonProxyRpcApi } from '../api';
-import { InstructionEvents, InstructionParams, NeonProgramStatus, SPLToken } from '../models';
+import { Amount, InstructionEvents, InstructionParams, NeonProgramStatus, SPLToken } from '../models';
 import { Buffer } from 'buffer';
 export declare class InstructionService {
     solanaWalletAddress: PublicKey;
@@ -18,6 +18,7 @@ export declare class InstructionService {
     constructor(options: InstructionParams);
     get erc20ForSPLContract(): Contract;
     get neonWrapperContract(): Contract;
+    neonWrapper2Contract(address: string): Contract;
     get solana(): any;
     get solanaWalletPubkey(): PublicKey;
     get solanaWalletSigner(): Account;
@@ -26,7 +27,7 @@ export declare class InstructionService {
     createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction;
     getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey>;
     approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction;
-    createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: number | bigint | string): string;
-    ethereumTransaction(amount: number | bigint | string, token: SPLToken): TransactionConfig;
+    createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): string;
+    ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig;
     emitFunction: (functionName?: Function, ...args: any[]) => void;
 }
