@@ -60,6 +60,7 @@ export class MintPortal extends InstructionService {
             const emulateSigner = this.solanaWalletSigner;
             const [neonWalletPDA] = yield this.neonAccountAddress(this.neonWalletAddress);
             const [emulateSignerPDA] = yield this.neonAccountAddress(emulateSigner.address);
+            const [delegatePDA] = yield this.authAccountAddress(emulateSigner.address, splToken);
             const emulateSignerPDAAccount = yield this.getNeonAccount(emulateSignerPDA);
             const neonWalletAccount = yield this.getNeonAccount(neonWalletPDA);
             const associatedTokenAddress = yield this.getAssociatedTokenAddress(new PublicKey(splToken.address_spl), solanaWallet);
@@ -70,7 +71,7 @@ export class MintPortal extends InstructionService {
             transaction.add(computeBudgetUtilsInstruction);
             const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
             transaction.add(computeBudgetHeapFrameInstruction);
-            const createApproveInstruction = yield this.approveDepositInstruction(solanaWallet, emulateSignerPDA, associatedTokenAddress, fullAmount);
+            const createApproveInstruction = yield this.approveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, fullAmount);
             transaction.add(createApproveInstruction);
             if (!neonWalletAccount) {
                 transaction.add(this.createAccountV3Instruction(solanaWallet, neonWalletPDA, this.neonWalletAddress));

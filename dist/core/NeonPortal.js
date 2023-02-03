@@ -100,10 +100,10 @@ export class NeonPortal extends InstructionService {
         const solanaWallet = this.solanaWalletAddress;
         return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
     }
-    ethereumTransaction(amount, token) {
+    ethereumTransaction(amount, token, to = NEON_WRAPPER_SOL) {
         const fullAmount = toFullAmount(amount, token.decimals);
         return {
-            to: NEON_WRAPPER_SOL,
+            to,
             from: this.neonWalletAddress,
             value: `0x${fullAmount.toString(16)}`,
             data: this.createWithdrawEthTransactionData()
