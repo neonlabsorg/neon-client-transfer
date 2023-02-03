@@ -1,6 +1,6 @@
 {
   "name": "neon-portal",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "JavaScript client-side module for creating transfer transactions from Solana EVM to Neon EVM",
   "files": [
     "./dist/**/*"
@@ -42,9 +42,9 @@
     "@solana/spl-token": "^0.3.6",
     "@solana/web3.js": "^1.66.2",
     "big.js": "^6.2.1",
-    "web3": "1.8.1",
-    "web3-core": "1.8.1",
-    "web3-eth-contract": "1.8.1"
+    "web3": "1.8.2",
+    "web3-core": "1.8.2",
+    "web3-eth-contract": "1.8.2"
   },
   "devDependencies": {
     "@types/big.js": "^6.1.6",

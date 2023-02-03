@@ -208,7 +208,6 @@ export class MintPortal extends InstructionService {
     };
     transaction.gasPrice = await this.web3.eth.getGasPrice();
     transaction.gas = await this.web3.eth.estimateGas(transaction);
-    transaction['gasLimit'] = 50000;
 
     return transaction;
   }
