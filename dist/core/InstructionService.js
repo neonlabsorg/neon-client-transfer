@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { SHA256 } from 'crypto-js';
-import { etherToProgram, toFullAmount } from '../utils';
+import { etherToProgram, isValidHex, toFullAmount } from '../utils';
 import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import { Buffer } from 'buffer';
 const noop = new Function();
@@ -65,6 +65,19 @@ export class InstructionService {
     neonAccountAddress(neonWallet) {
         return __awaiter(this, void 0, void 0, function* () {
             return etherToProgram(neonWallet);
+        });
+    }
+    authAccountAddress(neonWallet, token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
+            const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
+            const seed = [
+                new Uint8Array([3 /* AccountHex.SeedVersion */]),
+                new Uint8Array(Buffer.from('AUTH', 'utf-8')),
+                new Uint8Array(neonContractAddressBytes),
+                new Uint8Array(neonAccountAddressBytes)
+            ];
+            return PublicKey.findProgramAddress(seed, new PublicKey(NEON_EVM_LOADER_ID));
         });
     }
     getNeonAccount(neonAssociatedKey) {

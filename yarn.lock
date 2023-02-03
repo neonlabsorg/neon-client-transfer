@@ -5297,7 +5297,7 @@ web3-core-subscriptions@1.8.1:
     eventemitter3 "4.0.4"
     web3-core-helpers "1.8.1"
 
-web3-core@1.8.1, web3-core@^1.8.1:
+web3-core@1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/web3-core/-/web3-core-1.8.1.tgz#050b1c408d1f9b7ae539e90f7f7d1b7a7d10578b"
   integrity sha512-LbRZlJH2N6nS3n3Eo9Y++25IvzMY7WvYnp4NM/Ajhh97dAdglYs6rToQ2DbL2RLvTYmTew4O/y9WmOk4nq9COw==
@@ -5335,7 +5335,7 @@ web3-eth-accounts@1.8.1:
     web3-core-method "1.8.1"
     web3-utils "1.8.1"
 
-web3-eth-contract@1.8.1, web3-eth-contract@^1.8.1:
+web3-eth-contract@1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/web3-eth-contract/-/web3-eth-contract-1.8.1.tgz#bdf3e33bbcb79a1b6144dffd6a0deefd2e459272"
   integrity sha512-1wphnl+/xwCE2io44JKnN+ti3oa47BKRiVzvWd42icwRbcpFfRxH9QH+aQX3u8VZIISNH7dAkTWpGIIJgGFTmg==
@@ -5460,7 +5460,7 @@ web3-utils@1.8.1:
     randombytes "^2.1.0"
     utf8 "3.0.0"
 
-web3@^1.8.1:
+web3@1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/web3/-/web3-1.8.1.tgz#8ea67215ef5f3a6f6d3381800b527242ea22885a"
   integrity sha512-tAqFsQhGv340C9OgRJIuoScN7f7wa1tUvsnnDUMt9YE6J4gcm7TV2Uwv+KERnzvV+xgdeuULYpsioRRNKrUvoQ==

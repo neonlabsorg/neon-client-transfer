@@ -40,7 +40,7 @@ const wSOL: SPLToken = {
   decimals: 9,
   name: 'Wrapped SOL',
   symbol: 'wSOL',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/v2.1.13/assets/solana-sol-logo.svg'
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-wsol-logo.svg'
 };
 
 const CHAIN_NAME = 'devnet';
@@ -374,7 +374,7 @@ function itSolanaTokenSPL(token: SPLToken): void {
     try {
       const transaction = await mintPortal.neonTransferTransaction(amount, token);
       const signer: Signer = toSigner(keypair);
-      const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: true });
+      const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: false });
       expect(signature.length).toBeGreaterThan(0);
       solanaSignature(`Signature`, signature);
       await delay(5e3);
@@ -402,7 +402,7 @@ function itNeonTokenMint(token: SPLToken): void {
     neonTransaction.nonce = (await web3.eth.getTransactionCount(account.address));
     const signer: Signer = toSigner(keypair);
     try {
-      const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: true });
+      const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
       solanaSignature(`Solana Signature`, signedSolanaTransaction);
 
       expect(signedSolanaTransaction.length).toBeGreaterThan(0);
