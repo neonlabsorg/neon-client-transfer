@@ -62,6 +62,7 @@ export class MintPortal extends InstructionService {
     const emulateSigner = this.solanaWalletSigner;
     const [neonWalletPDA] = await this.neonAccountAddress(this.neonWalletAddress);
     const [emulateSignerPDA] = await this.neonAccountAddress(emulateSigner.address);
+    const [delegatePDA] = await this.authAccountAddress(emulateSigner.address, splToken);
     const emulateSignerPDAAccount = await this.getNeonAccount(emulateSignerPDA);
     const neonWalletAccount = await this.getNeonAccount(neonWalletPDA);
 
@@ -82,7 +83,7 @@ export class MintPortal extends InstructionService {
     transaction.add(computeBudgetUtilsInstruction);
     const computeBudgetHeapFrameInstruction = this.computeBudgetHeapFrameInstruction(computedBudgetProgram);
     transaction.add(computeBudgetHeapFrameInstruction);
-    const createApproveInstruction = await this.approveDepositInstruction(solanaWallet, emulateSignerPDA, associatedTokenAddress, fullAmount);
+    const createApproveInstruction = await this.approveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, fullAmount);
     transaction.add(createApproveInstruction);
 
     if (!neonWalletAccount) {
@@ -207,6 +208,7 @@ export class MintPortal extends InstructionService {
     };
     transaction.gasPrice = await this.web3.eth.getGasPrice();
     transaction.gas = await this.web3.eth.estimateGas(transaction);
+    transaction['gasLimit'] = 50000;
 
     return transaction;
   }

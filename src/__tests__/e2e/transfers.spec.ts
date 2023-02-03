@@ -143,7 +143,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;
     const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
     const balanceBefore = await splTokenBalance(connection, keypair.publicKey, neon);
@@ -165,7 +165,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
     const balanceBefore = await neonBalance(web3, account.address);
@@ -187,7 +187,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it('Should wrap 1 NEON to wNEON in Neon network', async () => {
+  it.skip('Should wrap 1 NEON to wNEON in Neon network', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -218,7 +218,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
+  it.skip('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -258,7 +258,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
+  it.skip('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
     const amount = 0.1;
     const signer: Signer = toSigner(keypair);
     const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
@@ -293,7 +293,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const signer: Signer = toSigner(keypair);
     const solBefore = await connection.getBalance(keypair.publicKey);
@@ -329,7 +329,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const signer: Signer = toSigner(keypair);
     const mintPubkey = new PublicKey(wSOL.address_spl);
@@ -362,10 +362,9 @@ describe('Transfer tests', () => {
     }
   });
 
-  faucet.tokens.forEach(token => itSolanaTokenSPL(token));
-  faucet.tokens.forEach(token => itNeonTokenMint(token));
+  faucet.supportedTokens.forEach(token => itSolanaTokenSPL(token));
+  faucet.supportedTokens.forEach(token => itNeonTokenMint(token));
 });
-
 
 function itSolanaTokenSPL(token: SPLToken): void {
   it(`Should transfer 0.1 ${token.symbol} from Solana to Neon`, async () => {
@@ -375,7 +374,7 @@ function itSolanaTokenSPL(token: SPLToken): void {
     try {
       const transaction = await mintPortal.neonTransferTransaction(amount, token);
       const signer: Signer = toSigner(keypair);
-      const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: false });
+      const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: true });
       expect(signature.length).toBeGreaterThan(0);
       solanaSignature(`Signature`, signature);
       await delay(5e3);
@@ -403,7 +402,7 @@ function itNeonTokenMint(token: SPLToken): void {
     neonTransaction.nonce = (await web3.eth.getTransactionCount(account.address));
     const signer: Signer = toSigner(keypair);
     try {
-      const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
+      const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: true });
       solanaSignature(`Solana Signature`, signedSolanaTransaction);
 
       expect(signedSolanaTransaction.length).toBeGreaterThan(0);

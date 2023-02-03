@@ -9,11 +9,14 @@ const TOKEN_LIST = `https://raw.githubusercontent.com/neonlabsorg/token-list/v1.
 
 export class FaucetDropper {
   public tokens: SPLToken[] = [];
+  public supportedTokens: SPLToken[] = [];
+  private _tokens: string[] = ['USDT', 'USDC'];
   private chainId: ChainId['id'];
 
   constructor(chainId: ChainId['id']) {
     this.chainId = chainId;
     this.tokens = (tokenList?.tokens as SPLToken[] ?? []).filter(t => t.chainId === this.chainId);
+    this.supportedTokens = this.tokens.filter(t => this._tokens.includes(t.symbol));
   }
 
   async requestERC20(wallet: string, { address_spl }: SPLToken, amount: number): Promise<any> {

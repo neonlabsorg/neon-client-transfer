@@ -13,9 +13,10 @@ import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { SHA256 } from 'crypto-js';
 import { NeonProxyRpcApi } from '../api';
-import { etherToProgram, toFullAmount } from '../utils';
+import { etherToProgram, isValidHex, toFullAmount } from '../utils';
 import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import {
+  AccountHex,
   Amount,
   EvmInstruction,
   InstructionEvents,
@@ -87,6 +88,17 @@ export class InstructionService {
 
   async neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]> {
     return etherToProgram(neonWallet);
+  }
+
+  async authAccountAddress(neonWallet: string, token: SPLToken): Promise<[PublicKey, number]> {
+    const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
+    const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
+    const seed = [
+      new Uint8Array([AccountHex.SeedVersion]),
+      new Uint8Array(Buffer.from('AUTH', 'utf-8')),
+      new Uint8Array(neonContractAddressBytes),
+      new Uint8Array(neonAccountAddressBytes)];
+    return PublicKey.findProgramAddress(seed, new PublicKey(NEON_EVM_LOADER_ID));
   }
 
   async getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null> {
