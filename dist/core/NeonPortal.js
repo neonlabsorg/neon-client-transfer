@@ -101,11 +101,11 @@ export class NeonPortal extends InstructionService {
         return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
     }
     ethereumTransaction(amount, token, to = NEON_WRAPPER_SOL) {
-        const fullAmount = toFullAmount(amount, token.decimals);
+        const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
         return {
             to,
             from: this.neonWalletAddress,
-            value: `0x${fullAmount.toString(16)}`,
+            value: `0x${BigInt(fullAmount).toString(16)}`,
             data: this.createWithdrawEthTransactionData()
         };
     }
@@ -114,7 +114,7 @@ export class NeonPortal extends InstructionService {
         return contract.methods.withdraw(amount).encodeABI();
     }
     wNeonTransaction(amount, token) {
-        const fullAmount = toFullAmount(amount, token.decimals);
+        const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
         return {
             to: token.address,
             from: this.neonWalletAddress,
@@ -123,11 +123,11 @@ export class NeonPortal extends InstructionService {
         };
     }
     neonTransaction(amount, token) {
-        const fullAmount = toFullAmount(amount, token.decimals);
+        const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
         return {
             to: token.address,
             from: this.neonWalletAddress,
-            value: `0x${fullAmount.toString(16)}`,
+            value: `0x${BigInt(fullAmount).toString(16)}`,
             data: this.createWithdrawEthTransactionData()
         };
     }

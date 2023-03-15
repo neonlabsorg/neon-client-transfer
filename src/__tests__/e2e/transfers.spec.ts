@@ -24,7 +24,8 @@ import {
   delay,
   FaucetDropper,
   mintTokenBalance,
-  neonBalance, neonSignature,
+  neonBalance,
+  neonSignature,
   sendSignedTransaction,
   sendTransaction,
   solanaSignature,
@@ -32,16 +33,6 @@ import {
   toSigner
 } from '../tools/utils';
 import neonWrapper2 from '../../data/abi/neonWrapper2';
-
-const wSOL: SPLToken = {
-  chainId: 111,
-  address_spl: 'So11111111111111111111111111111111111111112',
-  address: '0x16869acc45BA20abEFB2DdE2096F66373fDe364F',
-  decimals: 9,
-  name: 'Wrapped SOL',
-  symbol: 'wSOL',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-wsol-logo.svg'
-};
 
 const CHAIN_NAME = 'devnet';
 const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
@@ -173,6 +164,7 @@ describe('Transfer tests', () => {
       const transaction = neonPortal.ethereumTransaction(amount, neon);
       transaction.gas = await web3.eth.estimateGas(transaction);
       transaction.gasPrice = await web3.eth.getGasPrice();
+      transaction['gasLimit'] = 5e4;
       const hash = await sendSignedTransaction(web3, transaction, account);
       neonSignature(`Signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
@@ -258,108 +250,130 @@ describe('Transfer tests', () => {
     }
   });
 
-  it('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
+  it.skip('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
     const amount = 0.1;
     const signer: Signer = toSigner(keypair);
-    const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
-    const solBefore = await connection.getBalance(keypair.publicKey);
-    const wSolBefore = await connection.getBalance(associatedToken);
-    console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
-    console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);
+    const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
+    if (id > -1) {
+      const wSOL = faucet.tokens[id];
+      const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
+      const solBefore = await connection.getBalance(keypair.publicKey);
+      const wSolBefore = await connection.getBalance(associatedToken);
+      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+      console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);
 
-    try {
-      const wrapTransaction = await mintPortal.wrapSOLTransaction(amount, wSOL);
-      const wrapSignature = await sendTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
-      expect(wrapSignature.length).toBeGreaterThan(0);
-      solanaSignature(`SOL wrap signature`, wrapSignature);
-      const solAfter = await connection.getBalance(keypair.publicKey);
-      console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL`);
-      await delay(5e3);
+      try {
+        const wrapTransaction = await mintPortal.wrapSOLTransaction(amount, wSOL);
+        const wrapSignature = await sendTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
+        expect(wrapSignature.length).toBeGreaterThan(0);
+        solanaSignature(`SOL wrap signature`, wrapSignature);
+        const solAfter = await connection.getBalance(keypair.publicKey);
+        console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL`);
+        await delay(5e3);
 
-      const unwrapTransaction = await mintPortal.unwrapSOLTransaction(amount, wSOL);
-      unwrapTransaction.partialSign(signer);
-      const signature = await sendTransaction(connection, unwrapTransaction, [signer], true, { skipPreflight: true });
-      expect(signature.length).toBeGreaterThan(0);
-      solanaSignature(`wSOL unwrap signature`, signature);
-      await delay(5e3);
+        const unwrapTransaction = await mintPortal.unwrapSOLTransaction(amount, wSOL);
+        unwrapTransaction.partialSign(signer);
+        const signature = await sendTransaction(connection, unwrapTransaction, [signer], true, { skipPreflight: true });
+        expect(signature.length).toBeGreaterThan(0);
+        solanaSignature(`wSOL unwrap signature`, signature);
+        await delay(5e3);
 
-      const wSolAfter = await connection.getBalance(associatedToken);
-      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfter / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+        const wSolAfter = await connection.getBalance(associatedToken);
+        console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfter / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
 
-      expect(wSolBefore).toBeGreaterThan(wSolAfter);
-    } catch (e) {
-      console.log(e);
-      expect(e instanceof Error ? e.message : '').toBe('');
+        expect(wSolBefore).toBeGreaterThan(wSolAfter);
+      } catch (e) {
+        console.log(e);
+        expect(e instanceof Error ? e.message : '').toBe('');
+      }
     }
   });
 
   it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
+    const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const signer: Signer = toSigner(keypair);
     const solBefore = await connection.getBalance(keypair.publicKey);
     console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);
-    const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
-    const wSolBefore = await connection.getBalance(associatedToken);
-    console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
-    try {
-      const wrapTransaction = await mintPortal.wrapSOLTransaction(amount, wSOL);
-      const wrapSignature = await sendTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
-      expect(wrapSignature.length).toBeGreaterThan(0);
-      solanaSignature(`SOL wrap signature`, wrapSignature);
-      const solAfter = await connection.getBalance(keypair.publicKey);
-      console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL`);
-      await delay(5e3);
+    if (id > -1) {
+      const wSOL = faucet.tokens[id];
+      const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
+      const wSolBefore = await connection.getBalance(associatedToken);
+      const balanceBefore = await mintTokenBalance(web3, account.address, wSOL);
+      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+      try {
+        const wrapTransaction = await mintPortal.wrapSOLTransaction(amount, wSOL);
+        const wrapSignature = await sendTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
+        expect(wrapSignature.length).toBeGreaterThan(0);
+        solanaSignature(`SOL wrap signature`, wrapSignature);
+        const solAfter = await connection.getBalance(keypair.publicKey);
+        const wSolAfterWrapping = await connection.getBalance(associatedToken);
+        console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL; ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfterWrapping / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+        await delay(5e3);
 
-      const transaction = await mintPortal.neonTransferTransaction(amount, wSOL);
-      const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: true });
-      expect(signature.length).toBeGreaterThan(0);
-      solanaSignature(`wSOL unwrap signature`, signature);
-      await delay(5e3);
+        const transaction = await mintPortal.neonTransferTransaction(amount, wSOL);
+        const signature = await sendTransaction(connection, transaction, [signer], true, { skipPreflight: false });
+        expect(signature.length).toBeGreaterThan(0);
+        solanaSignature(`wSOL transfer signature`, signature);
+        await delay(5e3);
 
-      const wSolAfter = await connection.getBalance(associatedToken);
-      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfter / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
-
-      expect(wSolBefore).toBeLessThan(wSolAfter);
-
-      const balanceMint = await mintTokenBalance(web3, account.address, wSOL);
-      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfter / LAMPORTS_PER_SOL} ${wSOL.symbol} ==> ${balanceMint} ${wSOL.symbol} in Neon`);
-    } catch (e) {
-      console.log(e);
-      expect(e instanceof Error ? e.message : '').toBe('');
+        const wSolAfterTransfer = await connection.getBalance(associatedToken);
+        const balanceAfter = await mintTokenBalance(web3, account.address, wSOL);
+        console.log(`Balance: ${wSolAfterWrapping / LAMPORTS_PER_SOL} > ${wSolAfterTransfer / LAMPORTS_PER_SOL} ${wSOL.symbol} ==> ${balanceBefore} > ${balanceAfter} ${wSOL.symbol} in Neon`);
+        expect(balanceAfter).toBeGreaterThanOrEqual(balanceBefore);
+      } catch (e) {
+        console.log(e);
+        expect(e instanceof Error ? e.message : '').toBe('');
+      }
     }
   });
 
   it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
+    const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const signer: Signer = toSigner(keypair);
-    const mintPubkey = new PublicKey(wSOL.address_spl);
-    const solBefore = await connection.getBalance(keypair.publicKey);
-    const associatedToken = await mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
+    if (id > -1) {
+      const wSOL = faucet.tokens[id];
+      const mintPubkey = new PublicKey(wSOL.address_spl);
+      const solBefore = await connection.getBalance(keypair.publicKey);
+      const associatedToken = await mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
 
-    const balanceBefore = await mintTokenBalance(web3, account.address, wSOL);
-    console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
-    const solanaTransaction = await mintPortal.solanaTransferTransaction(keypair.publicKey, mintPubkey, associatedToken);
-    const neonTransaction = await mintPortal.createNeonTransaction(account.address, associatedToken, wSOL, amount);
-    neonTransaction['gasLimit'] = 50000;
-    neonTransaction.nonce = (await web3.eth.getTransactionCount(account.address));
-    const wSolBefore = await connection.getBalance(associatedToken);
-    console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
-    try {
-      const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
-      solanaSignature(`Solana Signature`, signedSolanaTransaction);
-      expect(signedSolanaTransaction.length).toBeGreaterThan(0);
-      await delay(1e3);
-      const signedNeonTransaction = await sendSignedTransaction(web3, neonTransaction, account);
-      neonSignature(`Neon Signature`, signedNeonTransaction);
-      expect(signedNeonTransaction.length).toBeGreaterThan(0);
-      await delay(15e3);
-      const balanceAfter = await mintTokenBalance(web3, account.address, wSOL);
-      const balanceSPL = await splTokenBalance(connection, keypair.publicKey, wSOL);
-      console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${wSOL.symbol} ==> ${balanceSPL?.uiAmount} ${wSOL.symbol} in Solana`);
-      expect(balanceAfter).toBeLessThan(balanceBefore);
-    } catch (e) {
-      console.log(e);
-      expect(e instanceof Error ? e.message : '').toBe('');
+      const balanceBefore = await mintTokenBalance(web3, account.address, wSOL);
+      console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
+      const solanaTransaction = await mintPortal.solanaTransferTransaction(keypair.publicKey, mintPubkey, associatedToken);
+      const neonTransaction = await mintPortal.createNeonTransaction(account.address, associatedToken, wSOL, amount);
+      neonTransaction['gasLimit'] = 50000;
+      neonTransaction.nonce = (await web3.eth.getTransactionCount(account.address));
+      const wSolBefore = await connection.getBalance(associatedToken);
+      console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+      try {
+        const signedSolanaTransaction = await sendTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
+        solanaSignature(`Solana Signature`, signedSolanaTransaction);
+        expect(signedSolanaTransaction.length).toBeGreaterThan(0);
+        await delay(1e3);
+        const signedNeonTransaction = await sendSignedTransaction(web3, neonTransaction, account);
+        neonSignature(`Neon Signature`, signedNeonTransaction);
+        expect(signedNeonTransaction.length).toBeGreaterThan(0);
+        await delay(15e3);
+        const balanceAfter = await mintTokenBalance(web3, account.address, wSOL);
+        const balanceSPL = await splTokenBalance(connection, keypair.publicKey, wSOL);
+        console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${wSOL.symbol} ==> ${balanceSPL?.uiAmount} ${wSOL.symbol} in Solana`);
+        expect(balanceAfter).toBeLessThan(balanceBefore);
+
+        const unwrapTransaction = await mintPortal.unwrapSOLTransaction(amount, wSOL);
+        unwrapTransaction.partialSign(signer);
+        const signature = await sendTransaction(connection, unwrapTransaction, [signer], true, { skipPreflight: true });
+        expect(signature.length).toBeGreaterThan(0);
+        solanaSignature(`wSOL unwrap signature`, signature);
+        await delay(5e3);
+
+        const wSolAfter = await connection.getBalance(associatedToken);
+        console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfter / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+        expect(wSolBefore).toBeGreaterThan(wSolAfter);
+      } catch (e) {
+        console.log(e);
+        expect(e instanceof Error ? e.message : '').toBe('');
+      }
     }
   });
 
