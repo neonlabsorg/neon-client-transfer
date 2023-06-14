@@ -2,7 +2,7 @@ import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
-import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
+import { NEON_WRAPPER_SOL } from '../data';
 import { Amount, EvmInstruction, SPLToken } from '../models';
 import { toFullAmount } from '../utils';
 
@@ -37,9 +37,9 @@ export class NeonPortal extends InstructionService {
 
   async neonTransferTransaction(amount: Amount, token: SPLToken): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
-    const [neonWallet] = await this.neonAccountAddress(this.neonWalletAddress);
+    const [neonWallet] = this.neonAccountAddress(this.neonWalletAddress);
+    const [authorityPoolPubkey] = this.getAuthorityPoolAddress();
     const neonAccount = await this.getNeonAccount(neonWallet);
-    const [authorityPoolPubkey] = await this.getAuthorityPoolAddress();
     const { blockhash } = await this.connection.getLatestBlockhash();
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
 
@@ -79,16 +79,16 @@ export class NeonPortal extends InstructionService {
     const b = Buffer.from(neonWalletAddress.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({
-      programId: new PublicKey(NEON_EVM_LOADER_ID),
+      programId: this.programId,
       keys,
       data
     });
   }
 
   // #endregion
-  async getAuthorityPoolAddress(): Promise<[PublicKey, number]> {
+  getAuthorityPoolAddress(): [PublicKey, number] {
     const enc = new TextEncoder();
-    return await PublicKey.findProgramAddress([enc.encode('Deposit')], new PublicKey(NEON_EVM_LOADER_ID));
+    return PublicKey.findProgramAddressSync([enc.encode('Deposit')], this.programId);
   }
 
   createWithdrawEthTransactionData(): string {

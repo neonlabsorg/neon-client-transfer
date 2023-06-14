@@ -14,8 +14,8 @@ export declare class MintPortal extends InstructionService {
         emulateSigner: Account;
         nonce: number;
     }>;
-    makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): Promise<TransactionInstruction>;
-    getCollateralPoolAddress(collateralPoolIndex: number): Promise<[PublicKey, number]>;
+    makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): TransactionInstruction;
+    getCollateralPoolAddress(collateralPoolIndex: number): [PublicKey, number];
     createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): Promise<TransactionConfig>;
     solanaTransferTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey): Promise<Transaction>;
     createAssociatedTokenAccountInstruction(associatedProgramId: PublicKey, programId: PublicKey, mint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey): TransactionInstruction;

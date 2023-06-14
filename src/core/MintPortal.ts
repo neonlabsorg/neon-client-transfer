@@ -16,7 +16,7 @@ import {
 import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
-import { COMPUTE_BUDGET_ID, NEON_EVM_LOADER_ID } from '../data';
+import { COMPUTE_BUDGET_ID } from '../data';
 import { toBytesInt32, toFullAmount } from '../utils';
 import { Amount, EvmInstruction, SPLToken } from '../models';
 
@@ -60,9 +60,9 @@ export class MintPortal extends InstructionService {
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const solanaWallet = this.solanaWalletPubkey;
     const emulateSigner = this.solanaWalletSigner;
-    const [neonWalletPDA] = await this.neonAccountAddress(this.neonWalletAddress);
-    const [emulateSignerPDA] = await this.neonAccountAddress(emulateSigner.address);
-    const [delegatePDA] = await this.authAccountAddress(emulateSigner.address, splToken);
+    const [neonWalletPDA] = this.neonAccountAddress(this.neonWalletAddress);
+    const [emulateSignerPDA] = this.neonAccountAddress(emulateSigner.address);
+    const [delegatePDA] = this.authAccountAddress(emulateSigner.address, splToken);
     const emulateSignerPDAAccount = await this.getNeonAccount(emulateSignerPDA);
     const neonWalletAccount = await this.getNeonAccount(neonWalletPDA);
 
@@ -95,7 +95,7 @@ export class MintPortal extends InstructionService {
     }
 
     if (neonTransaction?.rawTransaction) {
-      transaction.add(await this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
+      transaction.add(this.makeTrExecFromDataIx(neonWalletPDA, neonTransaction.rawTransaction, neonKeys));
     }
 
     return transaction;
@@ -120,7 +120,7 @@ export class MintPortal extends InstructionService {
     const nonce = await this.web3.eth.getTransactionCount(emulateSigner.address);
     const chainId = await this.web3.eth.getChainId();
     try {
-      const claimTo = this.erc20ForSPLContract.methods.claimTo(from.toBytes(), to, amount);
+      const claimTo = this.erc20ForSPLContract.methods.claimTo(from.toBuffer(), to, amount);
       const data = claimTo.encodeABI();
       const transaction: TransactionConfig = {
         chainId,
@@ -167,11 +167,11 @@ export class MintPortal extends InstructionService {
     return { neonKeys: [], neonTransaction: null, emulateSigner: null, nonce };
   }
 
-  async makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): Promise<TransactionInstruction> {
-    const programId = new PublicKey(NEON_EVM_LOADER_ID);
+  makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): TransactionInstruction {
+    const programId = this.programId;
     const count = Number(this.proxyStatus.NEON_POOL_COUNT);
     const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
-    const [treasuryPoolAddress] = await this.getCollateralPoolAddress(treasuryPoolIndex);
+    const [treasuryPoolAddress] = this.getCollateralPoolAddress(treasuryPoolIndex);
     const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
     const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
     const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
@@ -188,16 +188,16 @@ export class MintPortal extends InstructionService {
     return new TransactionInstruction({ programId, keys, data });
   }
 
-  async getCollateralPoolAddress(collateralPoolIndex: number): Promise<[PublicKey, number]> {
+  getCollateralPoolAddress(collateralPoolIndex: number): [PublicKey, number] {
     const a = Buffer.from('treasury_pool', 'utf8');
     const b = Buffer.from(toBytesInt32(collateralPoolIndex));
-    return PublicKey.findProgramAddress([a, b], new PublicKey(NEON_EVM_LOADER_ID));
+    return PublicKey.findProgramAddressSync([a, b], this.programId);
   }
 
   async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): Promise<TransactionConfig> {
     const nonce = await this.web3.eth.getTransactionCount(neonWallet);
     const fullAmount = toFullAmount(amount, splToken.decimals);
-    const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+    const data = this.erc20ForSPLContract.methods.transferSolana(solanaWallet.toBuffer(), fullAmount).encodeABI();
     const transaction: TransactionConfig = {
       data,
       nonce,

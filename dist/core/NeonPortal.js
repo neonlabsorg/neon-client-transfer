@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { InstructionService } from './InstructionService';
-import { NEON_EVM_LOADER_ID, NEON_WRAPPER_SOL } from '../data';
+import { NEON_WRAPPER_SOL } from '../data';
 import { toFullAmount } from '../utils';
 // Neon Token Transfer
 export class NeonPortal extends InstructionService {
@@ -48,9 +48,9 @@ export class NeonPortal extends InstructionService {
     neonTransferTransaction(amount, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const solanaWallet = this.solanaWalletPubkey;
-            const [neonWallet] = yield this.neonAccountAddress(this.neonWalletAddress);
+            const [neonWallet] = this.neonAccountAddress(this.neonWalletAddress);
+            const [authorityPoolPubkey] = this.getAuthorityPoolAddress();
             const neonAccount = yield this.getNeonAccount(neonWallet);
-            const [authorityPoolPubkey] = yield this.getAuthorityPoolAddress();
             const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
             if (!neonAccount) {
@@ -83,7 +83,7 @@ export class NeonPortal extends InstructionService {
             const b = Buffer.from(neonWalletAddress.slice(2), 'hex');
             const data = Buffer.concat([a, b]);
             return new TransactionInstruction({
-                programId: new PublicKey(NEON_EVM_LOADER_ID),
+                programId: this.programId,
                 keys,
                 data
             });
@@ -91,10 +91,8 @@ export class NeonPortal extends InstructionService {
     }
     // #endregion
     getAuthorityPoolAddress() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const enc = new TextEncoder();
-            return yield PublicKey.findProgramAddress([enc.encode('Deposit')], new PublicKey(NEON_EVM_LOADER_ID));
-        });
+        const enc = new TextEncoder();
+        return PublicKey.findProgramAddressSync([enc.encode('Deposit')], this.programId);
     }
     createWithdrawEthTransactionData() {
         const solanaWallet = this.solanaWalletAddress;

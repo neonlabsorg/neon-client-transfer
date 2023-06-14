@@ -11,10 +11,13 @@ import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.j
 import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, isValidHex, toFullAmount } from '../utils';
-import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
+import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import { Buffer } from 'buffer';
 const noop = new Function();
 export class InstructionService {
+    get programId() {
+        return new PublicKey(this.proxyStatus.NEON_EVM_ID);
+    }
     constructor(options) {
         var _a;
         this.emitFunction = (functionName, ...args) => {
@@ -63,22 +66,18 @@ export class InstructionService {
         return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
     }
     neonAccountAddress(neonWallet) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return etherToProgram(neonWallet);
-        });
+        return etherToProgram(neonWallet, this.programId);
     }
     authAccountAddress(neonWallet, token) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
-            const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
-            const seed = [
-                new Uint8Array([3 /* AccountHex.SeedVersion */]),
-                new Uint8Array(Buffer.from('AUTH', 'utf-8')),
-                new Uint8Array(neonContractAddressBytes),
-                new Uint8Array(neonAccountAddressBytes)
-            ];
-            return PublicKey.findProgramAddress(seed, new PublicKey(NEON_EVM_LOADER_ID));
-        });
+        const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
+        const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
+        const seed = [
+            new Uint8Array([3 /* AccountHex.SeedVersion */]),
+            new Uint8Array(Buffer.from('AUTH', 'utf-8')),
+            new Uint8Array(neonContractAddressBytes),
+            new Uint8Array(neonAccountAddressBytes)
+        ];
+        return PublicKey.findProgramAddressSync(seed, this.programId);
     }
     getNeonAccount(neonAssociatedKey) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -95,7 +94,7 @@ export class InstructionService {
         const b = Buffer.from(neonWallet.slice(2), 'hex');
         const data = Buffer.concat([a, b]);
         return new TransactionInstruction({
-            programId: new PublicKey(NEON_EVM_LOADER_ID),
+            programId: this.programId,
             keys,
             data
         });

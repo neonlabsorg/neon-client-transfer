@@ -8,13 +8,13 @@ import {
 } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import { AbiItem } from 'web3-utils';
-import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
+import Web3 from 'web3';
 import { SHA256 } from 'crypto-js';
 import { NeonProxyRpcApi } from '../api';
 import { etherToProgram, isValidHex, toFullAmount } from '../utils';
-import { erc20Abi, NEON_EVM_LOADER_ID, neonWrapper2Abi, neonWrapperAbi } from '../data';
+import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../data';
 import {
   AccountHex,
   Amount,
@@ -37,6 +37,10 @@ export class InstructionService {
   connection: Connection;
   events: InstructionEvents;
   solanaOptions: SendOptions;
+
+  get programId(): PublicKey {
+    return new PublicKey(this.proxyStatus.NEON_EVM_ID);
+  }
 
   constructor(options: InstructionParams) {
     this.web3 = options.web3;
@@ -86,11 +90,11 @@ export class InstructionService {
     return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
   }
 
-  async neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]> {
-    return etherToProgram(neonWallet);
+  neonAccountAddress(neonWallet: string): [PublicKey, number] {
+    return etherToProgram(neonWallet, this.programId);
   }
 
-  async authAccountAddress(neonWallet: string, token: SPLToken): Promise<[PublicKey, number]> {
+  authAccountAddress(neonWallet: string, token: SPLToken): [PublicKey, number] {
     const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
     const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
     const seed = [
@@ -98,7 +102,7 @@ export class InstructionService {
       new Uint8Array(Buffer.from('AUTH', 'utf-8')),
       new Uint8Array(neonContractAddressBytes),
       new Uint8Array(neonAccountAddressBytes)];
-    return PublicKey.findProgramAddress(seed, new PublicKey(NEON_EVM_LOADER_ID));
+    return PublicKey.findProgramAddressSync(seed, this.programId);
   }
 
   async getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null> {
@@ -115,7 +119,7 @@ export class InstructionService {
     const b = Buffer.from(neonWallet.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({
-      programId: new PublicKey(NEON_EVM_LOADER_ID),
+      programId: this.programId,
       keys,
       data
     });

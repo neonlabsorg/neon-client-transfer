@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { AccountInfo, Connection, PublicKey, SendOptions, TransactionInstruction } from '@solana/web3.js';
-import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
+import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../api';
 import { Amount, InstructionEvents, InstructionParams, NeonProgramStatus, SPLToken } from '../models';
 import { Buffer } from 'buffer';
@@ -15,6 +15,7 @@ export declare class InstructionService {
     connection: Connection;
     events: InstructionEvents;
     solanaOptions: SendOptions;
+    get programId(): PublicKey;
     constructor(options: InstructionParams);
     get erc20ForSPLContract(): Contract;
     get neonWrapperContract(): Contract;
@@ -22,8 +23,8 @@ export declare class InstructionService {
     get solana(): any;
     get solanaWalletPubkey(): PublicKey;
     get solanaWalletSigner(): Account;
-    neonAccountAddress(neonWallet: string): Promise<[PublicKey, number]>;
-    authAccountAddress(neonWallet: string, token: SPLToken): Promise<[PublicKey, number]>;
+    neonAccountAddress(neonWallet: string): [PublicKey, number];
+    authAccountAddress(neonWallet: string, token: SPLToken): [PublicKey, number];
     getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null>;
     createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction;
     getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey>;
