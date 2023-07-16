@@ -25,6 +25,11 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
 }
 
 export function toFullAmount(amount: Amount, decimals: number): bigint {
-  const data = Big(amount.toString()).times(Big(10).pow(decimals));
+  const data = new Big(amount.toString()).times(Big(10).pow(decimals));
+  return BigInt(data.toString());
+}
+
+export function toBigInt(amount: Amount): bigint {
+  const data = new Big(amount.toString());
   return BigInt(data.toString());
 }

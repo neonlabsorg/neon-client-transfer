@@ -1,10 +1,11 @@
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
 import { NEON_WRAPPER_SOL } from '../data';
 import { Amount, EvmInstruction, SPLToken } from '../models';
 import { toFullAmount } from '../utils';
+import { toBigInt } from '../utils/address';
 
 // Neon Token Transfer
 export class NeonPortal extends InstructionService {
@@ -35,16 +36,21 @@ export class NeonPortal extends InstructionService {
     }
   }
 
-  async neonTransferTransaction(amount: Amount, token: SPLToken): Promise<Transaction> {
+  async neonTransferTransaction(amount: Amount, token: SPLToken, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
     const [neonWallet] = this.neonAccountAddress(this.neonWalletAddress);
     const [authorityPoolPubkey] = this.getAuthorityPoolAddress();
     const neonAccount = await this.getNeonAccount(neonWallet);
-    const { blockhash } = await this.connection.getLatestBlockhash();
+    const { blockhash } = await this.connection.getLatestBlockhash('finalized');
     const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
 
     if (!neonAccount) {
-      transaction.add(this.createAccountV3Instruction(solanaWallet, neonWallet, this.neonWalletAddress));
+      const payerWallet = serviceWallet ? serviceWallet : solanaWallet;
+      transaction.add(this.createAccountV3Instruction(payerWallet, neonWallet, this.neonWalletAddress));
+    }
+
+    if (serviceWallet instanceof PublicKey && rewardAmount) {
+      transaction.add(this.neonTransferInstruction(solanaWallet, serviceWallet, rewardAmount));
     }
 
     const neonToken: SPLToken = {
@@ -53,19 +59,19 @@ export class NeonPortal extends InstructionService {
     };
 
     const fullAmount = toFullAmount(amount, neonToken.decimals);
-    const associatedTokenAddress = await this.getAssociatedTokenAddress(new PublicKey(neonToken.address_spl), solanaWallet);
-    const approveInstruction = await this.approveDepositInstruction(solanaWallet, neonWallet, associatedTokenAddress, fullAmount);
-    const depositInstruction = await this.createDepositInstruction(solanaWallet, neonWallet, authorityPoolPubkey, this.neonWalletAddress);
+    const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(neonToken.address_spl), solanaWallet);
+    const approveInstruction = this.approveDepositInstruction(solanaWallet, neonWallet, associatedTokenAddress, fullAmount);
+    const depositInstruction = this.createDepositInstruction(solanaWallet, neonWallet, authorityPoolPubkey, this.neonWalletAddress);
 
     transaction.add(approveInstruction);
     transaction.add(depositInstruction);
     return transaction;
   }
 
-  async createDepositInstruction(solanaPubkey: PublicKey, neonPubkey: PublicKey, depositPubkey: PublicKey, neonWalletAddress: string): Promise<TransactionInstruction> {
+  createDepositInstruction(solanaPubkey: PublicKey, neonPubkey: PublicKey, depositPubkey: PublicKey, neonWalletAddress: string): TransactionInstruction {
     const neonTokenMint = new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
-    const solanaAssociatedTokenAddress = await getAssociatedTokenAddress(neonTokenMint, solanaPubkey);
-    const poolKey = await getAssociatedTokenAddress(neonTokenMint, depositPubkey, true);
+    const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaPubkey);
+    const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositPubkey, true);
     const keys = [
       { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true },
       { pubkey: poolKey, isSigner: false, isWritable: true },
@@ -83,6 +89,20 @@ export class NeonPortal extends InstructionService {
       keys,
       data
     });
+  }
+
+  neonTransferInstruction(solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction {
+    const neonTokenMint = new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
+    const from = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet, true);
+    const to = getAssociatedTokenAddressSync(neonTokenMint, serviceWallet, true);
+    const fullAmount = toBigInt(rewardAmount);
+    const keys = [
+      { pubkey: from, isSigner: false, isWritable: true },
+      { pubkey: to, isSigner: false, isWritable: true },
+      { pubkey: solanaWallet, isSigner: true, isWritable: false }
+    ];
+    const data = Buffer.from(fullAmount.toString(16), 'hex');
+    return new TransactionInstruction({ programId: this.programId, keys, data });
   }
 
   // #endregion
