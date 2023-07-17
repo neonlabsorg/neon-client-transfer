@@ -6,7 +6,7 @@ export declare class NeonPortal extends InstructionService {
     createNeonTransfer(amount: number, splToken: SPLToken, events?: import("../models").InstructionEvents): Promise<void>;
     createSolanaTransfer(amount: number, splToken: SPLToken, events?: import("../models").InstructionEvents): Promise<void>;
     neonTransferTransaction(amount: Amount, token: SPLToken, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction>;
-    createDepositInstruction(solanaPubkey: PublicKey, neonPubkey: PublicKey, depositPubkey: PublicKey, neonWalletAddress: string): TransactionInstruction;
+    createDepositInstruction(solanaPubkey: PublicKey, neonPubkey: PublicKey, depositPubkey: PublicKey, neonWalletAddress: string, serviceWallet?: PublicKey): TransactionInstruction;
     neonTransferInstruction(solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction;
     getAuthorityPoolAddress(): [PublicKey, number];
     createWithdrawEthTransactionData(): string;
