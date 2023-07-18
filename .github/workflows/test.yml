@@ -24,5 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        
+      - name: Run Neon Transfer e2e-tests
+        run: yarn test
 
       # - run: yarn test
