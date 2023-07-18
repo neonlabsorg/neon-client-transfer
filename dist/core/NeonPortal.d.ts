@@ -10,7 +10,7 @@ export declare class NeonPortal extends InstructionService {
     neonTransferInstruction(solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction;
     getAuthorityPoolAddress(): [PublicKey, number];
     createWithdrawEthTransactionData(): string;
-    ethereumTransaction(amount: Amount, token: SPLToken, to?: string): TransactionConfig;
+    ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig;
     createWithdrawWNeonTransaction(amount: Amount, address: string): string;
     wNeonTransaction(amount: Amount, token: SPLToken): TransactionConfig;
     neonTransaction(amount: Amount, token: SPLToken): TransactionConfig;

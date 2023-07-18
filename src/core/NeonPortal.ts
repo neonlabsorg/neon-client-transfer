@@ -7,7 +7,6 @@ import {
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { TransactionConfig } from 'web3-core';
 import { InstructionService } from './InstructionService';
-import { NEON_WRAPPER_SOL } from '../data';
 import { Amount, EvmInstruction, SPLToken } from '../models';
 import { toFullAmount } from '../utils';
 import { toBigInt } from '../utils/address';
@@ -126,10 +125,10 @@ export class NeonPortal extends InstructionService {
     return this.neonWrapperContract.methods.withdraw(solanaWallet.toBuffer()).encodeABI();
   }
 
-  ethereumTransaction(amount: Amount, token: SPLToken, to = NEON_WRAPPER_SOL): TransactionConfig {
+  ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {
     const from = this.neonWalletAddress;
-    const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
-    const value = `0x${BigInt(fullAmount).toString(16)}`;
+    const to = this.neonContractAddress;
+    const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
     const data = this.createWithdrawEthTransactionData();
     return { from, to, value, data };
   }

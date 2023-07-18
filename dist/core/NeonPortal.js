@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, TokenInstruction, transferInstructionData } from '@solana/spl-token';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { InstructionService } from './InstructionService';
-import { NEON_WRAPPER_SOL } from '../data';
 import { toFullAmount } from '../utils';
 import { toBigInt } from '../utils/address';
 // Neon Token Transfer
@@ -117,10 +116,10 @@ export class NeonPortal extends InstructionService {
         const solanaWallet = this.solanaWalletAddress;
         return this.neonWrapperContract.methods.withdraw(solanaWallet.toBuffer()).encodeABI();
     }
-    ethereumTransaction(amount, token, to = NEON_WRAPPER_SOL) {
+    ethereumTransaction(amount, token) {
         const from = this.neonWalletAddress;
-        const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
-        const value = `0x${BigInt(fullAmount).toString(16)}`;
+        const to = this.neonContractAddress;
+        const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
         const data = this.createWithdrawEthTransactionData();
         return { from, to, value, data };
     }

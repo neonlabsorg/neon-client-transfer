@@ -9,6 +9,7 @@ import { Buffer } from 'buffer';
 export declare class InstructionService {
     solanaWalletAddress: PublicKey;
     neonWalletAddress: string;
+    neonContractAddress: string;
     web3: Web3;
     proxyApi: NeonProxyRpcApi;
     proxyStatus: NeonProgramStatus;
