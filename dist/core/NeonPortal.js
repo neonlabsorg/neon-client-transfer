@@ -115,16 +115,14 @@ export class NeonPortal extends InstructionService {
     }
     createWithdrawEthTransactionData() {
         const solanaWallet = this.solanaWalletAddress;
-        return this.neonWrapperContract.methods.withdraw(solanaWallet.toBytes()).encodeABI();
+        return this.neonWrapperContract.methods.withdraw(solanaWallet.toBuffer()).encodeABI();
     }
     ethereumTransaction(amount, token, to = NEON_WRAPPER_SOL) {
+        const from = this.neonWalletAddress;
         const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
-        return {
-            to,
-            from: this.neonWalletAddress,
-            value: `0x${BigInt(fullAmount).toString(16)}`,
-            data: this.createWithdrawEthTransactionData()
-        };
+        const value = `0x${BigInt(fullAmount).toString(16)}`;
+        const data = this.createWithdrawEthTransactionData();
+        return { from, to, value, data };
     }
     createWithdrawWNeonTransaction(amount, address) {
         const contract = this.neonWrapper2Contract(address);
@@ -140,13 +138,11 @@ export class NeonPortal extends InstructionService {
         };
     }
     neonTransaction(amount, token) {
-        const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
-        return {
-            to: token.address,
-            from: this.neonWalletAddress,
-            value: `0x${BigInt(fullAmount).toString(16)}`,
-            data: this.createWithdrawEthTransactionData()
-        };
+        const from = this.neonWalletAddress;
+        const to = token.address;
+        const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
+        const data = this.createWithdrawEthTransactionData();
+        return { from, to, value, data };
     }
 }
 //# sourceMappingURL=NeonPortal.js.map

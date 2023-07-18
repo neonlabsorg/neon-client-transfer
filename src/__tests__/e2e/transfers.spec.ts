@@ -146,8 +146,9 @@ describe('Transfer tests', () => {
       expect(signature.length).toBeGreaterThan(0);
       solanaSignature(`Signature`, signature);
       await delay(5e3);
+      console.log('account.address', account.address);
       const balanceAfter = await splTokenBalance(connection, keypair.publicKey, neon);
-      const balanceMint = await mintTokenBalance(web3, account.address, neon);
+      const balanceMint = await neonBalance(web3, account.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neon.symbol} ==> ${balanceMint} ${neon.symbol} in Neon`);
       expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
     } catch (e) {
@@ -250,7 +251,7 @@ describe('Transfer tests', () => {
     }
   });
 
-  it.skip('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
+  it('Should wrap and unwrap 0.1 SOL <-> wSOL', async () => {
     const amount = 0.1;
     const signer: Signer = toSigner(keypair);
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');

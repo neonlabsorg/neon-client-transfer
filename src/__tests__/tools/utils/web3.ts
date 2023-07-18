@@ -10,11 +10,11 @@ import {
 } from '@solana/web3.js';
 import Web3 from 'web3';
 import { Account, TransactionConfig } from 'web3-core';
+import { AbiItem } from 'web3-utils';
 import Big from 'big.js';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { SPLToken } from '../../../models';
-import { AbiItem } from 'web3-utils';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -61,16 +61,16 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<any> {
+export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<number> {
   const tokenInstance = new web3.eth.Contract(contractAbi, token.address);
   const balance = await tokenInstance.methods.balanceOf(account).call();
   return balance / Math.pow(10, token.decimals);
 }
 
 export function solanaSignature(comment: string, signature: string): void {
-  console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?cluster=devnet`)
+  console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?cluster=devnet`);
 }
 
 export function neonSignature(comment: string, signature: string): void {
-  console.log(`${comment}: ${signature}; url: https://neonscan.org/tx/${signature}?cluster=devnet`)
+  console.log(`${comment}: ${signature}; url: https://neonscan.org/tx/${signature}?cluster=devnet`);
 }

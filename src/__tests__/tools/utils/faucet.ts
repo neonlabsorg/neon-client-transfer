@@ -5,7 +5,7 @@ import { post } from './crud';
 const tokenList = require('token-list/tokenlist.json');
 
 const FAUCET_URL = `https://api.neonfaucet.org`;
-const TOKEN_LIST = `https://raw.githubusercontent.com/neonlabsorg/token-list/v1.0.0/tokenlist.json`;
+const TOKEN_LIST = `https://raw.githubusercontent.com/neonlabsorg/token-list/v4.0.0/tokenlist.json`;
 
 export class FaucetDropper {
   public tokens: SPLToken[] = [];

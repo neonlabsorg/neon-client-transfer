@@ -42,9 +42,9 @@
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",
     "big.js": "^6.2.1",
-    "web3": "^1.8.1",
-    "web3-core": "^1.8.1",
-    "web3-eth-contract": "^1.8.1"
+    "web3": "1.10.0",
+    "web3-core": "1.10",
+    "web3-eth-contract": "1.10.0"
   },
   "devDependencies": {
     "@types/big.js": "^6.1.6",
