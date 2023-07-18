@@ -20,7 +20,11 @@ export function toBytesInt32(number, littleEndian = true) {
     return arrayBuffer;
 }
 export function toFullAmount(amount, decimals) {
-    const data = Big(amount.toString()).times(Big(10).pow(decimals));
+    const data = new Big(amount.toString()).times(Big(10).pow(decimals));
+    return BigInt(data.toString());
+}
+export function toBigInt(amount) {
+    const data = new Big(amount.toString());
     return BigInt(data.toString());
 }
 //# sourceMappingURL=address.js.map
