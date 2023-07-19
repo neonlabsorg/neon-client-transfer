@@ -33,6 +33,7 @@ import {
   toSigner
 } from '../tools/utils';
 import neonWrapper2 from '../../data/abi/neonWrapper2';
+import { NEON_TRANSFER_CONTRACT_DEVNET } from '../../data';
 
 const CHAIN_NAME = 'devnet';
 const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
@@ -70,6 +71,7 @@ beforeAll(async () => {
     connection,
     solanaWalletAddress: keypair.publicKey,
     neonWalletAddress: account.address,
+    neonContractAddress: NEON_TRANSFER_CONTRACT_DEVNET,
     proxyApi,
     proxyStatus,
     web3

@@ -13,6 +13,7 @@ export interface InstructionEvents {
 export interface InstructionParams extends InstructionEvents {
     solanaWalletAddress: PublicKey;
     neonWalletAddress: string;
+    neonContractAddress: string;
     web3: Web3;
     proxyApi: NeonProxyRpcApi;
     proxyStatus: NeonProgramStatus;

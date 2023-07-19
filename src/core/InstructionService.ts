@@ -31,6 +31,7 @@ const noop = new Function();
 export class InstructionService {
   solanaWalletAddress: PublicKey;
   neonWalletAddress: string;
+  neonContractAddress: string;
   web3: Web3;
   proxyApi: NeonProxyRpcApi;
   proxyStatus: NeonProgramStatus;
@@ -48,6 +49,7 @@ export class InstructionService {
     this.proxyStatus = options.proxyStatus;
     this.solanaWalletAddress = options.solanaWalletAddress || '';
     this.neonWalletAddress = options.neonWalletAddress || '';
+    this.neonContractAddress = options.neonContractAddress || '';
     this.connection = options.connection;
     this.solanaOptions = options.solanaOptions ?? { skipPreflight: false };
     this.events = {
@@ -135,7 +137,7 @@ export class InstructionService {
 
   createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): string {
     const fullAmount = toFullAmount(amount, splToken.decimals);
-    return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+    return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBuffer(), fullAmount).encodeABI();
   }
 
   ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {

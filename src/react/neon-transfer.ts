@@ -5,6 +5,7 @@ import { NeonProxyRpcApi } from '../api';
 import { MintPortal, NeonPortal } from '../core';
 import { InstructionEvents, InstructionParams, SPLToken } from '../models';
 import { useProxyInfo } from './proxy-status';
+import { NEON_TRANSFER_CONTRACT_DEVNET } from '../data';
 
 const urls = process.env.REACT_APP_URLS ? JSON.parse(process.env.REACT_APP_URLS) : {
   solanaRpcApi: 'https://api.devnet.solana.com',
@@ -16,15 +17,16 @@ export const proxyApi = new NeonProxyRpcApi({
   neonProxyRpcApi: urls.neonProxyRpcApi
 });
 
-export function useNeonTransfer(events: InstructionEvents, connection: Connection, web3: Web3, publicKey: PublicKey, neonWalletAddress: string) {
+export function useNeonTransfer(events: InstructionEvents, connection: Connection, web3: Web3, publicKey: PublicKey, neonWalletAddress: string, neonContractAddress = NEON_TRANSFER_CONTRACT_DEVNET) {
   const proxyStatus = useProxyInfo(proxyApi);
   const options: InstructionParams = {
     connection: connection,
     solanaWalletAddress: publicKey,
     neonWalletAddress,
+    neonContractAddress,
     web3,
     proxyApi: proxyApi,
-    proxyStatus: proxyStatus
+    proxyStatus: proxyStatus,
   };
 
   const neonPortal = new NeonPortal(options);
@@ -44,7 +46,7 @@ export function useNeonTransfer(events: InstructionEvents, connection: Connectio
     return portal.createNeonTransfer.call(portal, amount, splToken, events);
   };
 
-  const withdraw = (amount: number, splToken: SPLToken): any => {
+  const withdraw = (amount: number, splToken: SPLToken, to: string): any => {
     const portal = portalInstance(splToken.address_spl);
     return portal.createSolanaTransfer.call(portal, amount, splToken, events);
   };

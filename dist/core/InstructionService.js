@@ -30,6 +30,7 @@ export class InstructionService {
         this.proxyStatus = options.proxyStatus;
         this.solanaWalletAddress = options.solanaWalletAddress || '';
         this.neonWalletAddress = options.neonWalletAddress || '';
+        this.neonContractAddress = options.neonContractAddress || '';
         this.connection = options.connection;
         this.solanaOptions = (_a = options.solanaOptions) !== null && _a !== void 0 ? _a : { skipPreflight: false };
         this.events = {
@@ -109,7 +110,7 @@ export class InstructionService {
     }
     createApproveSolanaData(solanaWallet, splToken, amount) {
         const fullAmount = toFullAmount(amount, splToken.decimals);
-        return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBytes(), fullAmount).encodeABI();
+        return this.erc20ForSPLContract.methods.approveSolana(solanaWallet.toBuffer(), fullAmount).encodeABI();
     }
     ethereumTransaction(amount, token) {
         const solanaWallet = this.solanaWalletPubkey;
