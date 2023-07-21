@@ -6,7 +6,7 @@ import {
   SystemProgram,
   TransactionInstruction
 } from '@solana/web3.js';
-import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
+import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { AbiItem } from 'web3-utils';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -70,7 +70,7 @@ export class InstructionService {
     return new this.web3.eth.Contract(neonWrapperAbi as AbiItem[]);
   }
 
-  public neonWrapper2Contract(address: string): Contract {
+  neonWrapper2Contract(address: string): Contract {
     return new this.web3.eth.Contract(neonWrapper2Abi as AbiItem[], address);
   }
 
@@ -120,15 +120,11 @@ export class InstructionService {
     const a = Buffer.from([EvmInstruction.CreateAccountV03]);
     const b = Buffer.from(neonWallet.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
-    return new TransactionInstruction({
-      programId: this.programId,
-      keys,
-      data
-    });
+    return new TransactionInstruction({ programId: this.programId, keys, data });
   }
 
-  async getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey> {
-    return await getAssociatedTokenAddress(mintPubkey, walletPubkey);
+  getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): PublicKey {
+    return getAssociatedTokenAddressSync(mintPubkey, walletPubkey);
   }
 
   approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction {

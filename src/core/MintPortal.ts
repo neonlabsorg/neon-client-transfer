@@ -3,6 +3,7 @@ import {
   createAssociatedTokenAccountInstruction,
   createCloseAccountInstruction,
   createSyncNativeInstruction,
+  getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import {
@@ -40,7 +41,7 @@ export class MintPortal extends InstructionService {
   async createSolanaTransfer(amount: number, splToken: SPLToken, events = this.events) {
     const mintPubkey = new PublicKey(splToken.address_spl);
     const walletPubkey = this.solanaWalletPubkey;
-    const associatedTokenPubkey = await this.getAssociatedTokenAddress(mintPubkey, walletPubkey);
+    const associatedTokenPubkey = getAssociatedTokenAddressSync(mintPubkey, walletPubkey);
     const solanaTransaction = await this.solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey);
     const neonTransaction = await this.createNeonTransaction(this.neonWalletAddress, associatedTokenPubkey, splToken, amount);
     neonTransaction.nonce = await this.web3.eth.getTransactionCount(this.neonWalletAddress);
@@ -65,8 +66,7 @@ export class MintPortal extends InstructionService {
     const [delegatePDA] = this.authAccountAddress(emulateSigner.address, splToken);
     const emulateSignerPDAAccount = await this.getNeonAccount(emulateSignerPDA);
     const neonWalletAccount = await this.getNeonAccount(neonWalletPDA);
-
-    const associatedTokenAddress = await this.getAssociatedTokenAddress(new PublicKey(splToken.address_spl), solanaWallet);
+    const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
 
     const { neonKeys, neonTransaction } = await this.createClaimInstruction(
       solanaWallet,
@@ -257,7 +257,7 @@ export class MintPortal extends InstructionService {
     const lamports = toFullAmount(amount, splToken.decimals);
     const solanaWallet = this.solanaWalletPubkey;
     const mintPubkey = new PublicKey(splToken.address_spl);
-    const associatedToken = await this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+    const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
     const wSOLAccount = await this.connection.getAccountInfo(associatedToken);
 
     const transaction = new Transaction({ feePayer: solanaWallet });
@@ -292,7 +292,7 @@ export class MintPortal extends InstructionService {
   async unwrapSOLTransaction(amount: Amount, splToken: SPLToken): Promise<Transaction> {
     const solanaWallet = this.solanaWalletPubkey;
     const mintPubkey = new PublicKey(splToken.address_spl);
-    const associatedToken = await this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+    const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
     const wSOLAccount = await this.connection.getAccountInfo(associatedToken);
 
     if (!wSOLAccount) {

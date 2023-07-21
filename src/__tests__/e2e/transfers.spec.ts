@@ -259,7 +259,7 @@ describe('Transfer tests', () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     if (id > -1) {
       const wSOL = faucet.tokens[id];
-      const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
+      const associatedToken = mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
       const solBefore = await connection.getBalance(keypair.publicKey);
       const wSolBefore = await connection.getBalance(associatedToken);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
@@ -300,7 +300,7 @@ describe('Transfer tests', () => {
     console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);
     if (id > -1) {
       const wSOL = faucet.tokens[id];
-      const associatedToken = await mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
+      const associatedToken = mintPortal.getAssociatedTokenAddress(new PublicKey(wSOL.address_spl), mintPortal.solanaWalletPubkey);
       const wSolBefore = await connection.getBalance(associatedToken);
       const balanceBefore = await mintTokenBalance(web3, account.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
@@ -339,7 +339,7 @@ describe('Transfer tests', () => {
       const wSOL = faucet.tokens[id];
       const mintPubkey = new PublicKey(wSOL.address_spl);
       const solBefore = await connection.getBalance(keypair.publicKey);
-      const associatedToken = await mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
+      const associatedToken = mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
 
       const balanceBefore = await mintTokenBalance(web3, account.address, wSOL);
       console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
@@ -414,7 +414,7 @@ function itNeonTokenMint(token: SPLToken): void {
     const mintPubkey = new PublicKey(token.address_spl);
     const balanceBefore = await mintTokenBalance(web3, account.address, token);
     console.log(`Balance: ${balanceBefore ?? 0} ${token.symbol}`);
-    const associatedTokenPubkey = await mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
+    const associatedTokenPubkey = mintPortal.getAssociatedTokenAddress(mintPubkey, keypair.publicKey);
     const solanaTransaction = await mintPortal.solanaTransferTransaction(keypair.publicKey, mintPubkey, associatedTokenPubkey);
     const neonTransaction = await mintPortal.createNeonTransaction(account.address, associatedTokenPubkey, token, amount);
     neonTransaction['gasLimit'] = 50000;

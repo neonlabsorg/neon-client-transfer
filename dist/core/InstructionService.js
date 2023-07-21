@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
-import { createApproveInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
+import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { SHA256 } from 'crypto-js';
 import { etherToProgram, isValidHex, toFullAmount } from '../utils';
 import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../data';
@@ -94,16 +94,10 @@ export class InstructionService {
         const a = Buffer.from([40 /* EvmInstruction.CreateAccountV03 */]);
         const b = Buffer.from(neonWallet.slice(2), 'hex');
         const data = Buffer.concat([a, b]);
-        return new TransactionInstruction({
-            programId: this.programId,
-            keys,
-            data
-        });
+        return new TransactionInstruction({ programId: this.programId, keys, data });
     }
     getAssociatedTokenAddress(mintPubkey, walletPubkey) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield getAssociatedTokenAddress(mintPubkey, walletPubkey);
-        });
+        return getAssociatedTokenAddressSync(mintPubkey, walletPubkey);
     }
     approveDepositInstruction(walletPubkey, neonPDAPubkey, associatedTokenPubkey, amount) {
         return createApproveInstruction(associatedTokenPubkey, neonPDAPubkey, walletPubkey, amount);

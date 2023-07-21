@@ -89,11 +89,7 @@ export class NeonPortal extends InstructionService {
     const a = Buffer.from([EvmInstruction.DepositV03]);
     const b = Buffer.from(neonWalletAddress.slice(2), 'hex');
     const data = Buffer.concat([a, b]);
-    return new TransactionInstruction({
-      programId: this.programId,
-      keys,
-      data
-    });
+    return new TransactionInstruction({ programId: this.programId, keys, data });
   }
 
   neonTransferInstruction(solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction {
@@ -139,13 +135,11 @@ export class NeonPortal extends InstructionService {
   }
 
   wNeonTransaction(amount: Amount, token: SPLToken): TransactionConfig {
-    const fullAmount = this.web3.utils.toWei(amount.toString(), 'ether');
-    return {
-      to: token.address,
-      from: this.neonWalletAddress,
-      value: `0x0`,
-      data: this.createWithdrawWNeonTransaction(fullAmount, token.address)
-    };
+    const from = this.neonWalletAddress;
+    const to = token.address;
+    const value = `0x0`;
+    const data = this.createWithdrawWNeonTransaction(this.web3.utils.toWei(amount.toString(), 'ether'), to);
+    return { from, to, value, data };
   }
 
   neonTransaction(amount: Amount, token: SPLToken): TransactionConfig {

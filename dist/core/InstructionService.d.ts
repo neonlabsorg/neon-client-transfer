@@ -28,7 +28,7 @@ export declare class InstructionService {
     authAccountAddress(neonWallet: string, token: SPLToken): [PublicKey, number];
     getNeonAccount(neonAssociatedKey: PublicKey): Promise<AccountInfo<Buffer> | null>;
     createAccountV3Instruction(solanaWallet: PublicKey, neonWalletPDA: PublicKey, neonWallet: string): TransactionInstruction;
-    getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): Promise<PublicKey>;
+    getAssociatedTokenAddress(mintPubkey: PublicKey, walletPubkey: PublicKey): PublicKey;
     approveDepositInstruction(walletPubkey: PublicKey, neonPDAPubkey: PublicKey, associatedTokenPubkey: PublicKey, amount: number | bigint): TransactionInstruction;
     createApproveSolanaData(solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): string;
     ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig;

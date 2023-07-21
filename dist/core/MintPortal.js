@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, createSyncNativeInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, createSyncNativeInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import { InstructionService } from './InstructionService';
@@ -36,7 +36,7 @@ export class MintPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const mintPubkey = new PublicKey(splToken.address_spl);
             const walletPubkey = this.solanaWalletPubkey;
-            const associatedTokenPubkey = yield this.getAssociatedTokenAddress(mintPubkey, walletPubkey);
+            const associatedTokenPubkey = getAssociatedTokenAddressSync(mintPubkey, walletPubkey);
             const solanaTransaction = yield this.solanaTransferTransaction(walletPubkey, mintPubkey, associatedTokenPubkey);
             const neonTransaction = yield this.createNeonTransaction(this.neonWalletAddress, associatedTokenPubkey, splToken, amount);
             neonTransaction.nonce = yield this.web3.eth.getTransactionCount(this.neonWalletAddress);
@@ -63,7 +63,7 @@ export class MintPortal extends InstructionService {
             const [delegatePDA] = this.authAccountAddress(emulateSigner.address, splToken);
             const emulateSignerPDAAccount = yield this.getNeonAccount(emulateSignerPDA);
             const neonWalletAccount = yield this.getNeonAccount(neonWalletPDA);
-            const associatedTokenAddress = yield this.getAssociatedTokenAddress(new PublicKey(splToken.address_spl), solanaWallet);
+            const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
             const { neonKeys, neonTransaction } = yield this.createClaimInstruction(solanaWallet, associatedTokenAddress, this.neonWalletAddress, splToken, emulateSigner, fullAmount);
             const { blockhash } = yield this.connection.getLatestBlockhash();
             const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
@@ -231,7 +231,7 @@ export class MintPortal extends InstructionService {
             const lamports = toFullAmount(amount, splToken.decimals);
             const solanaWallet = this.solanaWalletPubkey;
             const mintPubkey = new PublicKey(splToken.address_spl);
-            const associatedToken = yield this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+            const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
             const wSOLAccount = yield this.connection.getAccountInfo(associatedToken);
             const transaction = new Transaction({ feePayer: solanaWallet });
             const instructions = [];
@@ -254,7 +254,7 @@ export class MintPortal extends InstructionService {
         return __awaiter(this, void 0, void 0, function* () {
             const solanaWallet = this.solanaWalletPubkey;
             const mintPubkey = new PublicKey(splToken.address_spl);
-            const associatedToken = yield this.getAssociatedTokenAddress(mintPubkey, solanaWallet);
+            const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
             const wSOLAccount = yield this.connection.getAccountInfo(associatedToken);
             if (!wSOLAccount) {
                 throw new Error(`Error: ${associatedToken.toBase58()} haven't created account...`);
