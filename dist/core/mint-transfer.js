@@ -160,7 +160,7 @@ export function mintNeonTransactionData(web3, solanaWallet, splToken, amount) {
 export function createMintNeonTransaction(neonWallet, splToken, data) {
     return { data, from: neonWallet, to: splToken.address, value: `0x0` };
 }
-export function createERC20SolanaTransaction(walletPubkey, mintPubkey, associatedTokenPubkey, proxyStatus) {
+export function createMintSolanaTransaction(walletPubkey, mintPubkey, associatedTokenPubkey, proxyStatus) {
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const transaction = new Transaction({ feePayer: walletPubkey });
     transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));

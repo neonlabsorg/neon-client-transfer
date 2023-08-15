@@ -2,10 +2,15 @@
 import { AccountInfo, Connection, PublicKey, SendOptions, TransactionInstruction } from '@solana/web3.js';
 import { Account, TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
+import { Buffer } from 'buffer';
 import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../../api';
 import { Amount, InstructionEvents, InstructionParams, NeonProgramStatus, SPLToken } from '../../models';
-import { Buffer } from 'buffer';
+/**
+ * @deprecated this code was deprecated and will remove in next releases.
+ * Please use other methods from mint-transfer.ts and neon-transfer.ts files
+ * For more examples see `examples` folder
+ */
 export declare class InstructionService {
     solanaWalletAddress: PublicKey;
     neonWalletAddress: string;
@@ -17,6 +22,7 @@ export declare class InstructionService {
     events: InstructionEvents;
     solanaOptions: SendOptions;
     get programId(): PublicKey;
+    get tokenMint(): PublicKey;
     constructor(options: InstructionParams);
     get erc20ForSPLContract(): Contract;
     get neonWrapperContract(): Contract;

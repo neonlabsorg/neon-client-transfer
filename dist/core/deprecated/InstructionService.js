@@ -7,17 +7,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SHA256 } from 'crypto-js';
-import { isValidHex, toFullAmount } from '../../utils';
+import { toFullAmount } from '../../utils';
 import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
-import { Buffer } from 'buffer';
-import { neonWalletProgramAddress } from '../utils';
+import { authAccountAddress, neonWalletProgramAddress, solanaWalletSigner } from '../utils';
+import { createAccountV3Instruction } from '../mint-transfer';
 const noop = new Function();
+/**
+ * @deprecated this code was deprecated and will remove in next releases.
+ * Please use other methods from mint-transfer.ts and neon-transfer.ts files
+ * For more examples see `examples` folder
+ */
 export class InstructionService {
     get programId() {
         return new PublicKey(this.proxyStatus.NEON_EVM_ID);
+    }
+    get tokenMint() {
+        return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
     }
     constructor(options) {
         var _a;
@@ -62,24 +69,13 @@ export class InstructionService {
         return new PublicKey(this.solanaWalletAddress);
     }
     get solanaWalletSigner() {
-        const solanaWallet = this.solanaWalletPubkey.toBase58();
-        const neonWallet = this.neonWalletAddress;
-        const emulateSignerPrivateKey = `0x${SHA256(solanaWallet + neonWallet).toString()}`;
-        return this.web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
+        return solanaWalletSigner(this.web3, this.solanaWalletPubkey, this.neonWalletAddress);
     }
     neonAccountAddress(neonWallet) {
         return neonWalletProgramAddress(neonWallet, this.programId);
     }
     authAccountAddress(neonWallet, token) {
-        const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
-        const neonContractAddressBytes = Buffer.from(isValidHex(token.address) ? token.address.replace(/^0x/i, '') : token.address, 'hex');
-        const seed = [
-            new Uint8Array([3 /* AccountHex.SeedVersion */]),
-            new Uint8Array(Buffer.from('AUTH', 'utf-8')),
-            new Uint8Array(neonContractAddressBytes),
-            new Uint8Array(neonAccountAddressBytes)
-        ];
-        return PublicKey.findProgramAddressSync(seed, this.programId);
+        return authAccountAddress(neonWallet, this.programId, token);
     }
     getNeonAccount(neonAssociatedKey) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -87,15 +83,7 @@ export class InstructionService {
         });
     }
     createAccountV3Instruction(solanaWallet, neonWalletPDA, neonWallet) {
-        const keys = [
-            { pubkey: solanaWallet, isSigner: true, isWritable: true },
-            { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-            { pubkey: neonWalletPDA, isSigner: false, isWritable: true }
-        ];
-        const a = Buffer.from([40 /* EvmInstruction.CreateAccountV03 */]);
-        const b = Buffer.from(neonWallet.slice(2), 'hex');
-        const data = Buffer.concat([a, b]);
-        return new TransactionInstruction({ programId: this.programId, keys, data });
+        return createAccountV3Instruction(solanaWallet, neonWalletPDA, this.programId, neonWallet);
     }
     getAssociatedTokenAddress(mintPubkey, walletPubkey) {
         return getAssociatedTokenAddressSync(mintPubkey, walletPubkey);

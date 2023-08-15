@@ -7,11 +7,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, TokenInstruction, transferInstructionData } from '@solana/spl-token';
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { InstructionService } from './InstructionService';
-import { toBigInt, toFullAmount } from '../../utils';
-// Neon Token Transfer
+import { createNeonDepositInstruction, createNeonTransferInstruction, neonTransactionData, solanaNEONTransferTransaction } from '../neon-transfer';
+import { authorityPoolAddress } from '../utils';
+/**
+ * @deprecated this code was deprecated and will remove in next releases.
+ * Please use other methods in neon-transfer.ts file
+ * For more examples see `examples` folder
+ */
 export class NeonPortal extends InstructionService {
     // Solana -> Neon
     createNeonTransfer(amount, splToken, events = this.events) {
@@ -46,66 +49,22 @@ export class NeonPortal extends InstructionService {
     }
     neonTransferTransaction(amount, token, serviceWallet, rewardAmount) {
         return __awaiter(this, void 0, void 0, function* () {
-            const solanaWallet = this.solanaWalletPubkey;
-            const [neonWallet] = this.neonAccountAddress(this.neonWalletAddress);
-            const [authorityPoolPubkey] = this.getAuthorityPoolAddress();
-            const { blockhash } = yield this.connection.getLatestBlockhash('finalized');
-            const transaction = new Transaction({ recentBlockhash: blockhash, feePayer: solanaWallet });
-            const neonToken = Object.assign(Object.assign({}, token), { decimals: Number(this.proxyStatus.NEON_TOKEN_MINT_DECIMALS) });
-            const fullAmount = toFullAmount(amount, neonToken.decimals);
-            const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(neonToken.address_spl), solanaWallet);
-            const approveInstruction = this.approveDepositInstruction(solanaWallet, neonWallet, associatedTokenAddress, fullAmount);
-            transaction.add(approveInstruction);
-            const depositInstruction = this.createDepositInstruction(solanaWallet, neonWallet, authorityPoolPubkey, this.neonWalletAddress, serviceWallet);
-            transaction.add(depositInstruction);
-            if (serviceWallet && rewardAmount) {
-                transaction.add(this.neonTransferInstruction(solanaWallet, serviceWallet, rewardAmount));
-            }
+            const transaction = yield solanaNEONTransferTransaction(this.solanaWalletPubkey, this.neonWalletAddress, this.programId, this.tokenMint, token, amount, serviceWallet, rewardAmount);
+            transaction.recentBlockhash = (yield this.connection.getLatestBlockhash('finalized')).blockhash;
             return transaction;
         });
     }
     createDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWalletAddress, serviceWallet) {
-        const neonTokenMint = new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
-        const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaPubkey);
-        const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositPubkey, true);
-        const keys = [
-            { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true },
-            { pubkey: poolKey, isSigner: false, isWritable: true },
-            { pubkey: neonPubkey, isSigner: false, isWritable: true },
-            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-            { pubkey: serviceWallet ? serviceWallet : solanaPubkey, isSigner: true, isWritable: true },
-            { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
-        ];
-        const a = Buffer.from([39 /* EvmInstruction.DepositV03 */]);
-        const b = Buffer.from(neonWalletAddress.slice(2), 'hex');
-        const data = Buffer.concat([a, b]);
-        return new TransactionInstruction({ programId: this.programId, keys, data });
+        return createNeonDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWalletAddress, this.programId, this.tokenMint, serviceWallet);
     }
     neonTransferInstruction(solanaWallet, serviceWallet, rewardAmount) {
-        const neonTokenMint = new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
-        const from = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet, true);
-        const to = getAssociatedTokenAddressSync(neonTokenMint, serviceWallet, true);
-        const fullAmount = toBigInt(rewardAmount);
-        const keys = [
-            { pubkey: from, isSigner: false, isWritable: true },
-            { pubkey: to, isSigner: false, isWritable: true },
-            { pubkey: solanaWallet, isSigner: true, isWritable: false }
-        ];
-        const data = Buffer.alloc(transferInstructionData.span);
-        transferInstructionData.encode({
-            instruction: TokenInstruction.Transfer,
-            amount: fullAmount
-        }, data);
-        return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
+        return createNeonTransferInstruction(this.tokenMint, solanaWallet, serviceWallet, rewardAmount);
     }
-    // #endregion
     getAuthorityPoolAddress() {
-        const enc = new TextEncoder();
-        return PublicKey.findProgramAddressSync([enc.encode('Deposit')], this.programId);
+        return authorityPoolAddress(this.programId);
     }
     createWithdrawEthTransactionData() {
-        const solanaWallet = this.solanaWalletAddress;
-        return this.neonWrapperContract.methods.withdraw(solanaWallet.toBuffer()).encodeABI();
+        return neonTransactionData(this.web3, this.solanaWalletPubkey);
     }
     ethereumTransaction(amount, token) {
         const from = this.neonWalletAddress;

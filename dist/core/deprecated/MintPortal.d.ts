@@ -1,7 +1,12 @@
 import { AccountMeta, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
-import { InstructionService } from './InstructionService';
 import { Amount, SPLToken } from '../../models';
+import { InstructionService } from './InstructionService';
+/**
+ * @deprecated this code was deprecated and will remove in next releases.
+ * Please use other methods in mint-transfer.ts file
+ * For more examples see `examples` folder
+ */
 export declare class MintPortal extends InstructionService {
     createNeonTransfer(amount: number, splToken: SPLToken, events?: import("../../models").InstructionEvents): Promise<void>;
     createSolanaTransfer(amount: number, splToken: SPLToken, events?: import("../../models").InstructionEvents): Promise<void>;

@@ -10,6 +10,10 @@ export const proxyApi = new NeonProxyRpcApi({
     solanaRpcApi: urls.solanaRpcApi,
     neonProxyRpcApi: urls.neonProxyRpcApi
 });
+/*
+* @deprecated this code was deprecated and will remove in next releases.
+* Please, don't use this hock in you codebase, for more details see our React Demo in `examples` folder
+* */
 export function useNeonTransfer(events, connection, web3, publicKey, neonWalletAddress, neonContractAddress = NEON_TRANSFER_CONTRACT_DEVNET) {
     const proxyStatus = useProxyInfo(proxyApi);
     const options = {
@@ -19,7 +23,7 @@ export function useNeonTransfer(events, connection, web3, publicKey, neonWalletA
         neonContractAddress,
         web3,
         proxyApi: proxyApi,
-        proxyStatus: proxyStatus,
+        proxyStatus: proxyStatus
     };
     const neonPortal = new NeonPortal(options);
     const mintPortal = new MintPortal(options);

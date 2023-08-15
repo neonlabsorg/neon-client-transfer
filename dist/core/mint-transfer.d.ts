@@ -19,7 +19,7 @@ export declare function createExecFromDataInstruction(solanaWallet: PublicKey, n
 export declare function createMintNeonWeb3Transaction(web3: Web3, neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount, gasLimit?: number): Promise<TransactionConfig>;
 export declare function mintNeonTransactionData(web3: Web3, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): string;
 export declare function createMintNeonTransaction(neonWallet: string, splToken: SPLToken, data: string): TransactionConfig;
-export declare function createERC20SolanaTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey, proxyStatus: NeonProgramStatus): Transaction;
+export declare function createMintSolanaTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey, proxyStatus: NeonProgramStatus): Transaction;
 export declare function createAssociatedTokenAccountInstruction(tokenMint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey, associatedProgramId?: PublicKey, programId?: PublicKey): TransactionInstruction;
 export declare function createWrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, amount: Amount, splToken: SPLToken): Promise<Transaction>;
 export declare function createUnwrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, splToken: SPLToken): Promise<Transaction>;

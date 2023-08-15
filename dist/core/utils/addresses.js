@@ -23,7 +23,6 @@ export function collateralPoolAddress(neonWalletPDA, collateralPoolIndex) {
     return PublicKey.findProgramAddressSync([a, b], neonWalletPDA);
 }
 export function authorityPoolAddress(programId) {
-    const enc = new TextEncoder();
-    return PublicKey.findProgramAddressSync([enc.encode('Deposit')], programId);
+    return PublicKey.findProgramAddressSync([new Uint8Array(Buffer.from('Deposit', 'utf-8'))], programId);
 }
 //# sourceMappingURL=addresses.js.map
