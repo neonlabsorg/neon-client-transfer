@@ -1,4 +1,4 @@
-# Neon Transfer module for JavaScript client
+# Neon Transfer Module for JavaScript client
 
 [![workflows](https://github.com/neonlabsorg/neon-client-transfer/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/neonlabsorg/neon-client-transfer/actions)
 [![npm](https://img.shields.io/npm/v/neon-portal.svg)](https://www.npmjs.com/package/neon-portal)
@@ -7,110 +7,103 @@
 
 **NOTE**
 
-The package is tested on [NeonPass](https://neonpass.live/) codebase, which use react hooks arch.
-You can use clean core, but all important requirements you need to provide as params and see how it goes by yourself.
+The package using on our [NeonPass](https://neonpass.live/) codebase.
 
 ---
-
-Module was used by the react wrapper `import { useNeonTransfer } from "neon-portal/src/react"`
-For clean working configuration example we have to rebuild connect status buttons, their transfer callbacks and error handling.
 
 ## Installation and setup
 
 Firstly, install the package:
 
 ```sh
+yarn add neon-portal
+# or
 npm install neon-portal
 ```
 
 ### For native
 
-After installing you need to pass some required properties, when calling new instance, for properly working. Neon wallet interface based on Metamask. Module checks, is wallet objects - window.solana and window.ehtereum - really exists. If not - module will throw an error for you. So, besides Solana Phantom wallet you need to connect Metamask wallet and get both user addresses, which you need to pass as properties.
+Upon installation, it is essential to provide certain mandatory properties when initializing a new instance to ensure proper functionality. When integrating this into your frontend application, it's necessary to grant Solana/Neon wallets access for signing and sending transactions across Solana and Neon EVM networks.
+
 
 ```javascript
-import { NeonPortal } from "neon-portal"
-//for transfer ERC20 tokens use:
-import { MintPortal } from "neon-portal"
-
-const eventParams = {
-  onBeforeSignTransaction: () => {
-    /* Your state changes here */
-  },
-  /* ... */
-}
-const portal = new NeonPortal({
-  solanaWalletAddress: publicKey,
-  neonWalletAddress: account,
-  customConnection: connection,
-  /*
-    You can pass events as properties,
-    but this functions will be call at portal context.
-  */
-  ...eventParams,
-})
-button.addEventListener("onClick", (e) => {
-  /*
-    If you want to save context of event function - pass it as first argument
-    Else first argument should be undefined
-  */
-  portal.createNeonTransfer(eventParams, amount, splToken)
-})
+const solanaWallet = `<Your Solana wallet public key>`;
+const neonWallet = `<Your Neon wallet public address>`;
 ```
 
-|                  Property name |   Type   |                                                                                                            Description                                                                                                            | is required |
-|-------------------------------:| :------: |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|------------:|
-|            solanaWalletAddress |  String  |                                                                                                    Address from solana wallet                                                                                                     |        true |
-|              neonWalletAddress |  String  |                                                                                     Address of preconfigured for neon network metamask wallet                                                                                     |        true |
-|                           web3 |  Object  |                                                                    Connection module of ethereum web3 framework. It needs for use Neon SDK network connection.                                                                    |        true |
-|                     connection |  Object  |                       connection module of solana web3 framework. You have to provide your own connection, if it exists. Cause of context, if you won't, it should start working for other solana networks.                       |        true |
-|     onBeforeCreateInstructions | function |                                                                   Function, which calls on start of init transfer functions. It uses in both transfer functions                                                                   |       false |
-| onCreateNeonAccountInstruction | function |                                                       Function, which calls on instructions building, if neon account didn't find. It uses in transfer to neon from solana.                                                       |       false |
-|        onBeforeSignTransaction | function |                                                                 Function, which calls before transaction will be sign by solana wallet. It uses in both transfers                                                                 |       false |
-|               onBeforeNeonSign | function |                                                            Function, which calls before metamask will approve transfer. It uses when you transfer from neon to solana.                                                            |       false |
-|                  onSuccessSign | function |       Function, which calls after sign the transfer. When you use it on transfer to neon, function get one argument - solana transaction sign. On transfer to solana it provides two arguments. Solana and Neon signatures.       |       false |
-|                    onErrorSign | function |                                                                                 Function, which calls, if wallet throw an error after try to sign                                                                                 |       false |
+We employ the `evmParams` method from Neon EVM to obtain specific addresses and constants required for seamless operations.
+
+```javascript
+const proxyApi = new NeonProxyRpcApi(urls);
+// ...
+const neonProxyStatus = await proxyApi.evmParams();
+const neonEvmProgram = new PublicKey(neonProxyStatus.NEON_EVM_ID);
+const neonTokenMint = new PublicKey(neonProxyStatus.NEON_TOKEN_MINT);
+```
+
+Still, for testing you can use `NEON_TRANSFER_CONTRACT_DEVNET` or `NEON_TRANSFER_CONTRACT_MAINNET` constants. This objects contains snapshots with latest `neonProxyStatus` state. 
+
+#### Transfer NEON transactions
+
+To generate a transaction for transferring NEON from Solana to Neon EVM, utilize the functions found in the `neon-transfer.ts` file.
+
+```javascript
+const neonToken: SPLToken = {
+  ...NEON_TOKEN_MODEL,
+  address_spl: proxyStatus.NEON_TOKEN_MINT,
+  chainId: CHAIN_ID
+};
+const transaction = await solanaNEONTransferTransaction(solanaWallet, neonWallet, neonEvmProgram, neonTokenMint, neonToken, amount); // Solana Transaction object
+transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash; // Network blockhash
+const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false }); // method for sign and send transaction to network
+```
+And for transfer NEON from Neon EVM to Solana, you can using this pattern:
+
+```javascript
+const transaction = await neonNeonWeb3Transaction(web3, neonWallet, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet, amount); // Neon EVM Transaction object
+const hash = await sendNeonTransaction(web3, transaction, neonWallet); // method for sign and send transaction to network
+```
+
+#### Transfer ERC20 transactions
+
+When working with Devnet, Testnet, or Mainnet, different ERC20 tokens are utilized. We have compiled a [token-list](https://github.com/neonlabsorg/token-list) containing the tokens supported and available on Neon EVM. For further information, please refer to our [documentation](https://docs.neonfoundation.io/docs/tokens/token_list).
+
+For transfer ERC20 tokens from Solana to Neon EVM, using this patterns:
+
+```javascript
+const token = tokenList[0];
+const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, token, amount);
+transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
+```
+
+And for transfer ERC20 tokens from Neon EVM to Solana: 
+
+```javascript
+const token = tokenList[0];
+const mintPubkey = new PublicKey(token.address_spl);
+const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
+const solanaTransaction = createMintSolanaTransaction(solanaWallet, mintPubkey, associatedToken, proxyStatus);
+solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, token, amount);
+const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
+const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
+```
+
+Within the Neon Transfer codebase, we employ the `web3.js` library to streamline our code. However, if the situation demands, you can opt for alternatives such as `ethereum.js` or `WalletConnect`.
 
 ### For React
 
-You can use hook from package. This hook apply event parameters as object for argument. For clean code You should create your own hook and manipulate your states here.
+To incorporate it into your React App, please refer to our React Demo located in the `examples/react/neon-transfer-react` folder. 
 
-There is example:
+### For Testing
 
-```javascript
-export const useTransfering = () => {
-  const { setPending, setSign, setError } = useStates()
-  const { publicKey } = useWallet()
-  const { account, library } = useWeb3React();
-  // please, add your own custom solana connection, if you use it in the context of your app. Pass it as second argument at neon transfer hook.
-  const connection = useConnection()
-  const { createNeonTransfer, createSolanaTransfer } = useNeonTransfer(
-    {
-      onBeforeCreateInstruction: () => {
-        setPending(true)
-      },
-      onBeforeSignTransaction: () => {
-        setPending(false)
-        setTransfering(true)
-      },
-      /*
-    sig - phantom signature (solana)
-    txHash - neon approve signature when transfer to solana
-    */
-      onSuccessSign: (sig, txHash) => {
-        setSign(sig, txHash)
-        setTransfering(false)
-      },
-      onErrorSign: (e) => {
-        setError(e.message)
-        setPending(false)
-      },
-      // yes, there
-    },
-    connection,
-    library, // Web3 Library instance  
-    publicKey, // you Phantom wallet public key
-    account // you Metamask wallet public key
-  )
-  return { createNeonTransfer, createSolanaTransfer }
-}
+We have provided extra examples within the `src/__tests__/e2e` folder, intended for testing and debugging this library on both the Devnet Solana network and Neon EVM.
+
+Run this command for `e2e` testing Neon Transfer code.
+
+```sh
+yarn test
+# or
+npm run test
 ```

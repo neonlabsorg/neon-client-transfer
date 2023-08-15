@@ -17,6 +17,10 @@ export const proxyApi = new NeonProxyRpcApi({
   neonProxyRpcApi: urls.neonProxyRpcApi
 });
 
+/*
+* @deprecated this code was deprecated and will remove in next releases.
+* Please, don't use this hock in you codebase, for more details see our React Demo in `examples` folder
+* */
 export function useNeonTransfer(events: InstructionEvents, connection: Connection, web3: Web3, publicKey: PublicKey, neonWalletAddress: string, neonContractAddress = NEON_TRANSFER_CONTRACT_DEVNET) {
   const proxyStatus = useProxyInfo(proxyApi);
   const options: InstructionParams = {
@@ -26,7 +30,7 @@ export function useNeonTransfer(events: InstructionEvents, connection: Connectio
     neonContractAddress,
     web3,
     proxyApi: proxyApi,
-    proxyStatus: proxyStatus,
+    proxyStatus: proxyStatus
   };
 
   const neonPortal = new NeonPortal(options);

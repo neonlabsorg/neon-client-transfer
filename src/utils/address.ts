@@ -1,21 +1,5 @@
-import { PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 import Big from 'big.js';
-import { AccountHex, Amount } from '../models';
-
-export function isValidHex(hex: string | number): boolean {
-  const isHexStrict = /^(0x)?[0-9a-f]*$/i.test(hex.toString());
-  if (!isHexStrict) {
-    throw new Error(`Given value "${hex}" is not a valid hex string.`);
-  }
-  return isHexStrict;
-}
-
-export function etherToProgram(etherKey: string, neonEvmId: PublicKey): [PublicKey, number] {
-  const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
-  const seed = [new Uint8Array([AccountHex.SeedVersion]), new Uint8Array(keyBuffer)];
-  return PublicKey.findProgramAddressSync(seed, neonEvmId);
-}
+import { Amount } from '../models';
 
 export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   const arrayBuffer = new ArrayBuffer(4); // an Int32 takes 4 bytes
