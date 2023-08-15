@@ -115,7 +115,6 @@ export async function neonClaimTransactionFromSigner(climeData: string, walletSi
   return walletSigner.signTransaction(transaction);
 }
 
-
 export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, signedTransaction: SignedTransaction): Promise<{ neonKeys: AccountMeta[], neonTransaction: SignedTransaction }> {
   try {
     let neonEmulate: any;
@@ -186,7 +185,7 @@ export function createMintNeonTransaction(neonWallet: string, splToken: SPLToken
   return { data, from: neonWallet, to: splToken.address, value: `0x0` };
 }
 
-export function createERC20SolanaTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey, proxyStatus: NeonProgramStatus): Transaction {
+export function createMintSolanaTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey, proxyStatus: NeonProgramStatus): Transaction {
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const transaction = new Transaction({ feePayer: walletPubkey });
   transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));

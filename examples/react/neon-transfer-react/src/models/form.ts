@@ -3,3 +3,8 @@ export interface TransferDirection {
   from: string;
   to: string;
 }
+
+export interface TokenBalance {
+  neon: string;
+  solana: string;
+}

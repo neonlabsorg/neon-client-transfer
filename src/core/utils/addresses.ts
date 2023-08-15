@@ -27,6 +27,5 @@ export function collateralPoolAddress(neonWalletPDA: PublicKey, collateralPoolIn
 }
 
 export function authorityPoolAddress(programId: PublicKey): [PublicKey, number] {
-  const enc = new TextEncoder();
-  return PublicKey.findProgramAddressSync([enc.encode('Deposit')], programId);
+  return PublicKey.findProgramAddressSync([new Uint8Array(Buffer.from('Deposit', 'utf-8'))], programId);
 }

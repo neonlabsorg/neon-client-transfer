@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
-  InstructionParams,
-  MintPortal,
+  createERC20SolanaTransaction,
+  createMintNeonWeb3Transaction,
   NEON_STATUS_DEVNET_SNAPSHOT,
   NEON_TRANSFER_CONTRACT_DEVNET,
-  NeonPortal,
+  neonNeonWeb3Transaction,
   NeonProxyRpcApi,
+  neonTransferMintWeb3Transaction,
+  solanaNEONTransferTransaction,
   SPLToken
 } from 'neon-portal';
 import { decode } from 'bs58';
 import Web3 from 'web3';
+
 import {
   delay,
   mintTokenBalance,
@@ -30,7 +34,7 @@ import {
   TOKEN_LIST,
   toSigner
 } from './utils';
-import { TransferDirection } from './models';
+import { TokenBalance, TransferDirection } from './models';
 
 const urls = process.env.REACT_APP_URLS ? JSON.parse(process.env.REACT_APP_URLS) : {
   solanaRpcApi: 'https://api.devnet.solana.com',
@@ -60,12 +64,20 @@ function NeonTransferApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const neonProgram = useMemo(() => {
+    return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.NEON_EVM_ID);
+  }, []);
+
+  const neonTokenMint = useMemo(() => {
+    return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.NEON_TOKEN_MINT);
+  }, []);
+
   const [token, setToken] = useState<string>('');
-  const [tokenBalance, setTokenBalance] = useState<{ neon: string, solana: string }>({
+  const [tokenBalance, setTokenBalance] = useState<TokenBalance>({
     neon: '0',
     solana: '0'
   });
-  const [walletBalance, setWalletBalance] = useState<{ neon: string, solana: string }>({
+  const [walletBalance, setWalletBalance] = useState<TokenBalance>({
     neon: '0',
     solana: '0'
   });
@@ -75,38 +87,18 @@ function NeonTransferApp() {
     from: solanaWallet.publicKey.toBase58(),
     to: neonWallet.address.toString()
   });
-  const [signature, setSignature] = useState<{ neon?: string, solana?: string }>({
+  const [signature, setSignature] = useState<Partial<TokenBalance>>({
     solana: '',
     neon: ''
   });
   const [submitDisable, setSubmitDisable] = useState<boolean>(false);
 
-  const options: InstructionParams = useMemo(() => {
-    return {
-      connection,
-      solanaWalletAddress: solanaWallet.publicKey,
-      neonWalletAddress: neonWallet.address,
-      neonContractAddress: NEON_TRANSFER_CONTRACT_DEVNET,
-      proxyApi,
-      proxyStatus: NEON_STATUS_DEVNET_SNAPSHOT,
-      web3
-    };
-  }, [connection, neonWallet.address, proxyApi, solanaWallet.publicKey, web3]);
-
-  const neonPortal = useMemo(() => {
-    return new NeonPortal(options);
-  }, [options]);
-
-  const mintPortal = useMemo(() => {
-    return new MintPortal(options);
-  }, [options]);
-
   const tokenList = useMemo<SPLToken[]>(() => {
     const supported = ['wSOL', 'USDT', 'USDC'];
     const tokens = TOKEN_LIST.filter(i => supported.includes(i.symbol));
-    tokens.unshift({ ...NEON_TOKEN_MODEL, address_spl: options.proxyStatus.NEON_TOKEN_MINT });
+    tokens.unshift({ ...NEON_TOKEN_MODEL, address_spl: NEON_STATUS_DEVNET_SNAPSHOT.NEON_TOKEN_MINT });
     return tokens;
-  }, [options.proxyStatus.NEON_TOKEN_MINT]);
+  }, []);
 
   const splToken = useMemo(() => {
     const index = tokenList.findIndex(i => i.symbol === token);
@@ -177,7 +169,7 @@ function NeonTransferApp() {
         }
         case 'wSOL': {
           const address = new PublicKey(splToken.address_spl);
-          const associatedToken = mintPortal.getAssociatedTokenAddress(address, mintPortal.solanaWalletPubkey);
+          const associatedToken = getAssociatedTokenAddressSync(address, solanaWallet.publicKey);
           const solana = await solanaBalance(connection, associatedToken);
           const neon = await mintTokenBalance(web3, neonWallet.address, splToken);
           setTokenBalance({
@@ -207,44 +199,41 @@ function NeonTransferApp() {
       if (transfer.direction === 'solana') {
         switch (splToken.symbol) {
           case 'NEON': {
-            const transaction = await neonPortal.neonTransferTransaction(amount, splToken!);
+            const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonProgram, neonTokenMint, splToken, amount);
+            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           case 'wSOL': {
-            const transaction = await mintPortal.neonTransferTransaction(amount, splToken);
+            const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, NEON_STATUS_DEVNET_SNAPSHOT, neonProgram, solanaWallet.publicKey, neonWallet.address, splToken, amount);
+            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           default: {
-            const transaction = await mintPortal.neonTransferTransaction(amount, splToken);
+            const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, NEON_STATUS_DEVNET_SNAPSHOT, neonProgram, solanaWallet.publicKey, neonWallet.address, splToken, amount);
+            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
         }
       } else {
+        const mintPubkey = new PublicKey(splToken.address_spl);
+        const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
         switch (splToken.symbol) {
           case 'NEON': {
-            const transaction = neonPortal.ethereumTransaction(amount, splToken);
-            transaction['gas'] = await web3.eth.estimateGas(transaction);
-            transaction['gasPrice'] = await web3.eth.getGasPrice();
-            // @ts-ignore
-            transaction['gasLimit'] = 5e4;
+            const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
             const neon = await sendSignedTransaction(web3, transaction, neonWallet);
             setSignature({ neon });
             break;
           }
           case 'wSOL': {
-            const mintPubkey = new PublicKey(splToken.address_spl);
-            const associatedToken = mintPortal.getAssociatedTokenAddress(mintPubkey, solanaWallet.publicKey);
-            const solanaTransaction = await mintPortal.solanaTransferTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
-            const neonTransaction = await mintPortal.createNeonTransaction(neonWallet.address, associatedToken, splToken, amount);
-            // @ts-ignore
-            neonTransaction['gasLimit'] = 5e4;
-            neonTransaction.nonce = (await web3.eth.getTransactionCount(neonWallet.address));
+            const solanaTransaction = createERC20SolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, NEON_STATUS_DEVNET_SNAPSHOT);
+            const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, splToken, amount);
+            solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
             delay(1e3);
             const neon = await sendSignedTransaction(web3, neonTransaction, neonWallet);
@@ -252,13 +241,9 @@ function NeonTransferApp() {
             break;
           }
           default: {
-            const mintPubkey = new PublicKey(splToken.address_spl);
-            const associatedTokenPubkey = mintPortal.getAssociatedTokenAddress(mintPubkey, solanaWallet.publicKey);
-            const solanaTransaction = await mintPortal.solanaTransferTransaction(solanaWallet.publicKey, mintPubkey, associatedTokenPubkey);
-            const neonTransaction = await mintPortal.createNeonTransaction(neonWallet.address, associatedTokenPubkey, splToken, amount);
-            // @ts-ignore
-            neonTransaction['gasLimit'] = 5e4;
-            neonTransaction.nonce = (await web3.eth.getTransactionCount(neonWallet.address));
+            const solanaTransaction = createERC20SolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, NEON_STATUS_DEVNET_SNAPSHOT);
+            const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, splToken, amount);
+            solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
             delay(1e3);
             const neon = await sendSignedTransaction(web3, neonTransaction, neonWallet);
@@ -273,7 +258,7 @@ function NeonTransferApp() {
       await delay(5e3);
       setSubmitDisable(false);
     }
-  }, [token, splToken, solanaWallet, transfer.direction, getTokenBalance, getWalletBalance, neonPortal, amount, connection, mintPortal, web3, neonWallet]);
+  }, [token, splToken, solanaWallet, transfer.direction, getTokenBalance, getWalletBalance, amount, connection, web3, neonWallet]);
 
   useEffect(() => {
     getTokenBalance();

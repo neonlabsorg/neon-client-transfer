@@ -23,8 +23,8 @@ module.exports = function(config, env) {
     resolve: {
       ...config.resolve,
       fallback: {
-        assert: require.resolve('assert'),
         buffer: require.resolve('buffer'),
+        assert: false,
         stream: false,
         crypto: false,
         os: false,

@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { Connection, Keypair, Signer } from '@solana/web3.js';
-import Web3 from 'web3';
 import { MintPortal, NeonPortal, SPLToken } from 'neon-portal';
-import { delay, sendTransaction, toSigner } from '../utils';
 import { Account } from 'web3-core';
+import Web3 from 'web3';
+import { delay, sendTransaction, toSigner } from '../utils';
 
 function SolWrapForm(props: { connection: Connection, web3: Web3, splToken: SPLToken, solanaWallet: Keypair, neonWallet: Account, neonPortal: NeonPortal, mintPortal: MintPortal, callback: Function }) {
   const { connection, splToken, solanaWallet, mintPortal, callback } = props;

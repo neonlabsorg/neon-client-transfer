@@ -12,23 +12,26 @@ import { AbiItem } from 'web3-utils';
 import Web3 from 'web3';
 
 import { NeonProxyRpcApi } from '../../api';
-import { MintPortal, NeonPortal } from '../../core/deprecated';
+import { MintPortal, NeonPortal } from '../../core';
 import { InstructionParams, SPLToken } from '../../models';
-import { NEON_CHAIN_IDS, NEON_PRIVATE, NEON_TOKEN_MODEL, PHANTOM_PRIVATE } from '../tools';
+import { NEON_TRANSFER_CONTRACT_DEVNET } from '../../data';
+import neonWrapper2 from '../../data/abi/neonWrapper2';
 import {
   delay,
   FaucetDropper,
   mintTokenBalance,
+  NEON_CHAIN_IDS,
+  NEON_PRIVATE,
+  NEON_TOKEN_MODEL,
   neonBalance,
   neonSignature,
+  PHANTOM_PRIVATE,
   sendNeonTransaction,
   sendSolanaTransaction,
   solanaSignature,
   splTokenBalance,
   toSigner
-} from '../tools/utils';
-import neonWrapper2 from '../../data/abi/neonWrapper2';
-import { NEON_TRANSFER_CONTRACT_DEVNET } from '../../data';
+} from '../tools';
 
 const CHAIN_NAME = 'devnet';
 const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
