@@ -45,7 +45,7 @@
     "@solana/web3.js": "^1.78.0",
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1",
-    "neon-portal": "file:/Users/able/projects/work/neon/neonpass/neon-client-transfer",
+    "neon-portal": "https://github.com/neonlabsorg/neon-client-transfer.git#feature/demo",
     "react-app-rewired": "^2.2.1",
     "tailwindcss": "^3.3.3",
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.0.0",

@@ -66,8 +66,6 @@ const hash = await sendNeonTransaction(web3, transaction, neonWallet); // method
 
 #### Transfer ERC20 transactions
 
-For `Devnet/Testnet/Mainnet` using other ERC20 tokens. We created [token-list](https://github.com/neonlabsorg/token-list) with available and supported in Neon EVM tokens. For more details read our [docs](https://docs.neonfoundation.io/docs/tokens/token_list).
-
 When working with Devnet, Testnet, or Mainnet, different ERC20 tokens are utilized. We have compiled a [token-list](https://github.com/neonlabsorg/token-list) containing the tokens supported and available on Neon EVM. For further information, please refer to our [documentation](https://docs.neonfoundation.io/docs/tokens/token_list).
 
 For transfer ERC20 tokens from Solana to Neon EVM, using this patterns:
