@@ -9,6 +9,8 @@
 
 The package using on our [NeonPass](https://neonpass.live/) codebase.
 
+You can see Live Demo [here](https://codesandbox.io/s/neon-transfer-demo-z93nlj).
+
 ---
 
 ## Installation and setup
@@ -95,7 +97,7 @@ Within the Neon Transfer codebase, we employ the [web3.js](https://web3js.readth
 
 ### For React
 
-To incorporate it into your React App, please refer to our React Demo located in the `examples/react/neon-transfer-react` folder. 
+To incorporate it into your React App, please refer to our React Demo located in the `examples/react/neon-transfer-react` folder. Or see [live demo](https://codesandbox.io/s/neon-transfer-demo-z93nlj).
 
 ### For Testing
 
