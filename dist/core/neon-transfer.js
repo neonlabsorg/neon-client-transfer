@@ -29,15 +29,15 @@ export function solanaNEONTransferTransaction(solanaWallet, neonWallet, neonEvmP
         return transaction;
     });
 }
-export function createNeonDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet) {
-    const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaPubkey);
-    const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositPubkey, true);
+export function createNeonDepositInstruction(solanaWallet, neonPDAWallet, depositWallet, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet) {
+    const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet);
+    const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositWallet, true);
     const keys = [
         { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true },
         { pubkey: poolKey, isSigner: false, isWritable: true },
-        { pubkey: neonPubkey, isSigner: false, isWritable: true },
+        { pubkey: neonPDAWallet, isSigner: false, isWritable: true },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-        { pubkey: serviceWallet ? serviceWallet : solanaPubkey, isSigner: true, isWritable: true },
+        { pubkey: serviceWallet ? serviceWallet : solanaWallet, isSigner: true, isWritable: true },
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
     ];
     const a = Buffer.from([39 /* EvmInstruction.DepositV03 */]);

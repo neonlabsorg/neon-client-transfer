@@ -57,6 +57,7 @@ const transaction = await solanaNEONTransferTransaction(solanaWallet, neonWallet
 transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash; // Network blockhash
 const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false }); // method for sign and send transaction to network
 ```
+
 And for transfer NEON from Neon EVM to Solana, you can using this pattern:
 
 ```javascript
@@ -90,7 +91,7 @@ const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTr
 const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
 ```
 
-Within the Neon Transfer codebase, we employ the `web3.js` library to streamline our code. However, if the situation demands, you can opt for alternatives such as `ethereum.js` or `WalletConnect`.
+Within the Neon Transfer codebase, we employ the [web3.js](https://web3js.readthedocs.io/en/v1.10.0/) library to streamline our code. However, if the situation demands, you can opt for alternatives such as [ethers.js](https://docs.ethers.org/v6/) or [WalletConnect](https://walletconnect.com/).
 
 ### For React
 

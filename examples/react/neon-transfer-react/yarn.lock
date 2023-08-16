@@ -7831,19 +7831,10 @@ neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-"neon-portal@file:../../..":
-  version "2.0.0-a6"
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    big.js "^6.2.1"
-    web3 "1.10.0"
-    web3-core "1.10"
-    web3-eth-contract "1.10.0"
-
-"neon-portal@https://github.com/neonlabsorg/neon-client-transfer.git#feature/demo":
-  version "2.0.0-a6"
-  resolved "https://github.com/neonlabsorg/neon-client-transfer.git#76daaca041b41a9032c63068e09c1c642b9820d8"
+neon-portal@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/neon-portal/-/neon-portal-2.0.0.tgz#c8fd356d3d251125ccf06f73047427b0ccfebdc3"
+  integrity sha512-kpjQ6+CMVfbX/Iq71WMK1/gi3rf/HD9ZIkxpTt/2j/Lr5cJc/2ovbUmN9GRLpOtCdckqSULQ5yzNQc2zzIxwzw==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"

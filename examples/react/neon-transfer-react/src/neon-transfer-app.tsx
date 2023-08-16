@@ -261,6 +261,7 @@ function NeonTransferApp() {
       await delay(5e3);
       setSubmitDisable(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, splToken, solanaWallet, transfer.direction, getTokenBalance, getWalletBalance, amount, connection, web3, neonWallet]);
 
   useEffect(() => {
