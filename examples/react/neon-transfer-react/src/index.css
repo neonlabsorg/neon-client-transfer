@@ -48,8 +48,14 @@ input[type=number] {
 }
 
 .title-1 .logo {
-  @apply w-[32px] h-[32px];
+  @apply min-w-[32px] min-h-[32px];
   background-image: url('~/public/logo192.png');
+  background-size: contain;
+}
+
+.title-1 .github {
+  @apply block min-w-[32px] min-h-[32px];
+  background-image: url('~/public/icons/github.svg');
   background-size: contain;
 }
 

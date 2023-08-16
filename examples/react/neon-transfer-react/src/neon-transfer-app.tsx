@@ -277,6 +277,11 @@ function NeonTransferApp() {
           <span>Neon transfer</span>
           <span className='text-[18px]'>React demo</span>
         </div>
+        <a
+          href='https://github.com/neonlabsorg/neon-client-transfer/tree/master/examples/react/neon-transfer-react'
+          target='_blank' rel='noreferrer'>
+          <i className='github'></i>
+        </a>
       </h1>
       <form className='form mb-[20px]'>
         <div className='form-field'>
