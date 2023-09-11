@@ -34,7 +34,7 @@ export function neonTransferMintTransaction(connection, proxyStatus, neonEvmProg
         const neonWalletAccount = yield connection.getAccountInfo(neonWalletPDA);
         const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
         const transaction = new Transaction({ feePayer: solanaWallet });
-        transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
+        // transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
         transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, proxyStatus));
         transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
         if (!neonWalletAccount) {
@@ -163,7 +163,7 @@ export function createMintNeonTransaction(neonWallet, splToken, data) {
 export function createMintSolanaTransaction(solanaWallet, tokenMint, associatedToken, proxyStatus) {
     const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
     const transaction = new Transaction({ feePayer: solanaWallet });
-    transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
+    // transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
     transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, proxyStatus));
     transaction.add(createAssociatedTokenAccountInstruction(tokenMint, associatedToken, solanaWallet, solanaWallet));
     return transaction;
