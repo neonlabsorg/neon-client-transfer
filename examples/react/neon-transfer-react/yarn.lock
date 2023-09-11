@@ -7831,10 +7831,10 @@ neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-neon-portal@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/neon-portal/-/neon-portal-2.0.1.tgz#744bae41d9c35a691535faa77203e1e9dc3ed319"
-  integrity sha512-WDbkI8+DtgStPlHBw8NDmyN66Yc0/LnE6qxHXomBWHIAKVCm8Wp+X6nFNVaCeHYYpQPSR/4WrZZ6Rq39S7HSOg==
+neon-portal@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/neon-portal/-/neon-portal-2.0.2.tgz#7b6cacc475c9e6c0fc1830e4d7545cc060739573"
+  integrity sha512-MJ0N3biL5wqKg+uYlamhA4uroYBNRvdJe9MubD/e9dMAflqfgj5GV0QexBhj2cii0ZOJKwDddFFfxoaCjBr4Mw==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"
