@@ -10,10 +10,11 @@ import {
 import { TransactionConfig } from 'web3-core';
 import { toWei } from 'web3-utils';
 import Web3 from 'web3';
-import { toBigInt, toFullAmount } from '../utils';
+import { toBigInt, toFullAmount, numberTo64BitLittleEndian } from '../utils';
 import { NEON_TOKEN_DECIMALS } from '../data';
 import {
   authorityPoolAddress,
+  neonBalanceProgramAddress,
   neonWalletProgramAddress,
   neonWrapper2Contract,
   neonWrapperContract
@@ -21,6 +22,7 @@ import {
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const [neonPubkey] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
+  const [balancePubkey] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, token.chainId);
   const [authorityPoolPubkey] = authorityPoolAddress(neonEvmProgram);
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const fullAmount = toFullAmount(amount, neonToken.decimals);
@@ -28,7 +30,7 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createApproveInstruction(associatedTokenAddress, neonPubkey, solanaWallet, fullAmount));
-  transaction.add(createNeonDepositInstruction(solanaWallet, neonPubkey, authorityPoolPubkey, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+  transaction.add(createNeonDepositInstruction(solanaWallet, neonPubkey, balancePubkey, authorityPoolPubkey, neonWallet, neonEvmProgram, neonTokenMint, token.chainId, serviceWallet));
 
   if (serviceWallet && rewardAmount) {
     transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
@@ -37,13 +39,15 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   return transaction;
 }
 
-export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, depositWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
+export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, balancePDAWallet: PublicKey, depositWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, chainId: number, serviceWallet?: PublicKey): TransactionInstruction {
   const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet);
   const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositWallet, true);
   const keys = [
-    { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true },
+    { pubkey: neonTokenMint, isSigner: false, isWritable: false },
+    // { pubkey: solanaAssociatedTokenAddress, isSigner: false, isWritable: true }, //TODO: check if need it
     { pubkey: poolKey, isSigner: false, isWritable: true },
     { pubkey: neonPDAWallet, isSigner: false, isWritable: true },
+    { pubkey: balancePDAWallet, isSigner: false, isWritable: true },
     { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: serviceWallet ? serviceWallet : solanaWallet, isSigner: true, isWritable: true }, // operator
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
@@ -51,7 +55,8 @@ export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWal
 
   const a = Buffer.from([EvmInstruction.DepositV03]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
-  const data = Buffer.concat([a, b]);
+  const c = numberTo64BitLittleEndian(chainId);
+  const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 

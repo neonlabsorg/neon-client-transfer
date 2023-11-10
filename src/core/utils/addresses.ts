@@ -1,11 +1,18 @@
 import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import { AccountHex, SPLToken } from '../../models';
-import { isValidHex, toBytesInt32 } from '../../utils';
+import { isValidHex, toBytesInt32, toU256BE } from '../../utils';
 
 export function neonWalletProgramAddress(etherKey: string, neonEvmProgram: PublicKey): [PublicKey, number] {
   const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
   const seed = [new Uint8Array([AccountHex.SeedVersion]), new Uint8Array(keyBuffer)];
+  return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
+}
+
+export function neonBalanceProgramAddress(etherKey: string, neonEvmProgram: PublicKey, chainId: number): [PublicKey, number] {
+  const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
+  const chainIdBytes = toU256BE(BigInt(chainId)); //chain_id as u256be
+  const seed = [new Uint8Array([AccountHex.SeedVersion]), new Uint8Array(keyBuffer), chainIdBytes];
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 

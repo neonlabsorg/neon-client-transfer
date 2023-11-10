@@ -75,6 +75,7 @@ beforeAll(async () => {
   neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
 
   proxyStatus = await proxyApi.evmParams();
+
   neonEvmProgram = new PublicKey(proxyStatus.NEON_EVM_ID);
   neonTokenMint = new PublicKey(proxyStatus.NEON_TOKEN_MINT);
   signer = toSigner(solanaWallet);

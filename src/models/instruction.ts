@@ -10,7 +10,8 @@ export const enum EvmInstruction {
   HolderDelete = 0x25, //  37
   HolderWrite = 0x26, //  38
   DepositV03 = 0x27, //  39
-  CreateAccountV03 = 0x28, //  40
+  CreateAccountV03 = 0x28, //  40 //TODO: removed 0x28 => 0x2D
+  AccountCreateBalance = 0x2D, // 45
 }
 
 export const enum AccountHex {
