@@ -12,7 +12,11 @@ export function neonWalletProgramAddress(etherKey: string, neonEvmProgram: Publi
 export function neonBalanceProgramAddress(etherKey: string, neonEvmProgram: PublicKey, chainId: number): [PublicKey, number] {
   const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
   const chainIdBytes = toU256BE(BigInt(chainId)); //chain_id as u256be
-  const seed = [new Uint8Array([AccountHex.SeedVersion]), new Uint8Array(keyBuffer), chainIdBytes];
+  const seed = [
+    new Uint8Array([AccountHex.SeedVersion]),
+    new Uint8Array(keyBuffer),
+    chainIdBytes];
+  console.log(seed);
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 

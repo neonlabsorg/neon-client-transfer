@@ -33,7 +33,7 @@ export function numberTo64BitLittleEndian(num: number) {
 }
 
 export function toU256BE(bigIntNumber: bigint) {
-  if (bigIntNumber < 0n || bigIntNumber > BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")) {
+  if (bigIntNumber < 0n || bigIntNumber > BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')) {
     throw new Error('Number out of range for U256BE');
   }
 

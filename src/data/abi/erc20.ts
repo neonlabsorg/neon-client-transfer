@@ -1,4 +1,4 @@
-export default [
+export const erc20Abi = [
   {
     'inputs': [
       {
@@ -450,3 +450,5 @@ export default [
     'type': 'function'
   }
 ];
+
+export default erc20Abi;

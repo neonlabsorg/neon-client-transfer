@@ -1,4 +1,5 @@
 import {
+  AccountInfo,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
@@ -9,13 +10,19 @@ import {
   Transaction,
   TransactionSignature
 } from '@solana/web3.js';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
+import {
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddressSync
+} from '@solana/spl-token';
 import { Account, TransactionConfig } from 'web3-core';
 import { AbiItem } from 'web3-utils';
+import { Buffer } from 'buffer';
 import Web3 from 'web3';
 import Big from 'big.js';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 import { SPLToken } from '../../../models';
+import { solanaTransactionLog } from '../../../utils';
+import { delay } from './delay';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -24,6 +31,7 @@ export function toSigner({ publicKey, secretKey }: Keypair): Signer {
 export async function sendSolanaTransaction(connection: Connection, transaction: Transaction, signers: Signer[],
                                             confirm = false, options?: SendOptions): Promise<TransactionSignature> {
   transaction.sign(...signers);
+  solanaTransactionLog(transaction);
   const signature = await connection.sendRawTransaction(transaction.serialize(), options);
   if (confirm) {
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
@@ -61,7 +69,8 @@ export async function solanaBalance(connection: Connection, address: PublicKey):
 
 export async function splTokenBalance(connection: Connection, walletPubkey: PublicKey, token: SPLToken): Promise<TokenAmount> {
   const mintAccount = new PublicKey(token.address_spl);
-  const assocTokenAccountAddress = await getAssociatedTokenAddress(mintAccount, walletPubkey);
+  const assocTokenAccountAddress = getAssociatedTokenAddressSync(mintAccount, walletPubkey);
+
   const response = await connection.getTokenAccountBalance(assocTokenAccountAddress);
   return response?.value;
 }
@@ -78,4 +87,21 @@ export function solanaSignature(comment: string, signature: string): void {
 
 export function neonSignature(comment: string, signature: string): void {
   console.log(`${comment}: ${signature}; url: https://devnet.neonscan.org/tx/${signature}`);
+}
+
+export async function createSplAccount(connection: Connection, signer: Signer, token: SPLToken): Promise<AccountInfo<Buffer>> {
+  const solanaWallet = signer.publicKey;
+  const tokenMint = new PublicKey(token.address_spl);
+  const tokenAccount = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
+  let account = await connection.getAccountInfo(tokenAccount);
+  if (!account) {
+    const transaction = new Transaction();
+    transaction.add(createAssociatedTokenAccountInstruction(solanaWallet, tokenAccount, solanaWallet, tokenMint));
+    transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+    const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
+    solanaSignature(`SPL Account created`, signature);
+    await delay(2e3);
+  }
+  account = await connection.getAccountInfo(tokenAccount);
+  return account!;
 }
