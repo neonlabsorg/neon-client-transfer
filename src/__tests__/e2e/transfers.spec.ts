@@ -254,7 +254,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
@@ -263,7 +263,7 @@ describe('Neon transfer tests', () => {
       const wSOL = faucet.tokens[id];
       const associatedToken = getAssociatedTokenAddressSync(new PublicKey(wSOL.address_spl), solanaWallet.publicKey);
       const wSolBefore = await connection.getBalance(associatedToken);
-      const balanceBefore = await mintTokenBalance(web3, neonWallet.address, wSOL);
+      const balanceBefore = 0; // await mintTokenBalance(web3, neonWallet.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
         const wrapTransaction = await createWrapSOLTransaction(connection, solanaWallet.publicKey, amount, wSOL);

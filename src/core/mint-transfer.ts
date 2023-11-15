@@ -35,7 +35,7 @@ export async function neonTransferMintWeb3Transaction(connection: Connection, we
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
-  const walletSigner = await solanaWalletSigner(web3, solanaWallet, neonWallet);
+  const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
   const { neonKeys, neonTransaction } = await createClaimInstruction(proxyApi, signedTransaction);
   return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, neonTransaction, splToken, fullAmount, chainId);
@@ -63,7 +63,7 @@ export async function neonTransferMintTransaction(connection: Connection, proxyS
   }
 
   if (neonTransaction?.rawTransaction) {
-    transaction.add(createExecFromDataInstruction(solanaWallet, neonWalletPDA, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, proxyStatus));
+    transaction.add(createExecFromDataInstructionV2(solanaWallet, neonWallet, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, proxyStatus, chainId));
   }
 
   return transaction;
@@ -108,9 +108,10 @@ export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonPDA
     { pubkey: balanceAccount, isSigner: false, isWritable: false },
     { pubkey: neonPDAWallet, isSigner: false, isWritable: true }
   ];
-  const a = Buffer.from([EvmInstruction.CreateAccountV03]);
+  const a = Buffer.from([EvmInstruction.AccountCreateBalance]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
-  const data = Buffer.concat([a, b]);
+  const c = Buffer.from(chainId.toString(16).slice(2), 'hex');
+  const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
@@ -141,7 +142,8 @@ export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, signedTr
     }
     const accountsMap = new Map<string, AccountMeta>();
     if (neonEmulate) {
-      for (const account of neonEmulate['accounts']) {
+      const { accounts = [], solana_accounts = [] } = neonEmulate;
+      for (const account of accounts) {
         const key = account['account'];
         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
         if (account['contract']) {
@@ -150,7 +152,7 @@ export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, signedTr
         }
       }
 
-      for (const account of neonEmulate['solana_accounts']) {
+      for (const account of solana_accounts) {
         const key = account['pubkey'];
         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
       }
@@ -177,6 +179,26 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
     { pubkey: neonPDAWallet, isSigner: false, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     { pubkey: neonEvmProgram, isSigner: false, isWritable: false },
+    ...neonKeys
+  ];
+
+  return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
+}
+
+export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus, chainId: number): TransactionInstruction {
+  const count = Number(proxyStatus.NEON_POOL_COUNT);
+  const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
+  const [balanceAccount] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
+  const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
+  const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
+  const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
+  const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
+  const data = Buffer.concat([a, b, c]);
+  const keys: AccountMeta[] = [
+    { pubkey: solanaWallet, isSigner: true, isWritable: true },
+    { pubkey: treasuryPoolAddress, isSigner: false, isWritable: true },
+    { pubkey: balanceAccount, isSigner: false, isWritable: true },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ...neonKeys
   ];
 
