@@ -23,6 +23,7 @@ import { erc20Abi, NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 import { SPLToken } from '../../../models';
 import { solanaTransactionLog } from '../../../utils';
 import { delay } from './delay';
+import { compile } from './contract';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -104,4 +105,28 @@ export async function createSplAccount(connection: Connection, signer: Signer, t
   }
   account = await connection.getAccountInfo(tokenAccount);
   return account!;
+}
+
+export async function deployContract(web3: Web3, contractPath: string, signer: Account): Promise<any> {
+  try {
+    console.log(`Attempting to deploy from account: ${signer.address}`);
+    const { NeonToken } = await compile(contractPath);
+    const data = NeonToken?.evm.bytecode.object;
+    const abi = NeonToken.abi;
+    const incrementer = new web3.eth.Contract(abi);
+    const incrementerTx = incrementer.deploy({ data, arguments: [1] });
+    const transaction: TransactionConfig = {
+      from: signer.address,
+      data: incrementerTx.encodeABI()
+    };
+    transaction.gas = await web3.eth.estimateGas(transaction);
+    const signedTrx = await web3.eth.accounts.signTransaction(transaction, signer.privateKey);
+    if (signedTrx?.rawTransaction) {
+      const createReceipt = await web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+      return { blockHash: createReceipt.blockHash, contractAddress: createReceipt.contractAddress };
+    }
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
 }

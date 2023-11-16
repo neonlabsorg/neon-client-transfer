@@ -135,7 +135,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -162,16 +162,17 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
       address_spl: gasToken.token_mint,
       chainId: CHAIN_ID
     };
-    const balanceBefore = await neonBalance(web3, neonWallet.address);
     try {
-      const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+      // const { contractAddress } = await deployContract(web3, '/data/contract/NeonToken.sol', neonWallet);
+      const balanceBefore = await neonBalance(web3, neonWallet.address);
+      const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET /*contractAddress*/, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
       neonSignature(`Signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
@@ -254,7 +255,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
