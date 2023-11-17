@@ -19,8 +19,9 @@ import {
   neonWrapper2Contract,
   neonWrapperContract
 } from './utils';
+import {createAccountBalanceInstruction} from "./mint-transfer";
 
-export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, serviceWallet?: PublicKey, rewardAmount?: Amount, chainId = 111): Promise<Transaction> {
+export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const [neonPDAWallet] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
@@ -29,6 +30,7 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
 
   transaction.add(createApproveInstruction(associatedTokenAddress, neonPDAWallet, solanaWallet, fullAmount));
   transaction.add(createNeonDepositInstructionV3(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+  transaction.add(createAccountBalanceInstruction(solanaWallet, neonPDAWallet, neonEvmProgram, neonWallet, chainId));
 
   if (serviceWallet && rewardAmount) {
     transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));

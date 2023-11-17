@@ -117,7 +117,7 @@ afterEach(async () => {
 
 describe('Neon transfer tests', () => {
 
-  it.skip(`Solana Keypair has tokens`, async () => {
+  it(`Solana Keypair has tokens`, async () => {
     try {
       const balance = await connection.getBalance(solanaWallet.publicKey);
       expect(balance).toBeGreaterThan(1e9);
@@ -126,7 +126,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it.skip(`Neon Account has tokens`, async () => {
+  it(`Neon Account has tokens`, async () => {
     try {
       const token = await neonBalance(web3, neonWallet.address);
       expect(token.toNumber()).toBeGreaterThan(0.1);
@@ -135,34 +135,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
-    const amount = 0.1;
-    const neonToken: SPLToken = {
-      ...NEON_TOKEN_MODEL,
-      address_spl: gasToken.token_mint,
-      chainId: CHAIN_ID
-    };
-    await createSplAccount(connection, signer, neonToken);
-    const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
-    console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${neonToken.symbol}`);
-    try {
-      const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount);
-      transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
-      const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
-      expect(signature.length).toBeGreaterThan(0);
-      solanaSignature(`Signature`, signature);
-      await delay(5e3);
-      const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
-      const balanceNeon = await neonBalance(web3, neonWallet.address);
-      console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
-      expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
-    } catch (e) {
-      console.log(e);
-      expect(e instanceof Error ? e.message : '').toBe('');
-    }
-  });
-
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -181,6 +154,33 @@ describe('Neon transfer tests', () => {
       const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
       console.log(`Balance: ${balanceBefore} > ${balanceAfter} NEON ==> ${balanceSPL?.uiAmount} ${neonToken.symbol} in Solana`);
       expect(balanceAfter.toNumber()).toBeLessThan(balanceBefore.toNumber());
+    } catch (e) {
+      console.log(e);
+      expect(e instanceof Error ? e.message : '').toBe('');
+    }
+  });
+
+  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+    const amount = 0.1;
+    const neonToken: SPLToken = {
+      ...NEON_TOKEN_MODEL,
+      address_spl: gasToken.token_mint,
+      chainId: CHAIN_ID
+    };
+    await createSplAccount(connection, signer, neonToken);
+    const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
+    console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${neonToken.symbol}`);
+    try {
+      const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount, CHAIN_ID);
+      transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
+      expect(signature.length).toBeGreaterThan(0);
+      solanaSignature(`Signature`, signature);
+      await delay(5e3);
+      const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
+      const balanceNeon = await neonBalance(web3, neonWallet.address);
+      console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
+      expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
     } catch (e) {
       console.log(e);
       expect(e instanceof Error ? e.message : '').toBe('');
