@@ -71,7 +71,7 @@ export class MintPortal extends InstructionService {
       neonKeys,
       neonTransaction
     } = await createClaimInstruction(this.proxyApi, signedTransaction);
-    const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, neonTransaction, splToken, fullAmount);
+    const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, neonTransaction, splToken, fullAmount, 111);
     transaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
     return transaction;
   }

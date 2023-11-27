@@ -1,4 +1,4 @@
-import { NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
+import { GasToken, NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
 export declare class NeonProxyRpcApi {
     neonProxyRpcApi: string;
     solanaRpcApi: string;
@@ -8,4 +8,5 @@ export declare class NeonProxyRpcApi {
     solana<T>(method: string, params?: unknown[]): Promise<RPCResponse<T>>;
     neonEmulate(params?: string[]): Promise<RPCResponse<any>>;
     evmParams(): Promise<NeonProgramStatus>;
+    gasTokenList(): Promise<GasToken[]>;
 }

@@ -19,18 +19,16 @@ import {
   neonWrapper2Contract,
   neonWrapperContract
 } from './utils';
-import {createAccountBalanceInstruction} from "./mint-transfer";
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
-  const [neonPDAWallet] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
+  const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(neonToken.address_spl), solanaWallet);
   const transaction = new Transaction({ feePayer: solanaWallet });
 
-  transaction.add(createApproveInstruction(associatedTokenAddress, neonPDAWallet, solanaWallet, fullAmount));
+  transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
   transaction.add(createNeonDepositInstructionV3(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
-  transaction.add(createAccountBalanceInstruction(solanaWallet, neonPDAWallet, neonEvmProgram, neonWallet, chainId));
 
   if (serviceWallet && rewardAmount) {
     transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
@@ -49,7 +47,7 @@ export function createNeonDepositInstructionV3(chainId: number, solanaWallet: Pu
     { pubkey: tokenAddress, isSigner: false, isWritable: true }, // source
     { pubkey: poolAddress, isSigner: false, isWritable: true }, // pool key
     { pubkey: balanceAddress, isSigner: false, isWritable: true },
-    { pubkey: contractAddress, isSigner: false, isWritable: false }, // contract_account
+    { pubkey: contractAddress, isSigner: false, isWritable: true }, // contract_account
     { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: serviceWallet ? serviceWallet : solanaWallet, isSigner: true, isWritable: true }, // operator
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }

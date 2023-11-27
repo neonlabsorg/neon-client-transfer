@@ -135,6 +135,33 @@ describe('Neon transfer tests', () => {
     }
   });
 
+  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+    const amount = 0.1;
+    const neonToken: SPLToken = {
+      ...NEON_TOKEN_MODEL,
+      address_spl: gasToken.token_mint,
+      chainId: CHAIN_ID
+    };
+    await createSplAccount(connection, signer, neonToken);
+    const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
+    console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${neonToken.symbol}`);
+    try {
+      const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount, CHAIN_ID);
+      transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+      const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
+      expect(signature.length).toBeGreaterThan(0);
+      solanaSignature(`Signature`, signature);
+      await delay(5e3);
+      const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
+      const balanceNeon = await neonBalance(web3, neonWallet.address);
+      console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
+      expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
+    } catch (e) {
+      console.log(e);
+      expect(e instanceof Error ? e.message : '').toBe('');
+    }
+  });
+
   it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {

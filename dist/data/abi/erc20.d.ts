@@ -1,4 +1,4 @@
-declare const _default: ({
+export declare const erc20Abi: ({
     inputs: {
         internalType: string;
         name: string;
@@ -37,4 +37,4 @@ declare const _default: ({
     type: string;
     anonymous?: undefined;
 })[];
-export default _default;
+export default erc20Abi;

@@ -1,4 +1,4 @@
-declare const _default: ({
+export declare const neonWrapper2Abi: ({
     constant: boolean;
     inputs: {
         name: string;
@@ -36,4 +36,4 @@ declare const _default: ({
     payable?: undefined;
     stateMutability?: undefined;
 })[];
-export default _default;
+export default neonWrapper2Abi;

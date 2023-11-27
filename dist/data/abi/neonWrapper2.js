@@ -1,4 +1,4 @@
-export default [{
+export const neonWrapper2Abi = [{
         'constant': true,
         'inputs': [],
         'name': 'name',
@@ -126,4 +126,5 @@ export default [{
         'name': 'Withdrawal',
         'type': 'event'
     }];
+export default neonWrapper2Abi;
 //# sourceMappingURL=neonWrapper2.js.map

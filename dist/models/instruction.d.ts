@@ -10,7 +10,8 @@ export declare const enum EvmInstruction {
     HolderDelete = 37,
     HolderWrite = 38,
     DepositV03 = 39,
-    CreateAccountV03 = 40
+    CreateAccountV03 = 40,
+    AccountCreateBalance = 45
 }
 export declare const enum AccountHex {
     SeedVersion = 3

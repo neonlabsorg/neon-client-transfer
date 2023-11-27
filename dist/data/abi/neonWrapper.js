@@ -1,4 +1,4 @@
-export default [
+export const neonWrapperAbi = [
     {
         'inputs': [
             {
@@ -19,4 +19,5 @@ export default [
         'type': 'function'
     }
 ];
+export default neonWrapperAbi;
 //# sourceMappingURL=neonWrapper.js.map

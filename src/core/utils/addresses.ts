@@ -16,7 +16,6 @@ export function neonBalanceProgramAddress(etherKey: string, neonEvmProgram: Publ
     new Uint8Array([AccountHex.SeedVersion]),
     new Uint8Array(keyBuffer),
     chainIdBytes];
-  console.log(seed);
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
