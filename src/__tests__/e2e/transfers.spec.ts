@@ -176,8 +176,8 @@ describe('Neon transfer tests', () => {
       transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
       expect(signature.length).toBeGreaterThan(0);
-      solanaSignature(`Signature`, signature);
-      await delay(5e3);
+      solanaSignature(`Signature`, signature, { cluster: 'custom', customUrl: SOLANA_URL });
+      await delay(10e3);
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
       const balanceNeon = await neonBalance(web3, neonWallet.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);

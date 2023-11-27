@@ -82,8 +82,9 @@ export async function mintTokenBalance(web3: Web3, account: string, token: SPLTo
   return balance / Math.pow(10, token.decimals);
 }
 
-export function solanaSignature(comment: string, signature: string): void {
-  console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?cluster=devnet`);
+export function solanaSignature(comment: string, signature: string, params: any = { cluster: 'devnet' }): void {
+  const urlParams = new URLSearchParams(params);
+  console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?${urlParams.toString()}`);
 }
 
 export function neonSignature(comment: string, signature: string): void {
