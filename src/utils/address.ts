@@ -18,7 +18,7 @@ export function toBigInt(amount: Amount): bigint {
   return BigInt(data.toString());
 }
 
-export function numberTo64BitLittleEndian(num: number) {
+export function numberTo64BitLittleEndian(num: number): Uint8Array {
   const buffer = new ArrayBuffer(8); // 64 bits = 8 bytes
   const view = new DataView(buffer);
 

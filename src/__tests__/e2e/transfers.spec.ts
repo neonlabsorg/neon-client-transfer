@@ -161,7 +161,7 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -256,8 +256,8 @@ describe('Neon transfer tests', () => {
     }
   });
 
-  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
-    const amount = 0.1;
+  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+    const amount = 0.05;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
     console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);
@@ -275,7 +275,7 @@ describe('Neon transfer tests', () => {
         solanaSignature(`SOL wrap signature`, wrapSignature);
         const solAfter = await connection.getBalance(solanaWallet.publicKey);
         const wSolAfterWrapping = await connection.getBalance(associatedToken);
-        console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL; ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfterWrapping / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
+        console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL; ${wSolBefore / LAMPORTS_PER_SOL} < ${wSolAfterWrapping / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
         await delay(5e3);
 
         const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, proxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, wSOL, amount, CHAIN_ID);

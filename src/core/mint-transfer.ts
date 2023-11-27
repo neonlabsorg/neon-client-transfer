@@ -20,7 +20,7 @@ import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import Web3 from 'web3';
 import { toBytesInt32, toFullAmount } from '../utils';
 import { Amount, EvmInstruction, NeonProgramStatus, SPLToken } from '../models';
-import { COMPUTE_BUDGET_ID } from '../data';
+import { COMPUTE_BUDGET_ID, NEON_HEAP_FRAME } from '../data';
 import { NeonProxyRpcApi } from '../api';
 import {
   authAccountAddress,
@@ -30,6 +30,7 @@ import {
   neonWalletProgramAddress,
   solanaWalletSigner
 } from './utils';
+import { numberTo64BitLittleEndian } from '../utils';
 
 export async function neonTransferMintWeb3Transaction(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
@@ -79,7 +80,8 @@ export function createComputeBudgetUtilsInstruction(programId: PublicKey, proxyS
 
 export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, proxyStatus: NeonProgramStatus): TransactionInstruction {
   const a = Buffer.from([0x01]);
-  const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME)));
+  // const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME)));
+  const b = Buffer.from(toBytesInt32(parseInt(NEON_HEAP_FRAME)));
   const data = Buffer.concat([a, b]);
   return new TransactionInstruction({ programId, data, keys: [] });
 }
@@ -110,7 +112,8 @@ export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonPDA
   ];
   const a = Buffer.from([EvmInstruction.AccountCreateBalance]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
-  const c = Buffer.from(chainId.toString(16).slice(2), 'hex');
+  // const c = Buffer.from(chainId.toString(16).slice(2), 'hex');
+  const c = numberTo64BitLittleEndian(chainId);
   const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
@@ -192,7 +195,7 @@ export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWal
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
   const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
   const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
-  const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
+  const c = new Uint8Array(Buffer.from(neonRawTransaction.slice(2), 'hex'));
   const data = Buffer.concat([a, b, c]);
   const keys: AccountMeta[] = [
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
