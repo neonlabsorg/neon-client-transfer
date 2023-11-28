@@ -28,7 +28,7 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
-  transaction.add(createNeonDepositInstructionV3(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+  transaction.add(createNeonDepositToBalanceInstruction(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
 
   if (serviceWallet && rewardAmount) {
     transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
@@ -37,7 +37,7 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   return transaction;
 }
 
-export function createNeonDepositInstructionV3(chainId: number, solanaWallet: PublicKey, tokenAddress: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, tokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
+export function createNeonDepositToBalanceInstruction(chainId: number, solanaWallet: PublicKey, tokenAddress: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, tokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
   const [depositWallet] = authorityPoolAddress(neonEvmProgram);
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const [contractAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
