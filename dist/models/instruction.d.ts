@@ -11,7 +11,8 @@ export declare const enum EvmInstruction {
     HolderWrite = 38,
     DepositV03 = 39,
     CreateAccountV03 = 40,
-    AccountCreateBalance = 45
+    AccountCreateBalance = 48,
+    TransactionExecuteFromInstruction = 50
 }
 export declare const enum AccountHex {
     SeedVersion = 3

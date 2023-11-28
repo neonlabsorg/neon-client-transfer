@@ -172,7 +172,7 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
   const count = Number(proxyStatus.NEON_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
-  const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
+  const a = Buffer.from([EvmInstruction.TransactionExecuteFromInstruction]);
   const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
   const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
   const data = Buffer.concat([a, b, c]);
@@ -193,7 +193,7 @@ export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWal
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [balanceAccount] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
-  const a = Buffer.from([EvmInstruction.TransactionExecuteFromData]);
+  const a = Buffer.from([EvmInstruction.TransactionExecuteFromInstruction]);
   const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
   const c = new Uint8Array(Buffer.from(neonRawTransaction.slice(2), 'hex'));
   const data = Buffer.concat([a, b, c]);
@@ -201,7 +201,7 @@ export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWal
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: treasuryPoolAddress, isSigner: false, isWritable: true },
     { pubkey: balanceAccount, isSigner: false, isWritable: true },
-    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: true },
     ...neonKeys
   ];
 
