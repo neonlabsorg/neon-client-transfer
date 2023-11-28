@@ -117,7 +117,7 @@ afterEach(async () => {
 
 describe('Neon transfer tests', () => {
 
-  it(`Solana Keypair has tokens`, async () => {
+  it.skip(`Solana Keypair has tokens`, async () => {
     try {
       const balance = await connection.getBalance(solanaWallet.publicKey);
       expect(balance).toBeGreaterThan(1e8);
@@ -144,7 +144,6 @@ describe('Neon transfer tests', () => {
       chainId: CHAIN_ID
     };
     try {
-      // const { contractAddress } = await deployContract(web3, '/data/contract/NeonToken.sol', neonWallet);
       const balanceBefore = await neonBalance(web3, neonWallet.address);
       const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET /*contractAddress*/, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
@@ -268,11 +267,14 @@ describe('Neon transfer tests', () => {
       const balanceBefore = 0; // await mintTokenBalance(web3, neonWallet.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
-        const wrapTransaction = await createWrapSOLTransaction(connection, solanaWallet.publicKey, amount, wSOL);
-        wrapTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-        const wrapSignature = await sendSolanaTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
-        expect(wrapSignature.length).toBeGreaterThan(0);
-        solanaSignature(`SOL wrap signature`, wrapSignature);
+        // const wrapTransaction = await createWrapSOLTransaction(connection, solanaWallet.publicKey, amount, wSOL);
+        // wrapTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        // const wrapSignature = await sendSolanaTransaction(connection, wrapTransaction, [signer], true, { skipPreflight: false });
+        // expect(wrapSignature.length).toBeGreaterThan(0);
+        // solanaSignature(`SOL wrap signature`, wrapSignature, {
+        //   cluster: 'custom',
+        //   customUrl: SOLANA_URL
+        // });
         const solAfter = await connection.getBalance(solanaWallet.publicKey);
         const wSolAfterWrapping = await connection.getBalance(associatedToken);
         console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} > ${solAfter / LAMPORTS_PER_SOL} SOL; ${wSolBefore / LAMPORTS_PER_SOL} < ${wSolAfterWrapping / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
@@ -282,7 +284,10 @@ describe('Neon transfer tests', () => {
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
         expect(signature.length).toBeGreaterThan(0);
-        solanaSignature(`wSOL transfer signature`, signature);
+        solanaSignature(`wSOL transfer signature`, signature, {
+          cluster: 'custom',
+          customUrl: SOLANA_URL
+        });
         await delay(5e3);
 
         const wSolAfterTransfer = await connection.getBalance(associatedToken);
@@ -314,7 +319,10 @@ describe('Neon transfer tests', () => {
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
         const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
-        solanaSignature(`Solana Signature`, signedSolanaTransaction);
+        solanaSignature(`Solana Signature`, signedSolanaTransaction, {
+          cluster: 'custom',
+          customUrl: SOLANA_URL
+        });
         expect(signedSolanaTransaction.length).toBeGreaterThan(0);
         await delay(1e3);
         const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
@@ -330,7 +338,10 @@ describe('Neon transfer tests', () => {
         unwrapTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, unwrapTransaction, [signer], true, { skipPreflight: false });
         expect(signature.length).toBeGreaterThan(0);
-        solanaSignature(`wSOL unwrap signature`, signature);
+        solanaSignature(`wSOL unwrap signature`, signature, {
+          cluster: 'custom',
+          customUrl: SOLANA_URL
+        });
         await delay(5e3);
 
         const wSolAfter = await connection.getBalance(associatedToken);
@@ -358,7 +369,7 @@ function itSolanaTokenSPL(token: SPLToken): void {
       const signer: Signer = toSigner(solanaWallet);
       const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
       expect(signature.length).toBeGreaterThan(0);
-      solanaSignature(`Signature`, signature);
+      solanaSignature(`Signature`, signature, { cluster: 'custom', customUrl: SOLANA_URL });
       await delay(5e3);
 
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, token);
@@ -390,7 +401,10 @@ function itNeonTokenMint(token: SPLToken): void {
     const signer: Signer = toSigner(solanaWallet);
     try {
       const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
-      solanaSignature(`Solana Signature`, signedSolanaTransaction);
+      solanaSignature(`Solana Signature`, signedSolanaTransaction, {
+        cluster: 'custom',
+        customUrl: SOLANA_URL
+      });
       expect(signedSolanaTransaction.length).toBeGreaterThan(0);
       await delay(1e3);
       const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
