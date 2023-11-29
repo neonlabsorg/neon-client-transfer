@@ -47,23 +47,23 @@ export async function neonTransferMintWeb3Transaction(connection: Connection, we
 
 export async function neonTransferMintTransaction(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Account, neonKeys: AccountMeta[], neonTransaction: SignedTransaction, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction> {
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
-  const [neonWalletPDA] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
-  const [emulateSignerPDA] = neonWalletProgramAddress(emulateSigner.address, neonEvmProgram);
   const [delegatePDA] = authAccountAddress(emulateSigner.address, neonEvmProgram, splToken);
-  const emulateSignerPDAAccount = await connection.getAccountInfo(emulateSignerPDA);
-  const neonWalletAccount = await connection.getAccountInfo(neonWalletPDA);
+  const [neonWalletBalanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
+  const [emulateSignerBalanceAddress] = neonBalanceProgramAddress(emulateSigner.address, neonEvmProgram, chainId);
+  const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
+  const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const transaction = new Transaction({ feePayer: solanaWallet });
   // transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, proxyStatus));
   transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
 
-  if (!neonWalletAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonWalletPDA, neonEvmProgram, neonWallet, chainId));
+  if (!neonWalletBalanceAccount) {
+    transaction.add(createAccountBalanceInstruction(solanaWallet, neonWalletBalanceAddress, neonEvmProgram, neonWallet, chainId));
   }
 
-  if (!emulateSignerPDAAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, emulateSignerPDA, neonEvmProgram, emulateSigner.address, chainId));
+  if (!emulateSignerBalanceAccount) {
+    transaction.add(createAccountBalanceInstruction(solanaWallet, emulateSignerBalanceAddress, neonEvmProgram, emulateSigner.address, chainId));
   }
 
   if (neonTransaction?.rawTransaction) {
@@ -109,7 +109,7 @@ export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonPDA
   const keys = [
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: balanceAccount, isSigner: false, isWritable: false },
+    { pubkey: balanceAccount, isSigner: false, isWritable: true },
     { pubkey: neonPDAWallet, isSigner: false, isWritable: true }
   ];
   const a = Buffer.from([EvmInstruction.AccountCreateBalance]);
