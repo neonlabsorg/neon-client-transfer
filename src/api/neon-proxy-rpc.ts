@@ -40,4 +40,8 @@ export class NeonProxyRpcApi {
   async gasTokenList(): Promise<GasToken[]> {
     return this.proxy<GasToken[]>('neon_getGasTokenList', []).then(d => d.result);
   }
+
+  async nativeTokenList(): Promise<GasToken[]> {
+    return this.proxy<GasToken[]>('neon_getNativeTokenList', []).then(d => d.result);
+  }
 }

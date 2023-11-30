@@ -33,7 +33,7 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { NEON_TRANSFER_CONTRACT_DEVNET, neonWrapper2Abi } from '../../data';
+import { NEON_TRANSFER_CONTRACT_DEVNET, TOKEN_LIST_DEVNET_SNAPSHOT, neonWrapper2Abi } from '../../data';
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });
 
@@ -67,12 +67,11 @@ beforeAll(async () => {
     neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
 
     proxyStatus = await proxyApi.evmParams();
-    tokensList = await proxyApi.gasTokenList();
+    tokensList = await proxyApi.nativeTokenList() || TOKEN_LIST_DEVNET_SNAPSHOT;
     gasToken = tokensList.find(i => parseInt(i.token_chain_id, 16) === CHAIN_ID)!;
     neonEvmProgram = new PublicKey(proxyStatus.NEON_EVM_ID);
     neonTokenMint = new PublicKey(gasToken.token_mint);
     signer = toSigner(solanaWallet);
-
     await delay(1e3);
   } catch (e) {
     console.log(e);
@@ -117,7 +116,7 @@ afterEach(async () => {
 
 describe('Neon transfer tests', () => {
 
-  it.skip(`Solana Keypair has tokens`, async () => {
+  it(`Solana Keypair has tokens`, async () => {
     try {
       const balance = await connection.getBalance(solanaWallet.publicKey);
       expect(balance).toBeGreaterThan(1e8);
@@ -264,7 +263,7 @@ describe('Neon transfer tests', () => {
       const wSOL = faucet.tokens[id];
       const associatedToken = getAssociatedTokenAddressSync(new PublicKey(wSOL.address_spl), solanaWallet.publicKey);
       const wSolBefore = await connection.getBalance(associatedToken);
-      const balanceBefore = 0; // await mintTokenBalance(web3, neonWallet.address, wSOL);
+      const balanceBefore = await mintTokenBalance(web3, neonWallet.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
         // const wrapTransaction = await createWrapSOLTransaction(connection, solanaWallet.publicKey, amount, wSOL);
