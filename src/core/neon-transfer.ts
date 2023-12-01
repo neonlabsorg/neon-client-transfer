@@ -120,7 +120,6 @@ export async function neonNeonWeb3Transaction(web3: Web3, from: string, to: stri
   const transaction = neonNeonTransaction(from, to, amount, data);
   transaction.gasPrice = await web3.eth.getGasPrice();
   transaction.gas = await web3.eth.estimateGas(transaction);
-  // @ts-ignore
-  transaction['gasLimit'] = gasLimit;
+  transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
   return transaction;
 }

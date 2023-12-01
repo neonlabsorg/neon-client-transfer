@@ -1,6 +1,6 @@
 {
   "name": "@neonlabs/neon-client-transfer",
-  "version": "3.0.0-beta-1",
+  "version": "3.0.0-beta-2",
   "description": "JavaScript client-side module for creating transfer transactions from Solana EVM to Neon EVM",
   "files": [
     "./dist/**/*"
@@ -63,7 +63,7 @@
     "react": "18",
     "react-dom": "^18.2.0",
     "solc": "^0.8.23-fixed",
-    "token-list": "https://github.com/neonlabsorg/token-list.git#v5.1.0",
+    "token-list": "https://github.com/neonlabsorg/token-list.git#v5.2.0",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"

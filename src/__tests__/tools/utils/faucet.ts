@@ -1,5 +1,4 @@
-import { SPLToken } from '../../../models';
-import { ChainId } from '../models';
+import { ChainId, SPLToken } from '../../../models';
 import { post } from './crud';
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });

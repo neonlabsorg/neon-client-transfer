@@ -1,5 +1,4 @@
-import { GasToken, NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
-import { NeonEmulate } from '../__tests__/tools';
+import { GasToken, NeonEmulate, NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
 export declare class NeonProxyRpcApi {
     neonProxyRpcApi: string;
     solanaRpcApi: string;

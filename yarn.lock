@@ -5003,9 +5003,9 @@ toidentifier@1.0.1:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
-"token-list@https://github.com/neonlabsorg/token-list.git#v5.1.0":
+"token-list@https://github.com/neonlabsorg/token-list.git#v5.2.0":
   version "0.0.0"
-  resolved "https://github.com/neonlabsorg/token-list.git#7b9bd42b61547b8ce58a1702eab1fa25b86ac199"
+  resolved "https://github.com/neonlabsorg/token-list.git#a4f21b39b9e735b2c291b6a42bbe6a48ec5aa6b4"
 
 tough-cookie@~2.5.0:
   version "2.5.0"

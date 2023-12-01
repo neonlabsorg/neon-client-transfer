@@ -1,9 +1,8 @@
 import { AccountMeta, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import Web3 from 'web3';
-import { Amount, NeonProgramStatus, SPLToken } from '../models';
+import { Amount, ClaimInstructionResult, NeonProgramStatus, SolanaAccount, SPLToken } from '../models';
 import { NeonProxyRpcApi } from '../api';
-import { ClaimInstructionResult, SolanaAccount } from '../__tests__/tools';
 export declare function neonTransferMintWeb3Transaction(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: Amount, chainId: number): Promise<any>;
 export declare function neonTransferMintTransaction(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Account, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: SignedTransaction, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction>;
 export declare function createComputeBudgetUtilsInstruction(programId: PublicKey, proxyStatus: NeonProgramStatus): TransactionInstruction;

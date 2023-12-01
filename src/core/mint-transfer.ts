@@ -19,7 +19,15 @@ import { Buffer } from 'buffer';
 import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import Web3 from 'web3';
 import { numberTo64BitLittleEndian, toBytesInt32, toFullAmount } from '../utils';
-import { Amount, EvmInstruction, NeonProgramStatus, SPLToken } from '../models';
+import {
+  Amount,
+  ClaimInstructionResult,
+  EvmInstruction,
+  NeonEmulate,
+  NeonProgramStatus,
+  SolanaAccount,
+  SPLToken
+} from '../models';
 import {
   COMPUTE_BUDGET_ID,
   NEON_STATUS_DEVNET_SNAPSHOT,
@@ -34,7 +42,6 @@ import {
   neonWalletProgramAddress,
   solanaWalletSigner
 } from './utils';
-import { ClaimInstructionResult, NeonEmulate, SolanaAccount } from '../__tests__/tools';
 
 export async function neonTransferMintWeb3Transaction(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
