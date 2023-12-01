@@ -282,7 +282,7 @@ describe('Neon transfer tests', () => {
 
         const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, proxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, wSOL, amount, CHAIN_ID);
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-        const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
+        const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: true });
         expect(signature.length).toBeGreaterThan(0);
         solanaSignature(`wSOL transfer signature`, signature, SOLANA_URL!);
         await delay(5e3);

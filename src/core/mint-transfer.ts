@@ -31,8 +31,10 @@ import {
   collateralPoolAddress,
   erc20ForSPLContract,
   neonBalanceProgramAddress,
+  neonWalletProgramAddress,
   solanaWalletSigner
 } from './utils';
+import { ClaimInstructionResult, NeonEmulate, SolanaAccount } from '../__tests__/tools';
 
 export async function neonTransferMintWeb3Transaction(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
@@ -40,11 +42,15 @@ export async function neonTransferMintWeb3Transaction(connection: Connection, we
   const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
   const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
-  const { neonKeys, neonTransaction } = await createClaimInstruction(proxyApi, signedTransaction);
-  return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, neonTransaction, splToken, fullAmount, chainId);
+  const {
+    neonKeys,
+    neonTransaction,
+    legacyAccounts
+  } = await createClaimInstruction(proxyApi, signedTransaction);
+  return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, chainId);
 }
 
-export async function neonTransferMintTransaction(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Account, neonKeys: AccountMeta[], neonTransaction: SignedTransaction, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction> {
+export async function neonTransferMintTransaction(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Account, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: SignedTransaction, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction> {
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const [delegatePDA] = authAccountAddress(emulateSigner.address, neonEvmProgram, splToken);
   const [neonWalletBalanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
@@ -58,12 +64,21 @@ export async function neonTransferMintTransaction(connection: Connection, proxyS
   transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
 
   if (!neonWalletBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonWalletBalanceAddress, neonEvmProgram, neonWallet, chainId));
+    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonWallet, chainId));
   }
 
   if (!emulateSignerBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, emulateSignerBalanceAddress, neonEvmProgram, emulateSigner.address, chainId));
+    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, emulateSigner.address, chainId));
   }
+
+  console.log(neonWallet, emulateSigner.address);
+  for (const account of legacyAccounts) {
+    const instruction = await createAccountBalanceForLegacyAccountInstruction(connection, account, solanaWallet, neonEvmProgram, chainId);
+    if (instruction) {
+      transaction.add(instruction);
+    }
+  }
+
 
   if (neonTransaction?.rawTransaction) {
     transaction.add(createExecFromDataInstructionV2(solanaWallet, neonWallet, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, proxyStatus, chainId));
@@ -103,17 +118,30 @@ export function createAccountV3Instruction(solanaWallet: PublicKey, neonPDAWalle
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonWallet: string, chainId: number): TransactionInstruction {
-  const [balanceAccount] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
+export async function createAccountBalanceForLegacyAccountInstruction(connection: Connection, account: SolanaAccount, solanaWallet: PublicKey, neonEvmProgram: PublicKey, chainId: number): Promise<TransactionInstruction | null> {
+  const accountAddress = new PublicKey(account.pubkey);
+  console.log(account);
+  const accountInfo = await connection.getAccountInfo(accountAddress);
+  console.log(accountInfo);
+  if (accountInfo?.data) {
+    const neonAddress = `0x${accountInfo?.data.slice(1, 21).toString('hex')}`;
+    console.log(neonAddress);
+    return createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonAddress, chainId);
+  }
+  return null!;
+}
+
+export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonEvmProgram: PublicKey, neonWallet: string, chainId: number): TransactionInstruction {
+  const [neonWalletAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
+  const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const keys = [
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: balanceAccount, isSigner: false, isWritable: true },
-    { pubkey: neonPDAWallet, isSigner: false, isWritable: true }
+    { pubkey: balanceAddress, isSigner: false, isWritable: true },
+    { pubkey: neonWalletAddress, isSigner: false, isWritable: true }
   ];
   const a = Buffer.from([EvmInstruction.AccountCreateBalance]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
-  // const c = Buffer.from(chainId.toString(16).slice(2), 'hex');
   const c = numberTo64BitLittleEndian(chainId);
   const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
@@ -135,17 +163,16 @@ export async function neonClaimTransactionFromSigner(climeData: string, walletSi
   return walletSigner.signTransaction(transaction);
 }
 
-export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, signedTransaction: SignedTransaction): Promise<{
-  neonKeys: AccountMeta[],
-  neonTransaction: SignedTransaction
-}> {
+export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, neonTransaction: SignedTransaction): Promise<ClaimInstructionResult> {
   try {
-    let neonEmulate: any;
-    if (signedTransaction.rawTransaction) {
-      neonEmulate = await proxyApi.neonEmulate([signedTransaction.rawTransaction.slice(2)]);
+    let neonEmulate: NeonEmulate;
+    const legacyAccounts: SolanaAccount[] = [];
+    if (neonTransaction.rawTransaction) {
+      neonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
     }
     const accountsMap = new Map<string, AccountMeta>();
-    if (neonEmulate) {
+    if (neonEmulate!) {
+      // console.log(neonEmulate);
       const { accounts = [], solana_accounts = [] } = neonEmulate;
       for (const account of accounts) {
         const key = account['account'];
@@ -157,11 +184,18 @@ export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, signedTr
       }
 
       for (const account of solana_accounts) {
-        const key = account['pubkey'];
-        accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
+        const { pubkey, is_legacy, is_writable } = account;
+        accountsMap.set(pubkey, {
+          pubkey: new PublicKey(pubkey),
+          isSigner: false,
+          isWritable: is_writable
+        });
+        if (is_legacy) {
+          legacyAccounts.push(account);
+        }
       }
     }
-    return { neonKeys: Array.from(accountsMap.values()), neonTransaction: signedTransaction };
+    return { neonKeys: Array.from(accountsMap.values()), neonTransaction, legacyAccounts };
   } catch (e) {
     console.log(e);
   }

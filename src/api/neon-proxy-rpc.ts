@@ -1,4 +1,5 @@
 import { GasToken, NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
+import { NeonEmulate } from '../__tests__/tools';
 
 export class NeonProxyRpcApi {
   neonProxyRpcApi = '';
@@ -29,8 +30,8 @@ export class NeonProxyRpcApi {
     return this.rpc<T>(this.solanaRpcApi, method, params);
   }
 
-  async neonEmulate(params: string[] = []): Promise<RPCResponse<any>> {
-    return this.proxy<any>('neon_emulate', params).then(d => d.result);
+  async neonEmulate(params: string[] = []): Promise<NeonEmulate> {
+    return this.proxy<NeonEmulate>('neon_emulate', params).then(d => d.result);
   }
 
   async evmParams(): Promise<NeonProgramStatus> {
