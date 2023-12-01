@@ -1,7 +1,7 @@
 {
-  "name": "@neonlabs/neon-client-transfer",
-  "version": "3.0.0-beta-2",
-  "description": "JavaScript client-side module for creating transfer transactions from Solana EVM to Neon EVM",
+  "name": "@neonevm/token-transfer",
+  "version": "3.0.0-beta-4",
+  "description": "JavaScript client-side module for creating transfer transactions from Solana to NeonEVM",
   "files": [
     "./dist/**/*"
   ],

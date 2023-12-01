@@ -18,9 +18,9 @@ You can see Live Demo [here](https://codesandbox.io/s/neon-transfer-demo-z93nlj)
 Firstly, install the package:
 
 ```sh
-yarn add neon-portal
+yarn add @neonevm/token-transfer
 # or
-npm install neon-portal
+npm install @neonevm/token-transfer
 ```
 
 ### For native
