@@ -31,5 +31,8 @@ export class NeonProxyRpcApi {
     async gasTokenList() {
         return this.proxy('neon_getGasTokenList', []).then(d => d.result);
     }
+    async nativeTokenList() {
+        return this.proxy('neon_getNativeTokenList', []).then(d => d.result);
+    }
 }
 //# sourceMappingURL=neon-proxy-rpc.js.map

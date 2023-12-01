@@ -49,8 +49,8 @@ export class MintPortal extends InstructionService {
         const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), this.solanaWalletPubkey);
         const climeData = climeTransactionData(this.web3, associatedTokenAddress, this.neonWalletAddress, fullAmount);
         const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, this.neonWalletAddress, splToken);
-        const { neonKeys, neonTransaction } = await createClaimInstruction(this.proxyApi, signedTransaction);
-        const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, neonTransaction, splToken, fullAmount, 111);
+        const { neonKeys, neonTransaction, legacyAccounts } = await createClaimInstruction(this.proxyApi, signedTransaction);
+        const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, 111);
         transaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
         return transaction;
     }

@@ -11,13 +11,13 @@ export async function solanaNEONTransferTransaction(solanaWallet, neonWallet, ne
     const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(neonToken.address_spl), solanaWallet);
     const transaction = new Transaction({ feePayer: solanaWallet });
     transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
-    transaction.add(createNeonDepositInstructionV3(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+    transaction.add(createNeonDepositToBalanceInstruction(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
     if (serviceWallet && rewardAmount) {
         transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
     }
     return transaction;
 }
-export function createNeonDepositInstructionV3(chainId, solanaWallet, tokenAddress, neonWallet, neonEvmProgram, tokenMint, serviceWallet) {
+export function createNeonDepositToBalanceInstruction(chainId, solanaWallet, tokenAddress, neonWallet, neonEvmProgram, tokenMint, serviceWallet) {
     const [depositWallet] = authorityPoolAddress(neonEvmProgram);
     const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
     const [contractAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
@@ -32,7 +32,7 @@ export function createNeonDepositInstructionV3(chainId, solanaWallet, tokenAddre
         { pubkey: serviceWallet ? serviceWallet : solanaWallet, isSigner: true, isWritable: true },
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
     ];
-    const a = Buffer.from([39 /* EvmInstruction.DepositV03 */]);
+    const a = Buffer.from([49 /* EvmInstruction.DepositToBalance */]);
     const b = Buffer.from(neonWallet.slice(2), 'hex');
     const c = numberTo64BitLittleEndian(chainId);
     const data = Buffer.concat([a, b, c]);

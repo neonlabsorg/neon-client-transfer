@@ -3,3 +3,4 @@
 webpack.config.js
 .github/
 .snyk
+__tests__/
