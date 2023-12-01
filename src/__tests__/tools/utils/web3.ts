@@ -82,7 +82,19 @@ export async function mintTokenBalance(web3: Web3, account: string, token: SPLTo
   return balance / Math.pow(10, token.decimals);
 }
 
-export function solanaSignature(comment: string, signature: string, params: any = { cluster: 'devnet' }): void {
+export function solanaSignature(comment: string, signature: string, url: string = `https://api.devnet.solana.com`): void {
+  let params: { [key: string]: string } = { cluster: 'custom', customUrl: url };
+  switch (url) {
+    case 'https://api.devnet.solana.com':
+      params = { cluster: 'devnet' };
+      break;
+    case 'https://api.mainnet-beta.solana.com':
+      params = { cluster: 'mainnet-beta' };
+      break;
+    case 'https://api.testnet.solana.com':
+      params = { cluster: 'testnet' };
+      break;
+  }
   const urlParams = new URLSearchParams(params);
   console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?${urlParams.toString()}`);
 }

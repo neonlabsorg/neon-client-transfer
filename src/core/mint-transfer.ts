@@ -31,7 +31,6 @@ import {
   collateralPoolAddress,
   erc20ForSPLContract,
   neonBalanceProgramAddress,
-  neonWalletProgramAddress,
   solanaWalletSigner
 } from './utils';
 

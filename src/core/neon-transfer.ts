@@ -53,7 +53,7 @@ export function createNeonDepositToBalanceInstruction(chainId: number, solanaWal
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
   ];
 
-  const a = Buffer.from([EvmInstruction.DepositV03]);
+  const a = Buffer.from([EvmInstruction.DepositToBalance]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
   const c = numberTo64BitLittleEndian(chainId);
   const data = Buffer.concat([a, b, c]);
