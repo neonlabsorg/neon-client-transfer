@@ -86,12 +86,12 @@ beforeAll(async () => {
   try {
     const token = await neonBalance(web3, neonWallet.address);
     if (token.gte(0.1)) {
-      console.log(`${neonWallet.address}: ${token.toNumber()} NEON`);
+      console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
     } else {
       await faucet.requestNeon(neonWallet.address, 2);
       await delay(1e4);
       const token = await neonBalance(web3, neonWallet.address);
-      console.log(`${neonWallet.address}: ${token.toNumber()} NEON`);
+      console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
     }
   } catch (e) {
     console.log(e);
@@ -102,12 +102,12 @@ beforeAll(async () => {
   try {
     const balance = await connection.getBalance(solanaWallet.publicKey);
     if (balance) {
-      console.log(`${solanaWallet.publicKey.toBase58()}: ${balance / LAMPORTS_PER_SOL} SOL`);
+      console.log(`Solana wallet: ${solanaWallet.publicKey.toBase58()}: ${balance / LAMPORTS_PER_SOL} SOL`);
     } else {
       await connection.requestAirdrop(solanaWallet.publicKey, 2 * LAMPORTS_PER_SOL);
       await delay(1e4);
       const balance = await connection.getBalance(solanaWallet.publicKey);
-      console.log(`${solanaWallet.publicKey.toBase58()}: ${balance / LAMPORTS_PER_SOL} SOL`);
+      console.log(`Solana wallet: ${solanaWallet.publicKey.toBase58()}: ${balance / LAMPORTS_PER_SOL} SOL`);
     }
   } catch (e) {
     console.log(e);
@@ -259,7 +259,7 @@ describe('Neon transfer tests', () => {
   });
 
   it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
-    const amount = 0.05;
+    const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
     console.log(`Balance: ${solBefore / LAMPORTS_PER_SOL} SOL`);

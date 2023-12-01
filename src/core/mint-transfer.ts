@@ -78,7 +78,6 @@ export async function neonTransferMintTransaction(connection: Connection, proxyS
     transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, emulateSigner.address, chainId));
   }
 
-  console.log(neonWallet, emulateSigner.address);
   for (const account of legacyAccounts) {
     const instruction = await createAccountBalanceForLegacyAccountInstruction(connection, account, solanaWallet, neonEvmProgram, chainId);
     if (instruction) {
@@ -127,12 +126,9 @@ export function createAccountV3Instruction(solanaWallet: PublicKey, neonPDAWalle
 
 export async function createAccountBalanceForLegacyAccountInstruction(connection: Connection, account: SolanaAccount, solanaWallet: PublicKey, neonEvmProgram: PublicKey, chainId: number): Promise<TransactionInstruction | null> {
   const accountAddress = new PublicKey(account.pubkey);
-  console.log(account);
   const accountInfo = await connection.getAccountInfo(accountAddress);
-  console.log(accountInfo);
-  if (accountInfo?.data) {
+  if (accountInfo) {
     const neonAddress = `0x${accountInfo?.data.slice(1, 21).toString('hex')}`;
-    console.log(neonAddress);
     return createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonAddress, chainId);
   }
   return null!;
@@ -179,7 +175,6 @@ export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, neonTran
     }
     const accountsMap = new Map<string, AccountMeta>();
     if (neonEmulate!) {
-      // console.log(neonEmulate);
       const { accounts = [], solana_accounts = [] } = neonEmulate;
       for (const account of accounts) {
         const key = account['account'];
