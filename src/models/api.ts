@@ -79,3 +79,9 @@ export interface ClaimInstructionResult {
   neonKeys: AccountMeta[];
   legacyAccounts: SolanaAccount[];
 }
+
+export interface NativeToken {
+  token_name: string;
+  token_mint: string;
+  token_chain_id: string;
+}
