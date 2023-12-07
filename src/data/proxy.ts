@@ -1,4 +1,4 @@
-import { NeonProgramStatus } from '../models';
+import { GasToken, NeonProgramStatus } from '../models';
 
 export const NEON_STATUS_MAINNET_SNAPSHOT: NeonProgramStatus = {
   NEON_ACCOUNT_SEED_VERSION: '3',
@@ -60,18 +60,15 @@ export const NEON_STATUS_DEVNET_SNAPSHOT: NeonProgramStatus = {
   NEON_EVM_ID: 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 };
 
-export const TOKEN_LIST_DEVNET_SNAPSHOT = [
-  {
-    token_name: 'NEON',
-    token_mint: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
-    token_chain_id: 'e9ac0ce'
-  },
-  {
-    token_name: 'SOL',
-    token_mint: 'So11111111111111111111111111111111111111112',
-    token_chain_id: 'e9ac0ce'
-  }
-];
+export const TOKEN_LIST_DEVNET_SNAPSHOT: GasToken[] = [{
+  token_name: 'NEON',
+  token_mint: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
+  token_chain_id: '0xe9ac0ce'
+}, {
+  token_name: 'SOL',
+  token_mint: 'So11111111111111111111111111111111111111112',
+  token_chain_id: '0xe9ac0cf'
+}];
 
 const proxyStatusSnapshot = new Map<string, NeonProgramStatus>();
 proxyStatusSnapshot.set('mainnet', NEON_STATUS_MAINNET_SNAPSHOT);

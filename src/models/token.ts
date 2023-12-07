@@ -15,3 +15,5 @@ export interface GasToken {
 }
 
 export type Amount = number | bigint | string;
+
+export type NeonAddress = `0x${string}` | string;

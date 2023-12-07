@@ -1,4 +1,4 @@
-import { Amount, EvmInstruction, SPLToken } from '../models';
+import { Amount, EvmInstruction, NeonAddress, SPLToken } from '../models';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
   createApproveInstruction,
@@ -20,7 +20,7 @@ import {
   neonWrapperContract
 } from './utils';
 
-export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
+export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
