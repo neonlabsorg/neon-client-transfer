@@ -5,7 +5,8 @@ import {
   createMintNeonWeb3Transaction,
   createMintSolanaTransaction,
   GasToken,
-  NEON_STATUS_DEVNET_SNAPSHOT, NEON_TOKEN_MINT_DEVNET,
+  NEON_STATUS_DEVNET_SNAPSHOT,
+  NEON_TOKEN_MINT_DEVNET,
   NEON_TRANSFER_CONTRACT_DEVNET,
   neonNeonWeb3Transaction,
   NeonProgramStatus,
@@ -230,7 +231,7 @@ function NeonTransferApp() {
         case 'SOL': {
           const solana = await solanaBalance(connection, solanaWallet.publicKey);
           const neon = await neonBalance(web3, neonWallet.address);
-          setTokenBalance({ solana: solana, neon: neon });
+          setTokenBalance({ solana, neon });
           break;
         }
         case 'wSOL': {
@@ -253,7 +254,7 @@ function NeonTransferApp() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [web3, splToken, chainId]);
+  }, [web3, splToken]);
 
   const handleSubmit = useCallback(async () => {
     if (token && splToken) {
