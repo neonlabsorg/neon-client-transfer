@@ -24,7 +24,7 @@ import {
 import {
   createSplAccount,
   delay,
-  FaucetDropper,
+  FaucetDropper, getGasToken,
   getMultiTokenProxy,
   mintTokenBalance,
   NEON_PRIVATE,
@@ -64,13 +64,14 @@ let neonProxyRpcApi: NeonProxyRpcApi;
 describe('NEON token transfer tests', () => {
   beforeAll(async () => {
     try {
-      const result = await getMultiTokenProxy(NEON_PROXY_URL!, SOLANA_URL!, CHAIN_ID);
+      const result = await getMultiTokenProxy(NEON_PROXY_URL!, SOLANA_URL!);
+      const token = getGasToken(result.tokensList, CHAIN_ID);
       connection = new Connection(SOLANA_URL!, 'confirmed');
       web3 = result.web3;
+      neonProxyRpcApi = result.proxyRpc;
       neonProxyStatus = result.proxyStatus;
       neonEvmProgram = result.evmProgramAddress;
-      neonTokenMint = result.tokenMintAddress;
-      neonProxyRpcApi = result.proxyRpc;
+      neonTokenMint = token.tokenMintAddress;
       solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
       neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
       tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;

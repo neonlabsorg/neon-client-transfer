@@ -6,7 +6,7 @@ import { NeonProgramStatus, SPLToken } from '../../models';
 import {
   createSplAccount,
   delay,
-  FaucetDropper,
+  FaucetDropper, getGasToken,
   getMultiTokenProxy,
   NEON_PRIVATE,
   neonBalance,
@@ -45,12 +45,13 @@ let solanaWallet: Keypair;
 let neonWallet: Account;
 
 beforeAll(async () => {
-  const result = await getMultiTokenProxy(SOL_PROXY_URL, SOLANA_URL!, chainId);
+  const result = await getMultiTokenProxy(SOL_PROXY_URL, SOLANA_URL!);
+  const token = getGasToken(result.tokensList, chainId);
   web3 = result.web3;
+  proxyRpc = result.proxyRpc;
   proxyStatus = result.proxyStatus;
   evmProgramAddress = result.evmProgramAddress;
-  tokenMintAddress = result.tokenMintAddress;
-  proxyRpc = result.proxyRpc;
+  tokenMintAddress = token.tokenMintAddress;
   solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
   neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
   signer = toSigner(solanaWallet);

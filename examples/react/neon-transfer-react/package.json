@@ -27,6 +27,7 @@
     ]
   },
   "dependencies": {
+    "@neonevm/token-transfer": "file:/Users/able/projects/work/neon/neonpass/neon-client-transfer",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -37,6 +38,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
+    "token-list": "https://github.com/neonlabsorg/token-list.git#v5.2.1",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0"
   },
@@ -45,10 +47,8 @@
     "@solana/web3.js": "^1.78.0",
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1",
-    "neon-portal": "^2.0.2",
     "react-app-rewired": "^2.2.1",
     "tailwindcss": "^3.3.3",
-    "token-list": "https://github.com/neonlabsorg/token-list.git#v5.0.0",
     "web3": "1.10.0"
   }
 }

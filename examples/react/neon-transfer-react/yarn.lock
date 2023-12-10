@@ -1826,6 +1826,16 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
+"@neonevm/token-transfer@file:../../..":
+  version "3.0.0-beta-5d"
+  dependencies:
+    "@solana/spl-token" "^0.3.8"
+    "@solana/web3.js" "^1.77.3"
+    big.js "^6.2.1"
+    web3 "1.10.0"
+    web3-core "1.10"
+    web3-eth-contract "1.10.0"
+
 "@nicolo-ribaudo/eslint-scope-5-internals@5.1.1-v1":
   version "5.1.1-v1"
   resolved "https://registry.yarnpkg.com/@nicolo-ribaudo/eslint-scope-5-internals/-/eslint-scope-5-internals-5.1.1-v1.tgz#dbf733a965ca47b1973177dc0bb6c889edcfb129"
@@ -7831,18 +7841,6 @@ neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-neon-portal@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/neon-portal/-/neon-portal-2.0.2.tgz#7b6cacc475c9e6c0fc1830e4d7545cc060739573"
-  integrity sha512-MJ0N3biL5wqKg+uYlamhA4uroYBNRvdJe9MubD/e9dMAflqfgj5GV0QexBhj2cii0ZOJKwDddFFfxoaCjBr4Mw==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    big.js "^6.2.1"
-    web3 "1.10.0"
-    web3-core "1.10"
-    web3-eth-contract "1.10.0"
-
 next-tick@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.1.0.tgz#1836ee30ad56d67ef281b22bd199f709449b35eb"
@@ -10342,9 +10340,9 @@ toidentifier@1.0.1:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
-"token-list@https://github.com/neonlabsorg/token-list.git#v5.0.0":
+"token-list@https://github.com/neonlabsorg/token-list.git#v5.2.1":
   version "0.0.0"
-  resolved "https://github.com/neonlabsorg/token-list.git#25b435e54ff17995f4176c09a91723dda099dbbc"
+  resolved "https://github.com/neonlabsorg/token-list.git#034c3463ba1bf18b940c4ce3d54513b9eda45d54"
 
 tough-cookie@^4.0.0:
   version "4.1.3"

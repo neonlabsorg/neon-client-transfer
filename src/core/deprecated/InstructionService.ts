@@ -14,7 +14,7 @@ import Web3 from 'web3';
 
 import { NeonProxyRpcApi } from '../../api';
 import { toFullAmount } from '../../utils';
-import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
+import { erc20Abi, NEON_TOKEN_MINT_DEVNET, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 import {
   Amount,
   InstructionEvents,
@@ -48,7 +48,7 @@ export class InstructionService {
   }
 
   get tokenMint(): PublicKey {
-    return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
+    return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT ?? NEON_TOKEN_MINT_DEVNET);
   }
 
   constructor(options: InstructionParams) {

@@ -13,7 +13,7 @@ import {
 } from '@solana/web3.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { AbiItem } from 'web3-utils';
-import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from 'neon-portal';
+import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer';
 import { Account, TransactionConfig } from 'web3-core';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
@@ -65,10 +65,10 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<number> {
+export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<Big> {
   const tokenInstance = new web3.eth.Contract(contractAbi, token.address);
   const balance = await tokenInstance.methods.balanceOf(account).call();
-  return balance / Math.pow(10, token.decimals);
+  return new Big(balance).div(Math.pow(10, token.decimals));
 }
 
 export function solanaSignature(signature: string): string {
