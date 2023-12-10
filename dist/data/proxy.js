@@ -56,18 +56,15 @@ export const NEON_STATUS_DEVNET_SNAPSHOT = {
     NEON_TREASURY_POOL_SEED: 'treasury_pool',
     NEON_EVM_ID: 'eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU'
 };
-export const TOKEN_LIST_DEVNET_SNAPSHOT = [
-    {
+export const TOKEN_LIST_DEVNET_SNAPSHOT = [{
         token_name: 'NEON',
         token_mint: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
-        token_chain_id: 'e9ac0ce'
-    },
-    {
+        token_chain_id: '0xe9ac0ce'
+    }, {
         token_name: 'SOL',
         token_mint: 'So11111111111111111111111111111111111111112',
-        token_chain_id: 'e9ac0ce'
-    }
-];
+        token_chain_id: '0xe9ac0cf'
+    }];
 const proxyStatusSnapshot = new Map();
 proxyStatusSnapshot.set('mainnet', NEON_STATUS_MAINNET_SNAPSHOT);
 proxyStatusSnapshot.set('devnet', NEON_STATUS_DEVNET_SNAPSHOT);

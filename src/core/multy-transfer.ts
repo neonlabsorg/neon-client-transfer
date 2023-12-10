@@ -17,4 +17,3 @@ export async function solanaSOLTransferTransaction(connection: Connection, solan
 
   return transaction;
 }
-
