@@ -1,6 +1,7 @@
 {
   "name": "neon-transfer-demo",
-  "version": "0.1.0",
+  "description": "NeonEVM token transfer library demo with multi-token support",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "start": "react-app-rewired start",
@@ -27,7 +28,7 @@
     ]
   },
   "dependencies": {
-    "@neonevm/token-transfer": "https://github.com/neonlabsorg/neon-client-transfer.git#multitoken-beta-5",
+    "@neonevm/token-transfer": "^3.0.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",

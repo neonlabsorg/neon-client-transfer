@@ -1826,9 +1826,10 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
-"@neonevm/token-transfer@https://github.com/neonlabsorg/neon-client-transfer.git#multitoken-beta-5":
-  version "3.0.0-beta-5e"
-  resolved "https://github.com/neonlabsorg/neon-client-transfer.git#25edc5f24b9008e8e474cdd3bed19c5f87059085"
+"@neonevm/token-transfer@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer/-/token-transfer-3.0.0.tgz#d66927ae646024906c2b6089393ae4791d4c221e"
+  integrity sha512-H+n1sq/SAhn2PhE1dvGC1DC3n0yXzNrhsJAENG1YWgiQzDGNsLcQL0+dp64S64EAuiw5HswRrxeZF1gSA70qsg==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"
