@@ -88,10 +88,11 @@ transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized'))
 const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false }); // method for sign and send transaction to network
 ```
 
-And for transfer NEON from Neon EVM to Solana, you can using this pattern:
+And for transfer NEON from Neon EVM to Solana, you should known token contract address, you can look it in [this file](https://github.com/neonlabsorg/neon-client-transfer/blob/master/src/data/constants.ts).
 
 ```javascript
-const transaction = await neonNeonWeb3Transaction(web3, neonWallet, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet, amount); // Neon EVM Transaction object
+const tokenContract = NEON_TRANSFER_CONTRACT_DEVNET; // or SOL_TRANSFER_CONTRACT_DEVNET
+const transaction = await neonNeonWeb3Transaction(web3, neonWallet, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
 const hash = await sendNeonTransaction(web3, transaction, neonWallet); // method for sign and send transaction to network
 ```
 
