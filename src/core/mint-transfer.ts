@@ -30,8 +30,9 @@ import {
 } from '../models';
 import {
   COMPUTE_BUDGET_ID,
-  NEON_STATUS_DEVNET_SNAPSHOT,
-  NEON_STATUS_MAINNET_SNAPSHOT
+  NEON_COMPUTE_UNITS,
+  NEON_HEAP_FRAME,
+  NEON_STATUS_DEVNET_SNAPSHOT
 } from '../data';
 import { NeonProxyRpcApi } from '../api';
 import {
@@ -66,7 +67,7 @@ export async function neonTransferMintTransaction(connection: Connection, proxyS
   const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const transaction = new Transaction({ feePayer: solanaWallet });
-  // transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
+
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, proxyStatus));
   transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
 
@@ -95,7 +96,7 @@ export async function neonTransferMintTransaction(connection: Connection, proxyS
 
 export function createComputeBudgetUtilsInstruction(programId: PublicKey, proxyStatus: NeonProgramStatus): TransactionInstruction {
   const a = Buffer.from([0x00]);
-  const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_COMPUTE_UNITS)));
+  const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_COMPUTE_UNITS ?? NEON_COMPUTE_UNITS)));
   const c = Buffer.from(toBytesInt32(0));
   const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId, data, keys: [] });
@@ -103,7 +104,7 @@ export function createComputeBudgetUtilsInstruction(programId: PublicKey, proxyS
 
 export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, proxyStatus: NeonProgramStatus): TransactionInstruction {
   const a = Buffer.from([0x01]);
-  const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME ?? NEON_STATUS_MAINNET_SNAPSHOT.NEON_HEAP_FRAME)));
+  const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME ?? NEON_HEAP_FRAME)));
   const data = Buffer.concat([a, b]);
   return new TransactionInstruction({ programId, data, keys: [] });
 }
@@ -252,7 +253,7 @@ export async function createMintNeonWeb3Transaction(web3: Web3, neonWallet: stri
   transaction.gas = await web3.eth.estimateGas(transaction);
   transaction.nonce = (await web3.eth.getTransactionCount(neonWallet));
   // @ts-ignore
-  transaction['gasLimit'] = gasLimit;
+  transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
   return transaction;
 }
 
@@ -325,5 +326,38 @@ export async function createUnwrapSOLTransaction(connection: Connection, solanaW
   const instructions: TransactionInstruction[] = [];
   instructions.push(createCloseAccountInstruction(associatedToken, solanaWallet, solanaWallet));
   transaction.add(...instructions);
+  return transaction;
+}
+
+export async function createWrapAndTransferSOLTransactionWeb3(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: number, chainId = 111): Promise<Transaction> {
+  const instructions: TransactionInstruction[] = [];
+  const transaction: Transaction = new Transaction({ feePayer: solanaWallet });
+  const tokenMint = new PublicKey(splToken.address_spl);
+  const fullAmount = toFullAmount(amount, splToken.decimals);
+  const associatedTokenAddress = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
+  const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
+  const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
+  const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
+  const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
+  const {
+    neonKeys,
+    neonTransaction,
+    legacyAccounts
+  } = await createClaimInstruction(proxyApi, signedTransaction);
+  const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, chainId);
+
+  if (!wSOLAccount) {
+    instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedTokenAddress, solanaWallet, solanaWallet));
+  }
+
+  instructions.push(SystemProgram.transfer({
+    fromPubkey: solanaWallet,
+    toPubkey: associatedTokenAddress,
+    lamports: fullAmount
+  }));
+  instructions.push(createSyncNativeInstruction(associatedTokenAddress, TOKEN_PROGRAM_ID));
+  transaction.add(...instructions);
+  transaction.add(...mintTransaction.instructions);
+
   return transaction;
 }

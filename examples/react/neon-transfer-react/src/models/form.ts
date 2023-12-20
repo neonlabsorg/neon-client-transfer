@@ -1,3 +1,5 @@
+import Big from 'big.js';
+
 export interface TransferDirection {
   direction: 'solana' | 'neon';
   from: string;
@@ -5,6 +7,11 @@ export interface TransferDirection {
 }
 
 export interface TokenBalance {
-  neon: string;
-  solana: string;
+  neon: Big;
+  solana: Big;
+}
+
+export interface TransferSignature {
+  neon?: string;
+  solana?: string;
 }

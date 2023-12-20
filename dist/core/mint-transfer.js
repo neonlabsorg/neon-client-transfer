@@ -2,7 +2,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionI
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createApproveInstruction, createCloseAccountInstruction, createSyncNativeInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Buffer } from 'buffer';
 import { numberTo64BitLittleEndian, toBytesInt32, toFullAmount } from '../utils';
-import { COMPUTE_BUDGET_ID, NEON_STATUS_DEVNET_SNAPSHOT, NEON_STATUS_MAINNET_SNAPSHOT } from '../data';
+import { COMPUTE_BUDGET_ID, NEON_COMPUTE_UNITS, NEON_HEAP_FRAME, NEON_STATUS_DEVNET_SNAPSHOT } from '../data';
 import { authAccountAddress, collateralPoolAddress, erc20ForSPLContract, neonBalanceProgramAddress, neonWalletProgramAddress, solanaWalletSigner } from './utils';
 export async function neonTransferMintWeb3Transaction(connection, web3, proxyApi, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, splToken, amount, chainId) {
     const fullAmount = toFullAmount(amount, splToken.decimals);
@@ -22,7 +22,6 @@ export async function neonTransferMintTransaction(connection, proxyStatus, neonE
     const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
     const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
     const transaction = new Transaction({ feePayer: solanaWallet });
-    // transaction.add(createComputeBudgetUtilsInstruction(computedBudgetProgram, proxyStatus));
     transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, proxyStatus));
     transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
     if (!neonWalletBalanceAccount) {
@@ -44,14 +43,14 @@ export async function neonTransferMintTransaction(connection, proxyStatus, neonE
 }
 export function createComputeBudgetUtilsInstruction(programId, proxyStatus) {
     const a = Buffer.from([0x00]);
-    const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_COMPUTE_UNITS)));
+    const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_COMPUTE_UNITS ?? NEON_COMPUTE_UNITS)));
     const c = Buffer.from(toBytesInt32(0));
     const data = Buffer.concat([a, b, c]);
     return new TransactionInstruction({ programId, data, keys: [] });
 }
 export function createComputeBudgetHeapFrameInstruction(programId, proxyStatus) {
     const a = Buffer.from([0x01]);
-    const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME ?? NEON_STATUS_MAINNET_SNAPSHOT.NEON_HEAP_FRAME)));
+    const b = Buffer.from(toBytesInt32(parseInt(proxyStatus.NEON_HEAP_FRAME ?? NEON_HEAP_FRAME)));
     const data = Buffer.concat([a, b]);
     return new TransactionInstruction({ programId, data, keys: [] });
 }
@@ -188,7 +187,7 @@ export async function createMintNeonWeb3Transaction(web3, neonWallet, associated
     transaction.gas = await web3.eth.estimateGas(transaction);
     transaction.nonce = (await web3.eth.getTransactionCount(neonWallet));
     // @ts-ignore
-    transaction['gasLimit'] = gasLimit;
+    transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
     return transaction;
 }
 export function mintNeonTransactionData(web3, associatedToken, splToken, amount) {
@@ -250,6 +249,31 @@ export async function createUnwrapSOLTransaction(connection, solanaWallet, splTo
     const instructions = [];
     instructions.push(createCloseAccountInstruction(associatedToken, solanaWallet, solanaWallet));
     transaction.add(...instructions);
+    return transaction;
+}
+export async function createWrapAndTransferSOLTransactionWeb3(connection, web3, proxyApi, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, splToken, amount, chainId = 111) {
+    const instructions = [];
+    const transaction = new Transaction({ feePayer: solanaWallet });
+    const tokenMint = new PublicKey(splToken.address_spl);
+    const fullAmount = toFullAmount(amount, splToken.decimals);
+    const associatedTokenAddress = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
+    const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
+    const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
+    const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
+    const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
+    const { neonKeys, neonTransaction, legacyAccounts } = await createClaimInstruction(proxyApi, signedTransaction);
+    const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, chainId);
+    if (!wSOLAccount) {
+        instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedTokenAddress, solanaWallet, solanaWallet));
+    }
+    instructions.push(SystemProgram.transfer({
+        fromPubkey: solanaWallet,
+        toPubkey: associatedTokenAddress,
+        lamports: fullAmount
+    }));
+    instructions.push(createSyncNativeInstruction(associatedTokenAddress, TOKEN_PROGRAM_ID));
+    transaction.add(...instructions);
+    transaction.add(...mintTransaction.instructions);
     return transaction;
 }
 //# sourceMappingURL=mint-transfer.js.map

@@ -23,3 +23,4 @@ export declare function createMintSolanaTransaction(solanaWallet: PublicKey, tok
 export declare function createAssociatedTokenAccountInstruction(tokenMint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey, associatedProgramId?: PublicKey, programId?: PublicKey): TransactionInstruction;
 export declare function createWrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, amount: Amount, splToken: SPLToken): Promise<Transaction>;
 export declare function createUnwrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, splToken: SPLToken): Promise<Transaction>;
+export declare function createWrapAndTransferSOLTransactionWeb3(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: number, chainId?: number): Promise<Transaction>;

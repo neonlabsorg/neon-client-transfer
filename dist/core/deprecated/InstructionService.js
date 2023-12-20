@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { toFullAmount } from '../../utils';
-import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
+import { erc20Abi, NEON_TOKEN_MINT_DEVNET, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 import { authAccountAddress, neonWalletProgramAddress, solanaWalletSigner } from '../utils';
 import { createAccountV3Instruction } from '../mint-transfer';
 const noop = new Function();
@@ -15,7 +15,7 @@ export class InstructionService {
         return new PublicKey(this.proxyStatus.NEON_EVM_ID);
     }
     get tokenMint() {
-        return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
+        return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT ?? NEON_TOKEN_MINT_DEVNET);
     }
     constructor(options) {
         this.emitFunction = (functionName, ...args) => {

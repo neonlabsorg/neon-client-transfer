@@ -1,6 +1,4 @@
-import { clusterApiUrl } from '@solana/web3.js';
-import Web3 from 'web3';
-import { NEON_TOKEN_MINT_DECIMALS, SPLToken } from 'neon-portal';
+import { NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer';
 
 export const NEON_CHAIN_IDS: any[] = [
   { id: 111, name: 'LOCAL' },
@@ -19,11 +17,13 @@ export const NEON_TOKEN_MODEL: SPLToken = {
   logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
 };
 
+export const SOL_TOKEN_MODEL: SPLToken = {
+  name: 'Solana SOL',
+  symbol: 'SOL',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg'
+} as SPLToken;
 
 export const CHAIN_NAME = 'devnet';
 export const CHAIN_ID = NEON_CHAIN_IDS.find(i => i.name === CHAIN_NAME)!.id;
-export const SOLANA_DEVNET = clusterApiUrl(CHAIN_NAME);
-export const NEON_DEVNET = new Web3.providers.HttpProvider('https://devnet.neonevm.org');
-
 export const NEON_PRIVATE = process.env['REACT_APP_NEON_PRIVATE']!;
 export const SOLANA_PRIVATE = process.env['REACT_APP_SOLANA_PRIVATE']!;

@@ -24,7 +24,7 @@ export function numberTo64BitLittleEndian(num) {
     return new Uint8Array(buffer);
 }
 export function toU256BE(bigIntNumber) {
-    if (bigIntNumber < 0n || bigIntNumber > BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')) {
+    if (bigIntNumber < BigInt(0) || bigIntNumber > BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')) {
         throw new Error('Number out of range for U256BE');
     }
     const buffer = new ArrayBuffer(32); // 256 bits = 32 bytes
@@ -32,7 +32,7 @@ export function toU256BE(bigIntNumber) {
     // Loop through each byte and set it from the start to maintain big-endian order
     for (let i = 0; i < 32; i++) {
         // Extract each byte of the BigInt number
-        const byte = Number((bigIntNumber >> BigInt(8 * (31 - i))) & 0xffn);
+        const byte = Number((bigIntNumber >> BigInt(8 * (31 - i))) & BigInt(0xFF));
         view.setUint8(i, byte);
     }
     return new Uint8Array(buffer);

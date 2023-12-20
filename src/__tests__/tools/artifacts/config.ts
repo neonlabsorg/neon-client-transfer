@@ -22,3 +22,8 @@ export const NEON_TOKEN_MODEL: SPLToken = {
   symbol: 'NEON',
   logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
 };
+export const SOL_TOKEN_MODEL: SPLToken = {
+  name: 'Solana SOL',
+  symbol: 'SOL',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg'
+} as SPLToken;

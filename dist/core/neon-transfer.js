@@ -91,6 +91,7 @@ export async function neonNeonWeb3Transaction(web3, from, to, solanaWallet, amou
     const transaction = neonNeonTransaction(from, to, amount, data);
     transaction.gasPrice = await web3.eth.getGasPrice();
     transaction.gas = await web3.eth.estimateGas(transaction);
+    // @ts-ignore
     transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
     return transaction;
 }

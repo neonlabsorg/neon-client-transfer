@@ -1,4 +1,4 @@
-import { Amount, EvmInstruction, SPLToken } from '../models';
+import { Amount, EvmInstruction, NeonAddress, SPLToken } from '../models';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
   createApproveInstruction,
@@ -20,7 +20,7 @@ import {
   neonWrapperContract
 } from './utils';
 
-export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
+export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
@@ -120,6 +120,7 @@ export async function neonNeonWeb3Transaction(web3: Web3, from: string, to: stri
   const transaction = neonNeonTransaction(from, to, amount, data);
   transaction.gasPrice = await web3.eth.getGasPrice();
   transaction.gas = await web3.eth.estimateGas(transaction);
+  // @ts-ignore
   transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
   return transaction;
 }

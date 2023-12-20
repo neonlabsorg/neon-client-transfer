@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Connection, Keypair, Signer } from '@solana/web3.js';
-import { MintPortal, NeonPortal, SPLToken } from 'neon-portal';
+import { MintPortal, NeonPortal, SPLToken } from '@neonevm/token-transfer';
 import { Account } from 'web3-core';
 import Web3 from 'web3';
 import { delay, sendTransaction, toSigner } from '../utils';
