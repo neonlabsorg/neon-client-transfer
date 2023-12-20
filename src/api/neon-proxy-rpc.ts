@@ -1,4 +1,10 @@
-import { NeonProgramStatus, RPCResponse, SettingsFormState } from '../models';
+import {
+  GasToken,
+  NeonEmulate,
+  NeonProgramStatus,
+  RPCResponse,
+  SettingsFormState
+} from '../models';
 
 export class NeonProxyRpcApi {
   neonProxyRpcApi = '';
@@ -12,12 +18,13 @@ export class NeonProxyRpcApi {
   async rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
     const id = Date.now();
     const body = { id, jsonrpc: '2.0', method, params };
-    const request = await fetch(url, {
+    console.log('POST', url, JSON.stringify(body));
+    const response = await fetch(url, {
       method: 'POST',
       mode: 'cors',
       body: JSON.stringify(body)
     });
-    return await request.json();
+    return await response.json();
   }
 
   async proxy<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
@@ -28,11 +35,19 @@ export class NeonProxyRpcApi {
     return this.rpc<T>(this.solanaRpcApi, method, params);
   }
 
-  async neonEmulate(params: string[] = []): Promise<RPCResponse<any>> {
-    return this.proxy<any>('neon_emulate', params).then(d => d.result);
+  async neonEmulate(params: string[] = []): Promise<NeonEmulate> {
+    return this.proxy<NeonEmulate>('neon_emulate', params).then(d => d.result);
   }
 
   async evmParams(): Promise<NeonProgramStatus> {
     return this.proxy<NeonProgramStatus>('neon_getEvmParams', []).then(d => d.result);
+  }
+
+  async gasTokenList(): Promise<GasToken[]> {
+    return this.proxy<GasToken[]>('neon_getGasTokenList', []).then(d => d.result);
+  }
+
+  async nativeTokenList(): Promise<GasToken[]> {
+    return this.proxy<GasToken[]>('neon_getNativeTokenList', []).then(d => d.result);
   }
 }

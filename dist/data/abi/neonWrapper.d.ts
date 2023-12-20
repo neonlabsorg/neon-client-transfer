@@ -1,4 +1,4 @@
-declare const _default: {
+export declare const neonWrapperAbi: {
     inputs: {
         internalType: string;
         name: string;
@@ -13,4 +13,4 @@ declare const _default: {
     stateMutability: string;
     type: string;
 }[];
-export default _default;
+export default neonWrapperAbi;

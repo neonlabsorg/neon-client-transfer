@@ -1,16 +1,7 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import { PublicKey } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { toFullAmount } from '../../utils';
-import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
+import { erc20Abi, NEON_TOKEN_MINT_DEVNET, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 import { authAccountAddress, neonWalletProgramAddress, solanaWalletSigner } from '../utils';
 import { createAccountV3Instruction } from '../mint-transfer';
 const noop = new Function();
@@ -24,10 +15,9 @@ export class InstructionService {
         return new PublicKey(this.proxyStatus.NEON_EVM_ID);
     }
     get tokenMint() {
-        return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT);
+        return new PublicKey(this.proxyStatus.NEON_TOKEN_MINT ?? NEON_TOKEN_MINT_DEVNET);
     }
     constructor(options) {
-        var _a;
         this.emitFunction = (functionName, ...args) => {
             if (typeof functionName === 'function') {
                 functionName(...args);
@@ -40,7 +30,7 @@ export class InstructionService {
         this.neonWalletAddress = options.neonWalletAddress || '';
         this.neonContractAddress = options.neonContractAddress || '';
         this.connection = options.connection;
-        this.solanaOptions = (_a = options.solanaOptions) !== null && _a !== void 0 ? _a : { skipPreflight: false };
+        this.solanaOptions = options.solanaOptions ?? { skipPreflight: false };
         this.events = {
             onBeforeCreateInstruction: options.onBeforeCreateInstruction || noop,
             onCreateNeonAccountInstruction: options.onCreateNeonAccountInstruction || noop,
@@ -77,10 +67,8 @@ export class InstructionService {
     authAccountAddress(neonWallet, token) {
         return authAccountAddress(neonWallet, this.programId, token);
     }
-    getNeonAccount(neonAssociatedKey) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.connection.getAccountInfo(neonAssociatedKey);
-        });
+    async getNeonAccount(neonAssociatedKey) {
+        return this.connection.getAccountInfo(neonAssociatedKey);
     }
     createAccountV3Instruction(solanaWallet, neonWalletPDA, neonWallet) {
         return createAccountV3Instruction(solanaWallet, neonWalletPDA, this.programId, neonWallet);

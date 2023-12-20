@@ -44,7 +44,8 @@ export class NeonPortal extends InstructionService {
   }
 
   async neonTransferTransaction(amount: Amount, token: SPLToken, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
-    const transaction = await solanaNEONTransferTransaction(this.solanaWalletPubkey, this.neonWalletAddress, this.programId, this.tokenMint, token, amount, serviceWallet, rewardAmount);
+    const transaction = await solanaNEONTransferTransaction(this.solanaWalletPubkey, this.neonWalletAddress, this.programId, this.tokenMint, token, amount, 111
+      , serviceWallet, rewardAmount);
     transaction.recentBlockhash = (await this.connection.getLatestBlockhash('finalized')).blockhash;
     return transaction;
   }

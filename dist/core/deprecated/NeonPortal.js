@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import { InstructionService } from './InstructionService';
 import { createNeonDepositInstruction, createNeonTransferInstruction, neonTransactionData, solanaNEONTransferTransaction } from '../neon-transfer';
 import { authorityPoolAddress } from '../utils';
@@ -17,42 +8,36 @@ import { authorityPoolAddress } from '../utils';
  */
 export class NeonPortal extends InstructionService {
     // Solana -> Neon
-    createNeonTransfer(amount, splToken, events = this.events) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.emitFunction(events.onBeforeCreateInstruction);
-            const transaction = yield this.neonTransferTransaction(amount, splToken);
-            this.emitFunction(events.onBeforeSignTransaction);
-            try {
-                const signedTransaction = yield this.solana.signTransaction(transaction);
-                const signature = yield this.connection.sendRawTransaction(signedTransaction.serialize(), this.solanaOptions);
-                this.emitFunction(events.onSuccessSign, signature);
-            }
-            catch (error) {
-                this.emitFunction(events.onErrorSign, error);
-            }
-        });
+    async createNeonTransfer(amount, splToken, events = this.events) {
+        this.emitFunction(events.onBeforeCreateInstruction);
+        const transaction = await this.neonTransferTransaction(amount, splToken);
+        this.emitFunction(events.onBeforeSignTransaction);
+        try {
+            const signedTransaction = await this.solana.signTransaction(transaction);
+            const signature = await this.connection.sendRawTransaction(signedTransaction.serialize(), this.solanaOptions);
+            this.emitFunction(events.onSuccessSign, signature);
+        }
+        catch (error) {
+            this.emitFunction(events.onErrorSign, error);
+        }
     }
     // Neon -> Solana
-    createSolanaTransfer(amount, splToken, events = this.events) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.emitFunction(events.onBeforeCreateInstruction);
-            const transaction = this.ethereumTransaction(amount, splToken);
-            this.emitFunction(events.onBeforeSignTransaction);
-            try {
-                const neonTransaction = yield this.web3.eth.sendTransaction(transaction);
-                this.emitFunction(events.onSuccessSign, undefined, neonTransaction.transactionHash);
-            }
-            catch (error) {
-                this.emitFunction(events.onErrorSign, error);
-            }
-        });
+    async createSolanaTransfer(amount, splToken, events = this.events) {
+        this.emitFunction(events.onBeforeCreateInstruction);
+        const transaction = this.ethereumTransaction(amount, splToken);
+        this.emitFunction(events.onBeforeSignTransaction);
+        try {
+            const neonTransaction = await this.web3.eth.sendTransaction(transaction);
+            this.emitFunction(events.onSuccessSign, undefined, neonTransaction.transactionHash);
+        }
+        catch (error) {
+            this.emitFunction(events.onErrorSign, error);
+        }
     }
-    neonTransferTransaction(amount, token, serviceWallet, rewardAmount) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const transaction = yield solanaNEONTransferTransaction(this.solanaWalletPubkey, this.neonWalletAddress, this.programId, this.tokenMint, token, amount, serviceWallet, rewardAmount);
-            transaction.recentBlockhash = (yield this.connection.getLatestBlockhash('finalized')).blockhash;
-            return transaction;
-        });
+    async neonTransferTransaction(amount, token, serviceWallet, rewardAmount) {
+        const transaction = await solanaNEONTransferTransaction(this.solanaWalletPubkey, this.neonWalletAddress, this.programId, this.tokenMint, token, amount, 111, serviceWallet, rewardAmount);
+        transaction.recentBlockhash = (await this.connection.getLatestBlockhash('finalized')).blockhash;
+        return transaction;
     }
     createDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWalletAddress, serviceWallet) {
         return createNeonDepositInstruction(solanaPubkey, neonPubkey, depositPubkey, neonWalletAddress, this.programId, this.tokenMint, serviceWallet);

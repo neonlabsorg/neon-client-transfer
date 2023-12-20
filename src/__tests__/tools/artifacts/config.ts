@@ -1,6 +1,5 @@
 import { decode } from 'bs58';
-import { ChainId } from '../models';
-import { SPLToken } from '../../../models';
+import { ChainId, SPLToken } from '../../../models';
 import { NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 
 export const NEON_PRIVATE = '0x7ae72c37b092c82f60b4aa17e8ab476e20d13084570d39d3ea9e17ae3c6f7752';
@@ -23,3 +22,8 @@ export const NEON_TOKEN_MODEL: SPLToken = {
   symbol: 'NEON',
   logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
 };
+export const SOL_TOKEN_MODEL: SPLToken = {
+  name: 'Solana SOL',
+  symbol: 'SOL',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg'
+} as SPLToken;
