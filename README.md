@@ -92,7 +92,7 @@ And for transfer NEON from Neon EVM to Solana, you should known token contract a
 
 ```javascript
 const tokenContract = NEON_TRANSFER_CONTRACT_DEVNET; // or SOL_TRANSFER_CONTRACT_DEVNET
-const transaction = await neonNeonWeb3Transaction(web3, neonWallet, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
+const transaction = await neonNeonTransactionWeb3(web3, neonWallet, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
 const hash = await sendNeonTransaction(web3, transaction, neonWallet); // method for sign and send transaction to network
 ```
 
@@ -109,7 +109,7 @@ transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
 ```
 
-And for transfer ERC20 tokens from Neon EVM to Solana: 
+And for transfer ERC20 tokens from Neon EVM to Solana:
 
 ```javascript
 const token = tokenList[0];
@@ -117,7 +117,7 @@ const mintPubkey = new PublicKey(token.address_spl);
 const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
 const solanaTransaction = createMintSolanaTransaction(solanaWallet, mintPubkey, associatedToken, proxyStatus);
 solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, token, amount);
+const neonTransaction = await createMintNeonTransactionWeb3(web3, neonWallet.address, associatedToken, token, amount);
 const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
 const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
 ```

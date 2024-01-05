@@ -5,7 +5,7 @@ import { Amount, SPLToken } from '../../models';
 import {
   createNeonDepositInstruction,
   createNeonTransferInstruction,
-  neonTransactionData,
+  neonTransactionDataWeb3,
   solanaNEONTransferTransaction
 } from '../neon-transfer';
 import { authorityPoolAddress } from '../utils';
@@ -63,7 +63,7 @@ export class NeonPortal extends InstructionService {
   }
 
   createWithdrawEthTransactionData(): string {
-    return neonTransactionData(this.web3, this.solanaWalletPubkey);
+    return neonTransactionDataWeb3(this.web3, this.solanaWalletPubkey);
   }
 
   ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {

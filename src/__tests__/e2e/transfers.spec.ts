@@ -6,14 +6,14 @@ import { Account } from 'web3-core';
 import { AbiItem } from 'web3-utils';
 import { NeonProxyRpcApi } from '../../api';
 import {
-  createMintNeonWeb3Transaction,
+  createMintNeonTransactionWeb3,
   createMintSolanaTransaction,
   createUnwrapSOLTransaction,
   createWrapAndTransferSOLTransactionWeb3,
-  neonNeonWeb3Transaction,
+  neonNeonTransactionWeb3,
   solanaNEONTransferTransaction,
   wrappedNeonTransaction,
-  wrappedNeonTransactionData
+  wrappedNeonTransactionDataWeb3
 } from '../../core';
 import { GasToken, NeonProgramStatus, SPLToken } from '../../models';
 import {
@@ -144,7 +144,7 @@ describe('NEON token transfer tests', () => {
     };
     try {
       const balanceBefore = await neonBalance(web3, neonWallet.address);
-      const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+      const transaction = await neonNeonTransactionWeb3(web3, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
       neonSignature(`Signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
@@ -195,7 +195,7 @@ describe('NEON token transfer tests', () => {
       const neonBalanceBefore = await neonBalance(web3, neonWallet.address);
       const wneonBalanceBefore = await mintTokenBalance(web3, neonWallet.address, wneon, neonWrapper2Abi as AbiItem[]);
       try {
-        const wrapTransaction = await neonNeonWeb3Transaction(web3, neonWallet.address, wneon.address, solanaWallet.publicKey, amount);
+        const wrapTransaction = await neonNeonTransactionWeb3(web3, neonWallet.address, wneon.address, solanaWallet.publicKey, amount);
         const wrapHash = await sendNeonTransaction(web3, wrapTransaction, neonWallet);
         neonSignature(`NEON wrap signature`, wrapHash);
         expect(wrapHash.length).toBeGreaterThan(2);
@@ -223,7 +223,7 @@ describe('NEON token transfer tests', () => {
       const wneon: SPLToken = faucet.tokens[id];
       const wneonBalanceBefore = await mintTokenBalance(web3, neonWallet.address, wneon, neonWrapper2Abi as AbiItem[]);
       try {
-        const data = wrappedNeonTransactionData(web3, wneon, amount);
+        const data = wrappedNeonTransactionDataWeb3(web3, wneon, amount);
         const unwrapTransaction = wrappedNeonTransaction(neonWallet.address, wneon.address, data);
         unwrapTransaction.gasPrice = await web3.eth.getGasPrice();
         unwrapTransaction.gas = await web3.eth.estimateGas(unwrapTransaction);
@@ -237,7 +237,7 @@ describe('NEON token transfer tests', () => {
         expect(wneonBalanceAfter).toBeLessThan(wneonBalanceBefore);
 
         const neonBalanceBefore = await neonBalance(web3, neonWallet.address);
-        const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, neon.address, solanaWallet.publicKey, amount);
+        const transaction = await neonNeonTransactionWeb3(web3, neonWallet.address, neon.address, solanaWallet.publicKey, amount);
         const hash = await sendNeonTransaction(web3, transaction, neonWallet);
         neonSignature(`NEON transfer signature`, hash);
         await delay(5e3);
@@ -297,7 +297,7 @@ describe('NEON token transfer tests', () => {
       console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
       const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, neonProxyStatus);
       solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-      const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, wSOL, amount);
+      const neonTransaction = await createMintNeonTransactionWeb3(web3, neonWallet.address, associatedToken, wSOL, amount);
       const wSolBefore = await connection.getBalance(associatedToken);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {

@@ -19,7 +19,7 @@ import {
   solanaSignature,
   splTokenBalance, toSigner
 } from '../tools';
-import { neonNeonWeb3Transaction, solanaSOLTransferTransaction } from '../../core';
+import { neonNeonTransactionWeb3, solanaSOLTransferTransaction } from '../../core';
 import { NeonProxyRpcApi } from '../../api';
 import { SOL_TRANSFER_CONTRACT_DEVNET } from '../../data';
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
@@ -93,7 +93,7 @@ describe(`SOL Transfer tests`, () => {
     const solToken: SPLToken = { ...faucet.tokens[id], ...SOL_TOKEN_MODEL, chainId };
     try {
       const balanceBefore = await neonBalance(web3, neonWallet.address);
-      const transaction = await neonNeonWeb3Transaction(web3, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+      const transaction = await neonNeonTransactionWeb3(web3, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
       neonSignature(`NeonEvm (SOL) signature`, hash);
       expect(hash.length).toBeGreaterThan(2);

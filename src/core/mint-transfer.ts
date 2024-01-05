@@ -38,7 +38,7 @@ import { NeonProxyRpcApi } from '../api';
 import {
   authAccountAddress,
   collateralPoolAddress,
-  erc20ForSPLContract,
+  erc20ForSPLContractWeb3,
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
   solanaWalletSigner
@@ -47,15 +47,11 @@ import {
 export async function neonTransferMintWeb3Transaction(connection: Connection, web3: Web3, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
-  const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
+  const climeData = climeTransactionDataWeb3(web3, associatedTokenAddress, neonWallet, fullAmount);
   const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
-  const {
-    neonKeys,
-    neonTransaction,
-    legacyAccounts
-  } = await createClaimInstruction(proxyApi, signedTransaction);
-  return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, chainId);
+  const { neonKeys, legacyAccounts } = await createClaimInstruction(proxyApi, signedTransaction);
+  return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 }
 
 export async function neonTransferMintTransaction(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Account, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: SignedTransaction, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction> {
@@ -151,8 +147,8 @@ export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonEvm
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function climeTransactionData(web3: Web3, associatedToken: PublicKey, neonWallet: string, amount: Amount): string {
-  const claimTo = erc20ForSPLContract(web3).methods.claimTo(associatedToken.toBuffer(), neonWallet, amount);
+export function climeTransactionDataWeb3(web3: Web3, associatedToken: PublicKey, neonWallet: string, amount: Amount): string {
+  const claimTo = erc20ForSPLContractWeb3(web3).methods.claimTo(associatedToken.toBuffer(), neonWallet, amount);
   return claimTo.encodeABI();
 }
 
@@ -167,43 +163,40 @@ export async function neonClaimTransactionFromSigner(climeData: string, walletSi
   return walletSigner.signTransaction(transaction);
 }
 
-export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, neonTransaction: SignedTransaction): Promise<ClaimInstructionResult> {
-  try {
-    let neonEmulate: NeonEmulate;
-    const legacyAccounts: SolanaAccount[] = [];
-    if (neonTransaction.rawTransaction) {
-      neonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
-    }
-    const accountsMap = new Map<string, AccountMeta>();
-    if (neonEmulate!) {
-      const { accounts = [], solana_accounts = [] } = neonEmulate;
-      for (const account of accounts) {
-        const key = account['account'];
+export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstructionResult {
+  const legacyAccounts: SolanaAccount[] = [];
+  const accountsMap = new Map<string, AccountMeta>();
+  if (neonEmulate!) {
+    const { accounts = [], solana_accounts = [] } = neonEmulate;
+    for (const account of accounts) {
+      const key = account['account'];
+      accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
+      if (account['contract']) {
+        const key = account['contract'];
         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
-        if (account['contract']) {
-          const key = account['contract'];
-          accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
-        }
-      }
-
-      for (const account of solana_accounts) {
-        const { pubkey, is_legacy, is_writable } = account;
-        accountsMap.set(pubkey, {
-          pubkey: new PublicKey(pubkey),
-          isSigner: false,
-          isWritable: is_writable
-        });
-        if (is_legacy) {
-          legacyAccounts.push(account);
-        }
       }
     }
-    return { neonKeys: Array.from(accountsMap.values()), neonTransaction, legacyAccounts };
-  } catch (e) {
-    console.log(e);
+    for (const account of solana_accounts) {
+      const { pubkey, is_legacy, is_writable } = account;
+      accountsMap.set(pubkey, {
+        pubkey: new PublicKey(pubkey),
+        isSigner: false,
+        isWritable: is_writable
+      });
+      if (is_legacy) {
+        legacyAccounts.push(account);
+      }
+    }
   }
-// @ts-ignore
-  return { neonKeys: [], neonTransaction: null };
+  return { neonKeys: Array.from(accountsMap.values()), legacyAccounts };
+}
+
+export async function createClaimInstruction(proxyApi: NeonProxyRpcApi, neonTransaction: SignedTransaction): Promise<ClaimInstructionResult> {
+  if (neonTransaction.rawTransaction) {
+    const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
+    return createClaimInstructionKeys(neonEmulate);
+  }
+  return { neonKeys: [], legacyAccounts: [], neonTransaction };
 }
 
 export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus): TransactionInstruction {
@@ -246,8 +239,8 @@ export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWal
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export async function createMintNeonWeb3Transaction(web3: Web3, neonWallet: string, associatedToken: PublicKey, splToken: SPLToken, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
-  const data = mintNeonTransactionData(web3, associatedToken, splToken, amount);
+export async function createMintNeonTransactionWeb3(web3: Web3, neonWallet: string, associatedToken: PublicKey, splToken: SPLToken, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
+  const data = mintNeonTransactionDataWeb3(web3, associatedToken, splToken, amount);
   const transaction = createMintNeonTransaction(neonWallet, splToken, data);
   transaction.gasPrice = await web3.eth.getGasPrice();
   transaction.gas = await web3.eth.estimateGas(transaction);
@@ -257,9 +250,9 @@ export async function createMintNeonWeb3Transaction(web3: Web3, neonWallet: stri
   return transaction;
 }
 
-export function mintNeonTransactionData(web3: Web3, associatedToken: PublicKey, splToken: SPLToken, amount: Amount): string {
+export function mintNeonTransactionDataWeb3(web3: Web3, associatedToken: PublicKey, splToken: SPLToken, amount: Amount): string {
   const fullAmount = toFullAmount(amount, splToken.decimals);
-  return erc20ForSPLContract(web3).methods.transferSolana(associatedToken.toBuffer(), fullAmount).encodeABI();
+  return erc20ForSPLContractWeb3(web3).methods.transferSolana(associatedToken.toBuffer(), fullAmount).encodeABI();
 }
 
 export function createMintNeonTransaction(neonWallet: string, splToken: SPLToken, data: string): TransactionConfig {
@@ -336,15 +329,11 @@ export async function createWrapAndTransferSOLTransactionWeb3(connection: Connec
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
   const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
-  const climeData = climeTransactionData(web3, associatedTokenAddress, neonWallet, fullAmount);
+  const climeData = climeTransactionDataWeb3(web3, associatedTokenAddress, neonWallet, fullAmount);
   const walletSigner = solanaWalletSigner(web3, solanaWallet, neonWallet);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
-  const {
-    neonKeys,
-    neonTransaction,
-    legacyAccounts
-  } = await createClaimInstruction(proxyApi, signedTransaction);
-  const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, chainId);
+  const { neonKeys, legacyAccounts } = await createClaimInstruction(proxyApi, signedTransaction);
+  const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 
   if (!wSOLAccount) {
     instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedTokenAddress, solanaWallet, solanaWallet));

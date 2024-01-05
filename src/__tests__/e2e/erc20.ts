@@ -4,7 +4,7 @@ import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import Web3 from 'web3';
 import { Account } from 'web3-core';
 import {
-  createMintNeonWeb3Transaction,
+  createMintNeonTransactionWeb3,
   createMintSolanaTransaction,
   neonTransferMintWeb3Transaction
 } from '../../core';
@@ -58,7 +58,7 @@ export async function itNeonTokenMint(connection: Connection, web3: Web3, faucet
   const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
   const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, neonProxyStatus);
   solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-  const neonTransaction = await createMintNeonWeb3Transaction(web3, neonWallet.address, associatedToken, token, amount);
+  const neonTransaction = await createMintNeonTransactionWeb3(web3, neonWallet.address, associatedToken, token, amount);
   const signer: Signer = toSigner(solanaWallet);
   try {
     const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight });

@@ -16,8 +16,8 @@ import {
   authorityPoolAddress,
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
-  neonWrapper2Contract,
-  neonWrapperContract
+  neonWrapper2ContractWeb3,
+  neonWrapperContractWeb3
 } from './utils';
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
@@ -95,13 +95,13 @@ export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWa
   return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
 }
 
-export function neonTransactionData(web3: Web3, solanaWallet: PublicKey): string {
-  return neonWrapperContract(web3).methods.withdraw(solanaWallet.toBuffer()).encodeABI();
+export function neonTransactionDataWeb3(web3: Web3, solanaWallet: PublicKey): string {
+  return neonWrapperContractWeb3(web3).methods.withdraw(solanaWallet.toBuffer()).encodeABI();
 }
 
-export function wrappedNeonTransactionData(web3: Web3, token: SPLToken, amount: Amount): string {
+export function wrappedNeonTransactionDataWeb3(web3: Web3, token: SPLToken, amount: Amount): string {
   const value = toWei(amount.toString(), 'ether');
-  const contract = neonWrapper2Contract(web3, token.address);
+  const contract = neonWrapper2ContractWeb3(web3, token.address);
   return contract.methods.withdraw(value).encodeABI();
 }
 
@@ -115,8 +115,8 @@ export function neonNeonTransaction(from: string, to: string, amount: Amount, da
   return { from, to, value, data };
 }
 
-export async function neonNeonWeb3Transaction(web3: Web3, from: string, to: string, solanaWallet: PublicKey, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
-  const data = neonTransactionData(web3, solanaWallet);
+export async function neonNeonTransactionWeb3(web3: Web3, from: string, to: string, solanaWallet: PublicKey, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
+  const data = neonTransactionDataWeb3(web3, solanaWallet);
   const transaction = neonNeonTransaction(from, to, amount, data);
   transaction.gasPrice = await web3.eth.getGasPrice();
   transaction.gas = await web3.eth.estimateGas(transaction);

@@ -7,12 +7,12 @@ import { Account, SignedTransaction, TransactionConfig } from 'web3-core';
 import { toFullAmount } from '../../utils';
 import { Amount, SPLToken } from '../../models';
 import {
-  climeTransactionData,
+  climeTransactionDataWeb3,
   createClaimInstruction,
   createComputeBudgetHeapFrameInstruction,
   createComputeBudgetUtilsInstruction,
   createExecFromDataInstruction,
-  createMintNeonWeb3Transaction,
+  createMintNeonTransactionWeb3,
   createMintSolanaTransaction,
   createUnwrapSOLTransaction,
   createWrapSOLTransaction,
@@ -65,14 +65,13 @@ export class MintPortal extends InstructionService {
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const walletSigner = await solanaWalletSigner(this.web3, this.solanaWalletPubkey, this.neonWalletAddress);
     const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), this.solanaWalletPubkey);
-    const climeData = climeTransactionData(this.web3, associatedTokenAddress, this.neonWalletAddress, fullAmount);
+    const climeData = climeTransactionDataWeb3(this.web3, associatedTokenAddress, this.neonWalletAddress, fullAmount);
     const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, this.neonWalletAddress, splToken);
     const {
       neonKeys,
-      neonTransaction,
       legacyAccounts
     } = await createClaimInstruction(this.proxyApi, signedTransaction);
-    const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, legacyAccounts, neonTransaction, splToken, fullAmount, 111);
+    const transaction = await neonTransferMintTransaction(this.connection, this.proxyStatus, this.programId, this.solanaWalletPubkey, this.neonWalletAddress, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, 111);
     transaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
     return transaction;
   }
@@ -89,14 +88,14 @@ export class MintPortal extends InstructionService {
     const nonce = await this.web3.eth.getTransactionCount(emulateSigner.address);
     const fullAmount = toFullAmount(amount, splToken.decimals);
     const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), this.solanaWalletAddress);
-    const climeData = climeTransactionData(this.web3, associatedTokenAddress, this.neonWalletAddress, fullAmount);
+    const climeData = climeTransactionDataWeb3(this.web3, associatedTokenAddress, this.neonWalletAddress, fullAmount);
     const walletSigner = await solanaWalletSigner(this.web3, this.solanaWalletAddress, this.neonWalletAddress);
     const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, this.neonWalletAddress, splToken);
     const {
       neonKeys,
       neonTransaction
     } = await createClaimInstruction(this.proxyApi, signedTransaction);
-    return { neonKeys, neonTransaction, emulateSigner, nonce };
+    return { neonKeys, neonTransaction: signedTransaction, emulateSigner, nonce };
   }
 
   makeTrExecFromDataIx(neonAddress: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[]): TransactionInstruction {
@@ -108,7 +107,7 @@ export class MintPortal extends InstructionService {
   }
 
   async createNeonTransaction(neonWallet: string, solanaWallet: PublicKey, splToken: SPLToken, amount: Amount): Promise<TransactionConfig> {
-    return createMintNeonWeb3Transaction(this.web3, neonWallet, solanaWallet, splToken, amount);
+    return createMintNeonTransactionWeb3(this.web3, neonWallet, solanaWallet, splToken, amount);
   }
 
   async solanaTransferTransaction(walletPubkey: PublicKey, mintPubkey: PublicKey, associatedTokenPubkey: PublicKey): Promise<Transaction> {

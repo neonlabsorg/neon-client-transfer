@@ -78,7 +78,7 @@ export interface NeonAccounts {
 }
 
 export interface ClaimInstructionResult {
-  neonTransaction: SignedTransaction;
+  neonTransaction?: SignedTransaction;
   neonKeys: AccountMeta[];
   legacyAccounts: SolanaAccount[];
 }
