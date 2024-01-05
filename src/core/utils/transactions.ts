@@ -1,18 +1,18 @@
-import {getContracts} from "../utils";
-import {Contract as Web3Contract} from 'web3-eth-contract';
+import { getContracts } from '../utils';
+import { Contract as Web3Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
-import {PublicKey} from "@solana/web3.js";
-import {Amount, SPLToken} from "../../models";
-import {Interface} from '@ethersproject/abi';
-import {toWei} from "web3-utils";
-import {TransactionRequest, TransactionResponse,} from '@ethersproject/providers';
-import {Signer} from '@ethersproject/abstract-signer';
-import {Contract as EthersProjectContract} from '@ethersproject/contracts';
-import {parseUnits} from '@ethersproject/units';
-import {toFullAmount} from "../../utils";
-import {Wallet} from "@ethersproject/wallet";
-import {Account, TransactionConfig} from "web3-core";
-import { BigNumber } from "@ethersproject/bignumber";
+import { PublicKey } from '@solana/web3.js';
+import { Amount, SPLToken } from '../../models';
+import { Interface } from '@ethersproject/abi';
+import { toWei } from 'web3-utils';
+import { TransactionRequest, TransactionResponse } from '@ethersproject/providers';
+import { Signer } from '@ethersproject/abstract-signer';
+import { Contract as EthersProjectContract } from '@ethersproject/contracts';
+import { parseUnits } from '@ethersproject/units';
+import { toFullAmount } from '../../utils';
+import { Wallet } from '@ethersproject/wallet';
+import { Account, TransactionConfig } from 'web3-core';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export interface ContractMethods<Response = any> {
   claimTransactionData: (associatedToken: PublicKey, neonWallet: string, amount: Amount) => string;
@@ -41,7 +41,7 @@ export function useContractMethods<T = any>(i: T): ContractMethods<string | Prom
         const value = toWei(amount.toString(), 'ether');
         return (contracts.neonWrapper2Contract(token.address) as Web3Contract).methods.withdraw(value).encodeABI();
       }
-    }
+    };
   }
 
   return {
@@ -50,26 +50,26 @@ export function useContractMethods<T = any>(i: T): ContractMethods<string | Prom
       return (contracts.erc20ForSPLContract as Interface).encodeFunctionData('claimTo', [
         associatedToken.toBuffer(),
         neonWallet,
-        fullAmount,
+        fullAmount
       ]);
     },
     mintNeonTransactionData: (associatedToken: PublicKey, splToken: SPLToken, amount: Amount): string => {
       const fullAmount = parseUnits(amount.toString(), splToken.decimals);
       return (contracts.erc20ForSPLContract as Interface).encodeFunctionData('transferSolana', [
         associatedToken.toBuffer(),
-        fullAmount,
+        fullAmount
       ]);
     },
     neonTransactionData: (solanaWallet: PublicKey): string => {
       return (contracts.neonWrapperContract as Interface).encodeFunctionData('withdraw', [
-        solanaWallet.toBuffer(),
+        solanaWallet.toBuffer()
       ]);
     },
     wrappedNeonTransactionData: async (token: SPLToken, amount: Amount, signer?: Signer): Promise<TransactionResponse> => {
       return await (contracts.neonWrapper2Contract(token.address, signer) as EthersProjectContract).withdraw(
         parseUnits(amount.toString(), token.decimals)
       );
-    },
+    }
   };
 }
 
@@ -82,10 +82,10 @@ export async function useTransactionFromSignerEthers(
     data: claimData,
     gasLimit: `0x5F5E100`, // 100000000
     gasPrice: `0x0`,
-    to: address, // contract address
+    to: address // contract address
   };
   transaction.nonce = await walletSigner.getTransactionCount();
-  return transaction
+  return transaction;
 }
 
 export function useTransactionFromSignerWeb3(
@@ -97,5 +97,5 @@ export function useTransactionFromSignerWeb3(
     gasPrice: `0x0`,
     from: neonWallet,
     to: splToken.address // contract address
-  }
+  };
 }

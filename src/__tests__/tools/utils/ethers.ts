@@ -2,7 +2,6 @@ import {SPLToken} from "../../../models";
 import {erc20Abi} from "../../../data";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Contract } from "@ethersproject/contracts";
-import { BigNumber } from "@ethersproject/bignumber";
 
 export async function getTokenBalance(provider: JsonRpcProvider, account: string, token: SPLToken, contractAbi: any = erc20Abi): Promise<number> {
   const tokenInstance = new Contract(token.address, contractAbi, provider);

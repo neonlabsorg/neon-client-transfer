@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { AbiItem } from 'web3-utils';
-import { Account, TransactionConfig } from 'web3-core';
+import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { Buffer } from 'buffer';
 import Web3 from 'web3';
@@ -22,7 +22,7 @@ import {
   NeonProgramStatus,
   SPLToken
 } from '../../models';
-import { authAccountAddress, neonWalletProgramAddress, solanaWalletSigner } from '../utils';
+import { authAccountAddress, neonWalletProgramAddress } from '../utils';
 import { createAccountV3Instruction } from '../mint-transfer';
 
 const noop = new Function();

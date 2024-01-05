@@ -7,9 +7,9 @@ import Web3 from 'web3';
 import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 
 export interface Contracts<BaseContract> {
-  erc20ForSPLContract: BaseContract
-  neonWrapperContract: BaseContract
-  neonWrapper2Contract: (address: string, signer?: Signer) => BaseContract
+  erc20ForSPLContract: BaseContract;
+  neonWrapperContract: BaseContract;
+  neonWrapper2Contract: (address: string, signer?: Signer) => BaseContract;
 }
 
 export function getContracts<T>(i?: T): Contracts<Web3Contract | EthersProjectContract | Interface> {
@@ -17,13 +17,13 @@ export function getContracts<T>(i?: T): Contracts<Web3Contract | EthersProjectCo
     return {
       erc20ForSPLContract: new (i as Web3).eth.Contract(erc20Abi as AbiItem[]),
       neonWrapperContract: new (i as Web3).eth.Contract(neonWrapperAbi as AbiItem[]),
-      neonWrapper2Contract: (address: string) => new (i as Web3).eth.Contract(neonWrapper2Abi as AbiItem[], address),
-    }
+      neonWrapper2Contract: (address: string) => new (i as Web3).eth.Contract(neonWrapper2Abi as AbiItem[], address)
+    };
   }
 
   return {
     erc20ForSPLContract: new Interface(erc20Abi),
     neonWrapperContract: new Interface(neonWrapperAbi),
-    neonWrapper2Contract: (address: string, signer?: Signer) => new EthersProjectContract(address, neonWrapper2Abi, signer),
-  }
+    neonWrapper2Contract: (address: string, signer?: Signer) => new EthersProjectContract(address, neonWrapper2Abi, signer)
+  };
 }

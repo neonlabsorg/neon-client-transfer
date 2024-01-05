@@ -6,7 +6,8 @@ import { NeonProgramStatus, SPLToken } from '../../models';
 import {
   createSplAccount,
   delay,
-  FaucetDropper, getGasToken,
+  FaucetDropper,
+  getGasToken,
   getMultiTokenProxy,
   getWeb3Provider,
   NEON_PRIVATE,
@@ -18,7 +19,8 @@ import {
   SOL_TOKEN_MODEL,
   solanaBalance,
   solanaSignature,
-  splTokenBalance, toSigner
+  splTokenBalance,
+  toSigner
 } from '../tools';
 import { neonNeonTransactionWeb3, solanaSOLTransferTransaction } from '../../core';
 import { NeonProxyRpcApi } from '../../api';

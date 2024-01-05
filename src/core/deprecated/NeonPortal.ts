@@ -5,7 +5,6 @@ import { Amount, SPLToken } from '../../models';
 import {
   createNeonDepositInstruction,
   createNeonTransferInstruction,
-  neonTransactionDataWeb3,
   solanaNEONTransferTransaction
 } from '../neon-transfer';
 import { authorityPoolAddress } from '../utils';

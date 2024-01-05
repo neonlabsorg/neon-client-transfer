@@ -10,11 +10,11 @@ import {
   createMintSolanaTransaction,
   createUnwrapSOLTransaction,
   createWrapAndTransferSOLTransactionWeb3,
+  getContracts,
   neonNeonTransactionWeb3,
   solanaNEONTransferTransaction,
-  wrappedNeonTransactionDataWeb3,
-  wrappedNeonTransaction, useContractMethods
-  // wrappedNeonTransactionData
+  useContractMethods,
+  wrappedNeonTransaction
 } from '../../core';
 import { GasToken, NeonProgramStatus, SPLToken } from '../../models';
 import {
@@ -25,7 +25,8 @@ import {
 import {
   createSplAccount,
   delay,
-  FaucetDropper, getGasToken,
+  FaucetDropper,
+  getGasToken,
   getMultiTokenProxy,
   getWeb3Provider,
   mintTokenBalance,
@@ -40,9 +41,6 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { getContracts } from "../../core";
-
-import { itSolanaTokenSPL, itNeonTokenMint } from "./erc20";
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });
 jest.setTimeout(12e4);
