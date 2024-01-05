@@ -6,17 +6,13 @@ import { AbiItem } from 'web3-utils';
 import Web3 from 'web3';
 import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 
-export type BaseWeb3Contract = Web3Contract | Interface;
-
-export type BaseEthersContract = EthersProjectContract | Web3Contract;
-
 export interface Contracts<BaseContract> {
   erc20ForSPLContract: BaseContract
   neonWrapperContract: BaseContract
   neonWrapper2Contract: (address: string, signer?: Signer) => BaseContract
 }
 
-export function getContracts<T>(i?: T): Contracts<BaseWeb3Contract | BaseEthersContract> {
+export function getContracts<T>(i?: T): Contracts<Web3Contract | EthersProjectContract | Interface> {
   if (i instanceof Web3) {
     return {
       erc20ForSPLContract: new (i as Web3).eth.Contract(erc20Abi as AbiItem[]),

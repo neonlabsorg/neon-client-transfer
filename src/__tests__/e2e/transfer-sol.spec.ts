@@ -8,6 +8,7 @@ import {
   delay,
   FaucetDropper, getGasToken,
   getMultiTokenProxy,
+  getWeb3Provider,
   NEON_PRIVATE,
   neonBalance,
   neonSignature,
@@ -47,7 +48,7 @@ let neonWallet: Account;
 beforeAll(async () => {
   const result = await getMultiTokenProxy(SOL_PROXY_URL, SOLANA_URL!);
   const token = getGasToken(result.tokensList, chainId);
-  web3 = result.web3;
+  web3 = getWeb3Provider(SOL_PROXY_URL);
   proxyRpc = result.proxyRpc;
   proxyStatus = result.proxyStatus;
   evmProgramAddress = result.evmProgramAddress;

@@ -2,16 +2,24 @@ import { PublicKey } from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../../../api';
 import { GasToken, GasTokenData, MultiTokenProxy } from '../../../models';
 import { TOKEN_LIST_DEVNET_SNAPSHOT } from '../../../data';
+import Web3 from 'web3';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
-export const W3 = require('web3');
-
+//TODO: remove web3 from return type
 export async function getMultiTokenProxy(proxyUrl: string, solanaUrl: string): Promise<MultiTokenProxy> {
   const proxyRpc = new NeonProxyRpcApi({ solanaRpcApi: solanaUrl, neonProxyRpcApi: proxyUrl });
   const proxyStatus = await proxyRpc.evmParams();
   const tokensList = (await proxyRpc.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
-  const web3 = new W3(new W3.providers.HttpProvider(proxyUrl));
   const evmProgramAddress = new PublicKey(proxyStatus.NEON_EVM_ID);
-  return { web3, proxyRpc, proxyStatus, tokensList, evmProgramAddress };
+  return { proxyRpc, proxyStatus, tokensList, evmProgramAddress };
+}
+
+export function getWeb3Provider(proxyUrl: string): Web3 {
+  return new Web3(new Web3.providers.HttpProvider(proxyUrl));
+}
+
+export function getEthersProvider(proxyUrl: string): JsonRpcProvider {
+  return new JsonRpcProvider(proxyUrl);
 }
 
 export function getGasToken(tokenList: GasToken[], chainId: number): GasTokenData {

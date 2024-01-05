@@ -104,7 +104,7 @@ For transfer ERC20 tokens from Solana to Neon EVM, using this patterns:
 
 ```javascript
 const token = tokenList[0];
-const transaction = await neonTransferMintWeb3Transaction(connection, web3, proxyApi, proxyStatus, neonEvmProgram/* or solEvmProgram*/, solanaWallet, neonWallet, token, amount, neonChainId /*or solChainId*/);
+const transaction = await neonTransferMintTransactionWeb3(connection, web3, proxyApi, proxyStatus, neonEvmProgram/* or solEvmProgram*/, solanaWallet, neonWallet, token, amount, neonChainId /*or solChainId*/);
 transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
 ```

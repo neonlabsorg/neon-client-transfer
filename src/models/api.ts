@@ -1,6 +1,5 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { SignedTransaction } from 'web3-core';
-import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken } from './token';
 
@@ -77,14 +76,13 @@ export interface NeonAccounts {
   contract: string;
 }
 
-export interface ClaimInstructionResult {
-  neonTransaction?: SignedTransaction;
+export interface ClaimInstructionResult<R = SignedTransaction> {
+  neonTransaction?: R;
   neonKeys: AccountMeta[];
   legacyAccounts: SolanaAccount[];
 }
 
 export interface MultiTokenProxy {
-  web3: Web3;
   proxyRpc: NeonProxyRpcApi;
   proxyStatus: NeonProgramStatus;
   tokensList: GasToken[];
@@ -94,4 +92,8 @@ export interface MultiTokenProxy {
 export interface GasTokenData {
   tokenMintAddress: PublicKey;
   gasToken: GasToken;
+}
+
+export interface EthersSignedTransaction {
+  rawTransaction: string;
 }

@@ -6,7 +6,7 @@ import { Account } from 'web3-core';
 import {
   createMintNeonTransactionWeb3,
   createMintSolanaTransaction,
-  neonTransferMintWeb3Transaction
+  neonTransferMintTransactionWeb3
 } from '../../core';
 import { NeonProxyRpcApi } from '../../api';
 import { NeonProgramStatus, SPLToken } from '../../models';
@@ -27,7 +27,7 @@ export async function itSolanaTokenSPL(connection: Connection, web3: Web3, neonP
   const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, token);
   console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
   try {
-    const transaction = await neonTransferMintWeb3Transaction(connection, web3, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, token, amount, chainId);
+    const transaction = await neonTransferMintTransactionWeb3(connection, web3, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, token, amount, chainId);
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const signer: Signer = toSigner(solanaWallet);
     const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });

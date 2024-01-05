@@ -17,7 +17,8 @@ import {
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
   neonWrapper2ContractWeb3,
-  neonWrapperContractWeb3
+  neonWrapperContractWeb3,
+  useContractMethods
 } from './utils';
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
@@ -115,8 +116,10 @@ export function neonNeonTransaction(from: string, to: string, amount: Amount, da
   return { from, to, value, data };
 }
 
+//TODO: remove web3 dependency
 export async function neonNeonTransactionWeb3(web3: Web3, from: string, to: string, solanaWallet: PublicKey, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
-  const data = neonTransactionDataWeb3(web3, solanaWallet);
+  // const data = neonTransactionData(web3, solanaWallet);
+  const data = useContractMethods(web3).neonTransactionData(solanaWallet);
   const transaction = neonNeonTransaction(from, to, amount, data);
   transaction.gasPrice = await web3.eth.getGasPrice();
   transaction.gas = await web3.eth.estimateGas(transaction);

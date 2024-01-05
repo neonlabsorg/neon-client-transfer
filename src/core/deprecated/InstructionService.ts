@@ -93,9 +93,9 @@ export class InstructionService {
     return new PublicKey(this.solanaWalletAddress);
   }
 
-  get solanaWalletSigner(): Account {
-    return solanaWalletSigner(this.web3, this.solanaWalletPubkey, this.neonWalletAddress);
-  }
+  // get solanaWalletSigner(): Account {
+  //   return solanaWalletSigner(this.web3, this.solanaWalletPubkey, this.neonWalletAddress);
+  // }
 
   neonAccountAddress(neonWallet: string): [PublicKey, number] {
     return neonWalletProgramAddress(neonWallet, this.programId);

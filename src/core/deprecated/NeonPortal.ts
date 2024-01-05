@@ -62,17 +62,17 @@ export class NeonPortal extends InstructionService {
     return authorityPoolAddress(this.programId);
   }
 
-  createWithdrawEthTransactionData(): string {
-    return neonTransactionDataWeb3(this.web3, this.solanaWalletPubkey);
-  }
-
-  ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {
-    const from = this.neonWalletAddress;
-    const to = this.neonContractAddress;
-    const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
-    const data = this.createWithdrawEthTransactionData();
-    return { from, to, value, data };
-  }
+  // createWithdrawEthTransactionData(): string {
+  //   return neonTransactionData(this.web3, this.solanaWalletPubkey);
+  // }
+  //
+  // ethereumTransaction(amount: Amount, token: SPLToken): TransactionConfig {
+  //   const from = this.neonWalletAddress;
+  //   const to = this.neonContractAddress;
+  //   const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
+  //   const data = this.createWithdrawEthTransactionData();
+  //   return { from, to, value, data };
+  // }
 
   createWithdrawWNeonTransaction(amount: Amount, address: string): string {
     const contract = this.neonWrapper2Contract(address);
@@ -87,11 +87,11 @@ export class NeonPortal extends InstructionService {
     return { from, to, value, data };
   }
 
-  neonTransaction(amount: Amount, token: SPLToken): TransactionConfig {
-    const from = this.neonWalletAddress;
-    const to = token.address;
-    const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
-    const data = this.createWithdrawEthTransactionData();
-    return { from, to, value, data };
-  }
+  // neonTransaction(amount: Amount, token: SPLToken): TransactionConfig {
+  //   const from = this.neonWalletAddress;
+  //   const to = token.address;
+  //   const value = `0x${BigInt(this.web3.utils.toWei(amount.toString(), 'ether')).toString(16)}`;
+  //   const data = this.createWithdrawEthTransactionData();
+  //   return { from, to, value, data };
+  // }
 }

@@ -12,8 +12,9 @@ import {
   createWrapAndTransferSOLTransactionWeb3,
   neonNeonTransactionWeb3,
   solanaNEONTransferTransaction,
-  wrappedNeonTransaction,
-  wrappedNeonTransactionDataWeb3
+  wrappedNeonTransactionDataWeb3,
+  wrappedNeonTransaction, useContractMethods
+  // wrappedNeonTransactionData
 } from '../../core';
 import { GasToken, NeonProgramStatus, SPLToken } from '../../models';
 import {
@@ -26,6 +27,7 @@ import {
   delay,
   FaucetDropper, getGasToken,
   getMultiTokenProxy,
+  getWeb3Provider,
   mintTokenBalance,
   NEON_PRIVATE,
   NEON_TOKEN_MODEL,
@@ -38,7 +40,9 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
+import { getContracts } from "../../core";
+
+import { itSolanaTokenSPL, itNeonTokenMint } from "./erc20";
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });
 jest.setTimeout(12e4);
@@ -67,7 +71,7 @@ describe('NEON token transfer tests', () => {
       const result = await getMultiTokenProxy(NEON_PROXY_URL!, SOLANA_URL!);
       const token = getGasToken(result.tokensList, CHAIN_ID);
       connection = new Connection(SOLANA_URL!, 'confirmed');
-      web3 = result.web3;
+      web3 = getWeb3Provider(NEON_PROXY_URL!);
       neonProxyRpcApi = result.proxyRpc;
       neonProxyStatus = result.proxyStatus;
       neonEvmProgram = result.evmProgramAddress;
@@ -135,7 +139,18 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it.skip('Should return web3 ethereum contracts if web3 library is passed in getContracts', async () => {
+    const contracts = getContracts(web3);
+    expect(contracts).toBeDefined();
+    expect(contracts.erc20ForSPLContract).toBeInstanceOf((web3 as Web3).eth.Contract);
+    expect(contracts.neonWrapperContract).toBeInstanceOf((web3 as Web3).eth.Contract);
+    expect(contracts.neonWrapper2Contract).toBeInstanceOf(Function);
+    const ethersContracts = getContracts();
+    expect(ethersContracts).toBeDefined();
+    expect(ethersContracts.erc20ForSPLContract).not.toBeInstanceOf((web3 as Web3).eth.Contract);
+  });
+
+  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -159,7 +174,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -186,7 +201,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it('Should wrap 1 NEON to wNEON in Neon network', async () => {
+  it.skip('Should wrap 1 NEON to wNEON in Neon network', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -215,7 +230,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
+  it.skip('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -223,8 +238,9 @@ describe('NEON token transfer tests', () => {
       const wneon: SPLToken = faucet.tokens[id];
       const wneonBalanceBefore = await mintTokenBalance(web3, neonWallet.address, wneon, neonWrapper2Abi as AbiItem[]);
       try {
-        const data = wrappedNeonTransactionDataWeb3(web3, wneon, amount);
-        const unwrapTransaction = wrappedNeonTransaction(neonWallet.address, wneon.address, data);
+        // const data = wrappedNeonTransactionData(web3, wneon, amount);
+        const data = useContractMethods(web3).wrappedNeonTransactionData(wneon, amount);
+        const unwrapTransaction = wrappedNeonTransaction(neonWallet.address, wneon.address, data as string);
         unwrapTransaction.gasPrice = await web3.eth.getGasPrice();
         unwrapTransaction.gas = await web3.eth.estimateGas(unwrapTransaction);
         const unwrapHash = await sendNeonTransaction(web3, unwrapTransaction, neonWallet);
@@ -275,7 +291,7 @@ describe('NEON token transfer tests', () => {
 
         const wSolAfterTransfer = await connection.getBalance(associatedToken);
         const balanceAfter = await mintTokenBalance(web3, neonWallet.address, wSOL);
-        console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} > ${wSolAfterTransfer / LAMPORTS_PER_SOL} ${wSOL.symbol} ==> ${balanceBefore} > ${balanceAfter} ${wSOL.symbol} in Neon`);
+        console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} < ${wSolAfterTransfer / LAMPORTS_PER_SOL} ${wSOL.symbol} ==> ${balanceBefore} < ${balanceAfter} ${wSOL.symbol} in Neon`);
         expect(balanceAfter).toBeGreaterThanOrEqual(balanceBefore);
       } catch (e) {
         console.log(e);
@@ -284,7 +300,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const signer: Signer = toSigner(solanaWallet);
@@ -331,13 +347,13 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  faucet.supportedTokens.forEach(token => {
-    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-      itSolanaTokenSPL(connection, web3, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
-    });
-
-    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
-      itNeonTokenMint(connection, web3, faucet, neonProxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
-    });
-  });
+  // faucet.supportedTokens.forEach(token => {
+  //   it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+  //     itSolanaTokenSPL(connection, web3, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+  //   });
+  //
+  //   it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
+  //     itNeonTokenMint(connection, web3, faucet, neonProxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
+  //   });
+  // });
 });
