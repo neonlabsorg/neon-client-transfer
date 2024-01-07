@@ -1826,10 +1826,10 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
-"@neonevm/token-transfer@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer/-/token-transfer-3.0.0.tgz#d66927ae646024906c2b6089393ae4791d4c221e"
-  integrity sha512-H+n1sq/SAhn2PhE1dvGC1DC3n0yXzNrhsJAENG1YWgiQzDGNsLcQL0+dp64S64EAuiw5HswRrxeZF1gSA70qsg==
+"@neonevm/token-transfer@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer/-/token-transfer-3.0.1.tgz#691d7e4037964815151eef76591e023c8c60718c"
+  integrity sha512-eQDCr/30tdIQzXyuRGSnrTb3oMBCXyJjaYda3jqCrCOo+jdrIi5Xv2IUfEJE3QfH/4zwBSl4RzByH0DYCUjXxg==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"
