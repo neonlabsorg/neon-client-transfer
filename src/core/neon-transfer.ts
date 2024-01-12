@@ -7,18 +7,14 @@ import {
   TokenInstruction,
   transferInstructionData
 } from '@solana/spl-token';
-import { TransactionConfig } from 'web3-core';
+import { Transaction as TransactionConfig } from 'web3-types';
 import { toWei } from 'web3-utils';
-import Web3 from 'web3';
 import { numberTo64BitLittleEndian, toBigInt, toFullAmount } from '../utils';
 import { NEON_TOKEN_DECIMALS } from '../data';
 import {
   authorityPoolAddress,
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
-  neonWrapper2ContractWeb3,
-  neonWrapperContractWeb3,
-  useContractMethods
 } from './utils';
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
@@ -96,16 +92,6 @@ export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWa
   return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
 }
 
-export function neonTransactionDataWeb3(web3: Web3, solanaWallet: PublicKey): string {
-  return neonWrapperContractWeb3(web3).methods.withdraw(solanaWallet.toBuffer()).encodeABI();
-}
-
-export function wrappedNeonTransactionDataWeb3(web3: Web3, token: SPLToken, amount: Amount): string {
-  const value = toWei(amount.toString(), 'ether');
-  const contract = neonWrapper2ContractWeb3(web3, token.address);
-  return contract.methods.withdraw(value).encodeABI();
-}
-
 export function wrappedNeonTransaction(from: string, to: string, data: string): TransactionConfig {
   const value = `0x0`;
   return { from, to, value, data };
@@ -114,16 +100,4 @@ export function wrappedNeonTransaction(from: string, to: string, data: string): 
 export function neonNeonTransaction(from: string, to: string, amount: Amount, data: string): TransactionConfig {
   const value = `0x${BigInt(toWei(amount.toString(), 'ether')).toString(16)}`;
   return { from, to, value, data };
-}
-
-//TODO: remove web3 dependency
-export async function neonNeonTransactionWeb3(web3: Web3, from: string, to: string, solanaWallet: PublicKey, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
-  // const data = neonTransactionData(web3, solanaWallet);
-  const data = useContractMethods(web3).neonTransactionData(solanaWallet);
-  const transaction = neonNeonTransaction(from, to, amount, data);
-  transaction.gasPrice = await web3.eth.getGasPrice();
-  transaction.gas = await web3.eth.estimateGas(transaction);
-  // @ts-ignore
-  transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
-  return transaction;
 }

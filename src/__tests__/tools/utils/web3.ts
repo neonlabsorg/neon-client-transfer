@@ -14,15 +14,22 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync
 } from '@solana/spl-token';
-import { Account, TransactionConfig } from 'web3-core';
-import { AbiItem } from 'web3-utils';
-import { Buffer } from 'buffer';
+import { ContractAbi } from 'web3-types';
+import { Web3Account } from 'web3-eth-accounts';
+import { Contract } from 'web3-eth-contract';
+import { Web3Context } from 'web3-core';
+import {
+  DEFAULT_RETURN_FORMAT,
+  Transaction as TransactionConfig
+} from 'web3-types';
 import Web3 from 'web3';
 import Big from 'big.js';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 import { SPLToken } from '../../../models';
 import { solanaTransactionLog } from '../../../utils';
 import { delay } from './delay';
+import { getBalance } from "web3-eth";
+import { ReturnFormat} from "../../../web3/utils";
 import { compile } from './contract';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
@@ -41,26 +48,22 @@ export async function sendSolanaTransaction(connection: Connection, transaction:
   return signature;
 }
 
-export async function sendNeonTransaction(web3: Web3, transaction: TransactionConfig, account: Account): Promise<string> {
+export async function sendNeonTransaction(web3: Web3, transaction: TransactionConfig, account: Web3Account): Promise<string> {
   const signedTrx = await web3.eth.accounts.signTransaction(transaction, account.privateKey);
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     if (signedTrx?.rawTransaction) {
-      web3.eth.sendSignedTransaction(signedTrx.rawTransaction, (error, hash) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(hash);
-        }
-      });
+      const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+      txResult.on('transactionHash', (hash: string) => resolve(hash));
+      txResult.on('error', (error: Error) => reject(error));
     } else {
       reject('Unknown transaction');
     }
   });
 }
 
-export async function neonBalance(web3: Web3, address: string): Promise<Big> {
-  const balance = await web3.eth.getBalance(address);
-  return new Big(balance).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
+export async function neonBalance(proxyUrl: string, address: string): Promise<Big> {
+  const balance = await getBalance(new Web3Context(proxyUrl), address, undefined, DEFAULT_RETURN_FORMAT as ReturnFormat);
+  return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
 
 export async function solanaBalance(connection: Connection, address: PublicKey): Promise<Big> {
@@ -76,10 +79,11 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<number> {
-  const tokenInstance = new web3.eth.Contract(contractAbi, token.address);
-  const balance = await tokenInstance.methods.balanceOf(account).call();
-  return balance / Math.pow(10, token.decimals);
+export async function mintTokenBalance(proxyUrl: string, account: string, token: SPLToken, contractAbi: ContractAbi = erc20Abi as ContractAbi): Promise<number> {
+  const tokenInstance = new Contract(contractAbi, token.address, new Web3Context(proxyUrl));
+  //@ts-ignore
+  const balance: bigint = await tokenInstance.methods.balanceOf(account).call();
+  return Number(balance) / Math.pow(10, token.decimals);
 }
 
 export function solanaSignature(comment: string, signature: string, url: string = `https://api.devnet.solana.com`): void {
@@ -120,26 +124,26 @@ export async function createSplAccount(connection: Connection, signer: Signer, t
   return account!;
 }
 
-export async function deployContract(web3: Web3, contractPath: string, signer: Account): Promise<any> {
-  try {
-    console.log(`Attempting to deploy from account: ${signer.address}`);
-    const { NeonToken } = await compile(contractPath);
-    const data = NeonToken?.evm.bytecode.object;
-    const abi = NeonToken.abi;
-    const incrementer = new web3.eth.Contract(abi);
-    const incrementerTx = incrementer.deploy({ data, arguments: [1] });
-    const transaction: TransactionConfig = {
-      from: signer.address,
-      data: incrementerTx.encodeABI()
-    };
-    transaction.gas = await web3.eth.estimateGas(transaction);
-    const signedTrx = await web3.eth.accounts.signTransaction(transaction, signer.privateKey);
-    if (signedTrx?.rawTransaction) {
-      const createReceipt = await web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
-      return { blockHash: createReceipt.blockHash, contractAddress: createReceipt.contractAddress };
-    }
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
-}
+// export async function deployContract(web3: Web3, contractPath: string, signer: Account): Promise<any> {
+//   try {
+//     console.log(`Attempting to deploy from account: ${signer.address}`);
+//     const { NeonToken } = await compile(contractPath);
+//     const data = NeonToken?.evm.bytecode.object;
+//     const abi = NeonToken.abi;
+//     const incrementer = new Web3Contract.Contract(abi);
+//     const incrementerTx = incrementer.deploy({ data, arguments: [1] });
+//     const transaction: TransactionConfig = {
+//       from: signer.address,
+//       data: incrementerTx.encodeABI()
+//     };
+//     transaction.gas = await web3.eth.estimateGas(transaction);
+//     const signedTrx = await web3.eth.accounts.signTransaction(transaction, signer.privateKey);
+//     if (signedTrx?.rawTransaction) {
+//       const createReceipt = await web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+//       return { blockHash: createReceipt.blockHash, contractAddress: createReceipt.contractAddress };
+//     }
+//   } catch (e) {
+//     console.log(e);
+//     throw e;
+//   }
+// }

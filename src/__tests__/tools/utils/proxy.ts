@@ -3,9 +3,9 @@ import { NeonProxyRpcApi } from '../../../api';
 import { GasToken, GasTokenData, MultiTokenProxy } from '../../../models';
 import { TOKEN_LIST_DEVNET_SNAPSHOT } from '../../../data';
 import Web3 from 'web3';
+import HttpProvider from "web3-providers-http";
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-//TODO: remove web3 from return type
 export async function getMultiTokenProxy(proxyUrl: string, solanaUrl: string): Promise<MultiTokenProxy> {
   const proxyRpc = new NeonProxyRpcApi({ solanaRpcApi: solanaUrl, neonProxyRpcApi: proxyUrl });
   const proxyStatus = await proxyRpc.evmParams();
@@ -14,8 +14,8 @@ export async function getMultiTokenProxy(proxyUrl: string, solanaUrl: string): P
   return { proxyRpc, proxyStatus, tokensList, evmProgramAddress };
 }
 
-export function getWeb3Provider(proxyUrl: string): Web3 {
-  return new Web3(new Web3.providers.HttpProvider(proxyUrl));
+export function getWeb3Provider(proxyUrl: string): Web3<any> {
+  return new Web3(new HttpProvider(proxyUrl));
 }
 
 export function getEthersProvider(proxyUrl: string): JsonRpcProvider {
