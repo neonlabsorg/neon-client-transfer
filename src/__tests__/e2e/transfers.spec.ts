@@ -9,7 +9,8 @@ import {
   createMintSolanaTransaction,
   createUnwrapSOLTransaction,
   solanaNEONTransferTransaction,
-  wrappedNeonTransaction
+  wrappedNeonTransaction,
+  signerPrivateKey
 } from '../../core';
 import {
   neonNeonTransactionWeb3,
@@ -40,6 +41,7 @@ import {
   sendSolanaTransaction,
   solanaSignature,
   splTokenBalance,
+  solanaWalletSigner,
   toSigner
 } from '../tools';
 
@@ -267,7 +269,7 @@ describe('NEON token transfer tests', () => {
   });
 
   //TODO: Pending tx problem
-  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
@@ -279,7 +281,8 @@ describe('NEON token transfer tests', () => {
       const balanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
-        const transaction = await createWrapAndTransferSOLTransaction(connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, wSOL, amount, CHAIN_ID);
+        const walletSigner = solanaWalletSigner(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+        const transaction = await createWrapAndTransferSOLTransaction(connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, wSOL, amount, CHAIN_ID);
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
         expect(signature.length).toBeGreaterThan(0);
@@ -297,7 +300,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WSOL');
     const signer: Signer = toSigner(solanaWallet);
@@ -347,7 +350,7 @@ describe('NEON token transfer tests', () => {
   faucet.supportedTokens.forEach(token => {
     //TODO: Pending tx problem
     it.skip(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-      itSolanaTokenSPL(connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
     it.skip(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {

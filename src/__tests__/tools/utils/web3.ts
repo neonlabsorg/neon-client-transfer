@@ -124,6 +124,10 @@ export async function createSplAccount(connection: Connection, signer: Signer, t
   return account!;
 }
 
+export function solanaWalletSigner(web3: Web3, pk: string): Web3Account {
+  return web3.eth.accounts.privateKeyToAccount(pk);
+}
+
 // export async function deployContract(web3: Web3, contractPath: string, signer: Account): Promise<any> {
 //   try {
 //     console.log(`Attempting to deploy from account: ${signer.address}`);

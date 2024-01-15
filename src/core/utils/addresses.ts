@@ -1,5 +1,4 @@
 import { PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 import { AccountHex, SPLToken } from '../../models';
 import { isValidHex, toBytesInt32, toU256BE } from '../../utils';
 

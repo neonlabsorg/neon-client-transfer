@@ -5,6 +5,7 @@ import Web3 from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
 import {
   createMintSolanaTransaction,
+  signerPrivateKey,
 } from '../../core';
 import { neonTransferMintTransactionWeb3, createMintNeonTransactionWeb3 } from '../../web3'
 import { NeonProxyRpcApi } from '../../api';
@@ -17,16 +18,18 @@ import {
   sendNeonTransaction,
   sendSolanaTransaction,
   solanaSignature,
+  solanaWalletSigner,
   splTokenBalance,
   toSigner
 } from '../tools';
 
-export async function itSolanaTokenSPL(connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, neonProxyStatus: NeonProgramStatus, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account, chainId: number, solanaUrl: string, skipPreflight = false) {
+export async function itSolanaTokenSPL(web3: Web3, connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, neonProxyStatus: NeonProgramStatus, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account, chainId: number, solanaUrl: string, skipPreflight = false) {
   const amount = 0.1;
   const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, token);
   console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
   try {
-    const transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, token, amount, chainId);
+    const walletSigner = solanaWalletSigner(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+    const transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, token, amount, chainId);
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const signer: Signer = toSigner(solanaWallet);
     const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
