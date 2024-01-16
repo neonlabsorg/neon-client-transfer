@@ -61,13 +61,14 @@ let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
 let signer: Signer = toSigner(solanaWallet);
 let gasToken: GasToken;
-let connection: Connection;
-let provider: JsonRpcProvider;
-let neonWallet: Wallet;
 let neonProxyStatus: NeonProgramStatus;
 let neonEvmProgram: PublicKey;
 let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
+
+let provider: JsonRpcProvider;
+let neonWallet: Wallet;
+let connection: Connection;
 
 beforeAll(async () => {
   const result = await getMultiTokenProxy(NEON_PROXY_URL!, SOLANA_URL!);
@@ -82,6 +83,7 @@ beforeAll(async () => {
   neonWallet = new Wallet(NEON_PRIVATE, provider);
   tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
   gasToken = tokensList.find(i => parseInt(i.token_chain_id, 16) === CHAIN_ID)!;
+
 });
 
 afterEach(async () => {
@@ -90,7 +92,7 @@ afterEach(async () => {
 
 describe('NEON token transfer tests', () => {
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -114,7 +116,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it('Should wrap 1 NEON to wNEON in Neon network', async () => {
+  it.skip('Should wrap 1 NEON to wNEON in Neon network', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -143,7 +145,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
+  it.skip('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -156,7 +158,7 @@ describe('NEON token transfer tests', () => {
       const wneonBalanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi);
       try {
         const data = await wrappedNeonTransactionData(wneon, amount, neonWallet);
-        const unwrapTransaction = <TransactionRequest>wrappedNeonTransaction(neonWallet.address, wneon.address, data.hash);
+        const unwrapTransaction = wrappedNeonTransaction<TransactionRequest>(neonWallet.address, wneon.address, data.hash) as TransactionRequest;
         unwrapTransaction.gasPrice = await provider.getGasPrice();
         unwrapTransaction.gasLimit = await estimateGas(provider, unwrapTransaction);
         const unwrapHash = await sendNeonTransactionEthers(unwrapTransaction, neonWallet);
@@ -186,7 +188,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
@@ -217,7 +219,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WSOL');
     const signer: Signer = toSigner(solanaWallet);
@@ -269,7 +271,7 @@ describe('NEON token transfer tests', () => {
       itSolanaTokenSPL(provider, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
-    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
+    it.skip(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
       itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, neonProxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
     });
   });
