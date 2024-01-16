@@ -1,5 +1,4 @@
 import { Cluster, Connection, PublicKey, SendOptions } from '@solana/web3.js';
-import Web3 from 'web3';
 import { NeonProxyRpcApi } from '../api';
 import { NeonProgramStatus } from './api';
 
@@ -12,11 +11,11 @@ export interface InstructionEvents {
   onErrorSign?: Function;
 }
 
-export interface InstructionParams extends InstructionEvents {
+export interface InstructionParams<P> extends InstructionEvents {
   solanaWalletAddress: PublicKey;
   neonWalletAddress: string;
   neonContractAddress: string;
-  web3: Web3;
+  provider: P;
   proxyApi: NeonProxyRpcApi;
   proxyStatus: NeonProgramStatus;
   connection: Connection;

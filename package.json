@@ -43,7 +43,6 @@
     "@solana/web3.js": "^1.77.3",
     "big.js": "^6.2.1",
     "js-sha256": "^0.10.1",
-    "web3": "^4.3.0",
     "web3-core": "^4.3.2",
     "web3-eth": "^4.3.1",
     "web3-eth-abi": "^4.1.4",
@@ -65,11 +64,8 @@
     "@ethersproject/units": "~5.7.0",
     "@ethersproject/wallet": "^5.7.0",
     "@types/big.js": "^6.1.6",
-    "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.2.3",
     "@types/node-fetch": "^2.6.10",
-    "@types/react": "^18.0.25",
-    "@types/react-dom": "^18.0.9",
     "@typescript-eslint/parser": "^5.43.0",
     "bs58": "^5.0.0",
     "dotenv": "^16.3.1",
@@ -78,12 +74,11 @@
     "jest": "^29.3.1",
     "npm-run-all": "^4.1.5",
     "prettier": "2.7.1",
-    "react": "18",
-    "react-dom": "^18.2.0",
     "solc": "^0.8.23-fixed",
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.3.0",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "web3": "^4.3.0"
   }
 }

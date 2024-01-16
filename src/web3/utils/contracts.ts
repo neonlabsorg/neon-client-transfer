@@ -1,6 +1,4 @@
 import { Contract } from 'web3-eth-contract';
-import { ContractAbi } from 'web3-types';
-import Web3 from 'web3';
 import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data';
 import {Web3Context} from "web3-core";
 

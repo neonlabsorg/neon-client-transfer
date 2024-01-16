@@ -16,6 +16,7 @@ import {
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
 } from './utils';
+import { TransactionRequest } from "@ethersproject/providers";
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
@@ -92,12 +93,12 @@ export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWa
   return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
 }
 
-export function wrappedNeonTransaction(from: string, to: string, data: string): TransactionConfig {
+export function wrappedNeonTransaction(from: string, to: string, data: string): TransactionConfig | TransactionRequest {
   const value = `0x0`;
   return { from, to, value, data };
 }
 
-export function neonNeonTransaction(from: string, to: string, amount: Amount, data: string): TransactionConfig {
+export function neonNeonTransaction(from: string, to: string, amount: Amount, data: string): TransactionConfig | TransactionRequest {
   const value = `0x${BigInt(toWei(amount.toString(), 'ether')).toString(16)}`;
   return { from, to, value, data };
 }

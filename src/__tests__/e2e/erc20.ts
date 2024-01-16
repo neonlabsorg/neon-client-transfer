@@ -1,8 +1,9 @@
 import { expect } from '@jest/globals';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Signer, Transaction } from '@solana/web3.js';
 import Web3 from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
+import { JsonRpcProvider, TransactionRequest } from "@ethersproject/providers";
 import {
   createMintSolanaTransaction,
   signerPrivateKey,
@@ -15,21 +16,33 @@ import {
   FaucetDropper,
   mintTokenBalance,
   neonSignature,
-  sendNeonTransaction,
+  sendNeonTransaction, sendNeonTransactionEthers,
   sendSolanaTransaction,
   solanaSignature,
   solanaWalletSigner,
   splTokenBalance,
-  toSigner
+  toSigner, walletSigner
 } from '../tools';
+import { Transaction as TransactionConfig} from "web3-types";
+import {
+  createMintNeonTransactionEthers,
+  neonTransferMintTransactionEthers
+} from "../../ethers";
+import { Wallet } from '@ethersproject/wallet';
 
-export async function itSolanaTokenSPL(web3: Web3, connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, neonProxyStatus: NeonProgramStatus, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account, chainId: number, solanaUrl: string, skipPreflight = false) {
+export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, neonProxyStatus: NeonProgramStatus, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account | Wallet, chainId: number, solanaUrl: string, skipPreflight = false) {
   const amount = 0.1;
   const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, token);
   console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
   try {
-    const walletSigner = solanaWalletSigner(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
-    const transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, token, amount, chainId);
+    let transaction: Transaction;
+    if(provider instanceof JsonRpcProvider) {
+      const solanaWalletSigner = walletSigner(<JsonRpcProvider>provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+      transaction = await neonTransferMintTransactionEthers(connection, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, solanaWalletSigner, token, amount, chainId);
+    } else {
+      const walletSigner = solanaWalletSigner(provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+      transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, token, amount, chainId);
+    }
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const signer: Signer = toSigner(solanaWallet);
     const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
@@ -47,7 +60,7 @@ export async function itSolanaTokenSPL(web3: Web3, connection: Connection, proxy
   }
 }
 
-export async function itNeonTokenMint(connection: Connection, web3: Web3, proxyUrl: string, faucet: FaucetDropper, neonProxyStatus: NeonProgramStatus, token: SPLToken, solanaWallet: Keypair, neonWallet: Web3Account, solanaUrl: string, skipPreflight = false) {
+export async function itNeonTokenMint(connection: Connection, provider: Web3 | JsonRpcProvider, proxyUrl: string, faucet: FaucetDropper, neonProxyStatus: NeonProgramStatus, token: SPLToken, solanaWallet: Keypair, neonWallet: Web3Account | Wallet, solanaUrl: string, skipPreflight = false) {
   const amount = 0.1;
   const mintPubkey = new PublicKey(token.address_spl);
   let balanceBefore = await mintTokenBalance(proxyUrl, neonWallet.address, token);
@@ -60,14 +73,22 @@ export async function itNeonTokenMint(connection: Connection, web3: Web3, proxyU
   const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
   const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, neonProxyStatus);
   solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-  const neonTransaction = await createMintNeonTransactionWeb3(proxyUrl, neonWallet.address, associatedToken, token, amount);
+  let neonTransaction: TransactionRequest | TransactionConfig;
+  if(provider instanceof JsonRpcProvider) {
+    neonTransaction = await createMintNeonTransactionEthers(provider, neonWallet.address, associatedToken, token, amount);
+  } else {
+    neonTransaction = await createMintNeonTransactionWeb3(proxyUrl, neonWallet.address, associatedToken, token, amount);
+  }
+
   const signer: Signer = toSigner(solanaWallet);
   try {
     const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight });
     solanaSignature(`Solana Signature`, signedSolanaTransaction, solanaUrl);
     expect(signedSolanaTransaction.length).toBeGreaterThan(0);
     await delay(1e3);
-    const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
+    const signedNeonTransaction = provider instanceof JsonRpcProvider ?
+      await sendNeonTransactionEthers(<TransactionRequest>neonTransaction, <Wallet>neonWallet) :
+      await sendNeonTransaction(provider, <TransactionConfig>neonTransaction, <Web3Account>neonWallet);
     neonSignature(`Neon Signature`, signedNeonTransaction);
     expect(signedNeonTransaction.length).toBeGreaterThan(0);
     await delay(15e3);

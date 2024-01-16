@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
-import { Account } from 'web3-core';
+import { Web3Account } from 'web3-eth-accounts';
 import Web3 from 'web3';
 import { NeonProgramStatus, SPLToken } from '../../models';
 import {
@@ -22,7 +22,8 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { neonNeonTransactionWeb3, solanaSOLTransferTransaction } from '../../core';
+import { solanaSOLTransferTransaction } from '../../core';
+import { neonNeonTransactionWeb3 } from '../../web3';
 import { NeonProxyRpcApi } from '../../api';
 import { SOL_TRANSFER_CONTRACT_DEVNET } from '../../data';
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
@@ -45,7 +46,7 @@ let evmProgramAddress: PublicKey;
 let tokenMintAddress: PublicKey;
 let web3: Web3;
 let solanaWallet: Keypair;
-let neonWallet: Account;
+let neonWallet: Web3Account;
 
 beforeAll(async () => {
   const result = await getMultiTokenProxy(SOL_PROXY_URL, SOLANA_URL!);
@@ -81,7 +82,7 @@ describe(`SOL Transfer tests`, () => {
       solanaSignature(`Signature`, signature, SOLANA_URL!);
       await delay(10e3);
       const balanceAfter = (await solanaBalance(connection, solanaWallet.publicKey)).toNumber();
-      const balanceNeon = await neonBalance(web3, neonWallet.address);
+      const balanceNeon = await neonBalance(SOL_PROXY_URL, neonWallet.address);
       console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${solToken.symbol} ==> ${balanceNeon} ${solToken.symbol} in NeonEVM`);
       expect(balanceAfter).toBeLessThan(balanceBefore);
     } catch (e) {
@@ -95,13 +96,13 @@ describe(`SOL Transfer tests`, () => {
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solToken: SPLToken = { ...faucet.tokens[id], ...SOL_TOKEN_MODEL, chainId };
     try {
-      const balanceBefore = await neonBalance(web3, neonWallet.address);
-      const transaction = await neonNeonTransactionWeb3(web3, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+      const balanceBefore = await neonBalance(SOL_PROXY_URL, neonWallet.address);
+      const transaction = await neonNeonTransactionWeb3(SOL_PROXY_URL, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
       neonSignature(`NeonEvm (SOL) signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
       await delay(5e3);
-      const balanceAfter = await neonBalance(web3, neonWallet.address);
+      const balanceAfter = await neonBalance(SOL_PROXY_URL, neonWallet.address);
       const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, solToken);
       console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${solToken.symbol} ==> ${balanceSPL?.uiAmount} ${solToken.symbol} in Solana`);
       expect(balanceAfter.toNumber()).toBeLessThan(balanceBefore.toNumber());
@@ -113,11 +114,11 @@ describe(`SOL Transfer tests`, () => {
 
   faucet.supportedTokens.forEach(token => {
     it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (SOL)`, _ => {
-      itSolanaTokenSPL(connection, web3, proxyRpc, proxyStatus, token, evmProgramAddress, solanaWallet, neonWallet, chainId, SOLANA_URL!).then(() => _());
+      itSolanaTokenSPL(web3, connection, SOL_PROXY_URL, proxyRpc, proxyStatus, token, evmProgramAddress, solanaWallet, neonWallet, chainId, SOLANA_URL!).then(() => _());
     });
 
     it(`Should transfer 0.1 ${token.symbol} from NeonEVM (SOL) to Solana`, _ => {
-      itNeonTokenMint(connection, web3, faucet, proxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
+      itNeonTokenMint(connection, web3, SOL_PROXY_URL, faucet, proxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
     });
   });
 });

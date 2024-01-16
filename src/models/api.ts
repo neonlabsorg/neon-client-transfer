@@ -1,7 +1,7 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js';
-import { SignedTransaction } from 'web3-core';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken } from './token';
+import { SignTransactionResult } from "web3-eth-accounts";
 
 export const enum ProxyStatus {
   unknown = 'UNKNOWN',
@@ -76,7 +76,7 @@ export interface NeonAccounts {
   contract: string;
 }
 
-export interface ClaimInstructionResult<R = SignedTransaction> {
+export interface ClaimInstructionResult<R = SignTransactionResult> {
   neonTransaction?: R;
   neonKeys: AccountMeta[];
   legacyAccounts: SolanaAccount[];

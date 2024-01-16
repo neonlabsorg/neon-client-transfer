@@ -35,20 +35,20 @@ import {
   Transaction as TransactionConfig
 } from "web3-types";
 import { Web3Context } from "web3-core";
-import {Web3Account} from "web3-eth-accounts";
+import { Web3Account, SignTransactionResult } from "web3-eth-accounts";
 
 export async function neonTransferMintTransactionWeb3(connection: Connection, proxyUrl: string, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, walletSigner: Web3Account, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const climeData = claimTransactionData(proxyUrl, associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
-  const { neonKeys, legacyAccounts } = await createClaimInstruction(proxyApi, signedTransaction);
-  return neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
+  const { neonKeys, legacyAccounts } = await createClaimInstruction<SignTransactionResult>(proxyApi, signedTransaction);
+  return neonTransferMintTransaction<Web3Account, SignTransactionResult>(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 }
 
 export async function createMintNeonTransactionWeb3(proxyUrl: string, neonWallet: string, associatedToken: PublicKey, splToken: SPLToken, amount: Amount, gasLimit = 5e4): Promise<TransactionConfig> {
   const data = mintNeonTransactionData(proxyUrl, associatedToken, splToken, amount);
-  const transaction = createMintNeonTransaction(neonWallet, splToken, data);
+  const transaction = createMintNeonTransaction<TransactionConfig>(neonWallet, splToken, data);
   const { gasPrice, gas } = await getGasAndEstimationGasPrice(proxyUrl, transaction);
   transaction.gasPrice = gasPrice;
   transaction.gas = gas;
@@ -67,8 +67,8 @@ export async function createWrapAndTransferSOLTransaction(connection: Connection
   const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
   const climeData = claimTransactionData(proxyUrl, associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken);
-  const { neonKeys, legacyAccounts } = await createClaimInstruction(proxyApi, signedTransaction);
-  const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
+  const { neonKeys, legacyAccounts } = await createClaimInstruction<SignTransactionResult>(proxyApi, signedTransaction);
+  const mintTransaction = await neonTransferMintTransaction<Web3Account, SignTransactionResult>(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 
   if (!wSOLAccount) {
     instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedTokenAddress, solanaWallet, solanaWallet));
