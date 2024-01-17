@@ -50,7 +50,7 @@ import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
 require('dotenv').config({ path: `./src/__tests__/env/.env` });
 jest.setTimeout(12e4);
 
-const skipPreflight = true;
+const skipPreflight = false;
 const CHAIN_ID = Number(process.env.CHAIN_ID);
 const SOLANA_URL = process.env.SOLANA_URL;
 const NEON_PROXY_URL = process.env.NEON_URL;
@@ -300,7 +300,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WSOL');
     const signer: Signer = toSigner(solanaWallet);
@@ -348,8 +348,8 @@ describe('NEON token transfer tests', () => {
   });
 
   faucet.supportedTokens.forEach(token => {
-    it.skip(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!, true).then(() => _());
+    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
     it.skip(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {

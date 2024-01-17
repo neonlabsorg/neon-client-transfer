@@ -56,6 +56,7 @@ export async function useTransactionFromSignerEthers(
     to: address // contract address
   };
   transaction.nonce = await walletSigner.getTransactionCount();
+
   const signedTransaction = await walletSigner.signTransaction(transaction);
   return { rawTransaction: signedTransaction };
 }

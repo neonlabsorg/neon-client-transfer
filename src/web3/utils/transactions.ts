@@ -20,7 +20,8 @@ import { SignTransactionResult, Web3Account } from "web3-eth-accounts";
 import {
   estimateGas,
   getBlockNumber,
-  getGasPrice
+  getGasPrice,
+  getTransactionCount
 } from "web3-eth";
 import { Web3Context } from "web3-core";
 
@@ -49,7 +50,7 @@ export function wrappedNeonTransactionData(proxyUrl: string, token: SPLToken, am
 }
 
 export async function neonClaimTransactionFromSigner(
-  climeData: string, walletSigner: Web3Account, neonWallet: string, splToken: SPLToken
+  climeData: string, walletSigner: Web3Account, neonWallet: string, splToken: SPLToken, proxyUrl: string
 ): Promise<SignTransactionResult> {
 
   const transaction: TransactionConfig = {
@@ -59,6 +60,12 @@ export async function neonClaimTransactionFromSigner(
     from: neonWallet,
     to: splToken.address // contract address
   };
+
+  transaction.nonce = await getTransactionCount(new Web3Context(proxyUrl),
+    walletSigner.address,
+    'latest',
+    DEFAULT_RETURN_FORMAT as ReturnFormat
+  );
 
   return await walletSigner.signTransaction(transaction);
 }

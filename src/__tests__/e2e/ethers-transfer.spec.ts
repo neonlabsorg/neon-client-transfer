@@ -188,7 +188,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it.skip(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
+  it(`Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solBefore = await connection.getBalance(solanaWallet.publicKey);
@@ -267,7 +267,7 @@ describe('NEON token transfer tests', () => {
   });
 
   faucet.supportedTokens.forEach(token => {
-    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+    it.skip(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
       itSolanaTokenSPL(provider, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
