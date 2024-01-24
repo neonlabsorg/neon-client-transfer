@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.neonNeonTransactionWeb3 = exports.neonNeonTransaction = exports.wrappedNeonTransaction = exports.wrappedNeonTransactionDataWeb3 = exports.neonTransactionDataWeb3 = exports.createNeonTransferInstruction = exports.createNeonDepositInstruction = exports.createNeonDepositToBalanceInstruction = exports.solanaNEONTransferTransaction = void 0;
+exports.neonNeonTransaction = exports.wrappedNeonTransaction = exports.createNeonTransferInstruction = exports.createNeonDepositInstruction = exports.createNeonDepositToBalanceInstruction = exports.solanaNEONTransferTransaction = void 0;
 const web3_js_1 = require("@solana/web3.js");
 const spl_token_1 = require("@solana/spl-token");
 const web3_utils_1 = require("web3-utils");
@@ -88,16 +88,6 @@ function createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWalle
     return new web3_js_1.TransactionInstruction({ programId: spl_token_1.TOKEN_PROGRAM_ID, keys, data });
 }
 exports.createNeonTransferInstruction = createNeonTransferInstruction;
-function neonTransactionDataWeb3(web3, solanaWallet) {
-    return (0, utils_2.neonWrapperContractWeb3)(web3).methods.withdraw(solanaWallet.toBuffer()).encodeABI();
-}
-exports.neonTransactionDataWeb3 = neonTransactionDataWeb3;
-function wrappedNeonTransactionDataWeb3(web3, token, amount) {
-    const value = (0, web3_utils_1.toWei)(amount.toString(), 'ether');
-    const contract = (0, utils_2.neonWrapper2ContractWeb3)(web3, token.address);
-    return contract.methods.withdraw(value).encodeABI();
-}
-exports.wrappedNeonTransactionDataWeb3 = wrappedNeonTransactionDataWeb3;
 function wrappedNeonTransaction(from, to, data) {
     const value = `0x0`;
     return { from, to, value, data };
@@ -108,15 +98,3 @@ function neonNeonTransaction(from, to, amount, data) {
     return { from, to, value, data };
 }
 exports.neonNeonTransaction = neonNeonTransaction;
-function neonNeonTransactionWeb3(web3, from, to, solanaWallet, amount, gasLimit = 5e4) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const data = neonTransactionDataWeb3(web3, solanaWallet);
-        const transaction = neonNeonTransaction(from, to, amount, data);
-        transaction.gasPrice = yield web3.eth.getGasPrice();
-        transaction.gas = yield web3.eth.estimateGas(transaction);
-        // @ts-ignore
-        transaction['gasLimit'] = transaction.gas > gasLimit ? transaction.gas + 1e4 : gasLimit;
-        return transaction;
-    });
-}
-exports.neonNeonTransactionWeb3 = neonNeonTransactionWeb3;

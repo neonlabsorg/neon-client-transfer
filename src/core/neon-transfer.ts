@@ -1,4 +1,3 @@
-import { Amount, EvmInstruction, NeonAddress, SPLToken } from '../models';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
   createApproveInstruction,
@@ -10,11 +9,8 @@ import {
 import { toWei } from 'web3-utils';
 import { numberTo64BitLittleEndian, toBigInt, toFullAmount } from '../utils';
 import { NEON_TOKEN_DECIMALS } from '../data';
-import {
-  authorityPoolAddress,
-  neonBalanceProgramAddress,
-  neonWalletProgramAddress,
-} from './utils';
+import { Amount, EvmInstruction, NeonAddress, SPLToken } from '../models';
+import { authorityPoolAddress, neonBalanceProgramAddress, neonWalletProgramAddress } from './utils';
 
 export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };

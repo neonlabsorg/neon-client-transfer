@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.solanaWalletSigner = void 0;
-const crypto_js_1 = require("crypto-js");
-function solanaWalletSigner(web3, solanaWallet, neonWallet) {
-    const emulateSignerPrivateKey = `0x${(0, crypto_js_1.SHA256)(solanaWallet.toBase58() + neonWallet).toString()}`;
-    return web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
+exports.signerPrivateKey = void 0;
+const js_sha256_1 = require("js-sha256");
+function signerPrivateKey(solanaWallet, neonWallet) {
+    return `0x${(0, js_sha256_1.sha256)(solanaWallet.toBase58() + neonWallet).toString()}`;
 }
-exports.solanaWalletSigner = solanaWalletSigner;
+exports.signerPrivateKey = signerPrivateKey;

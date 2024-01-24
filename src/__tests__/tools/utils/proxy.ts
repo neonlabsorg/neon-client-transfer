@@ -1,10 +1,10 @@
 import { PublicKey } from '@solana/web3.js';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import HttpProvider from 'web3-providers-http';
 import { NeonProxyRpcApi } from '../../../api';
 import { GasToken, GasTokenData, MultiTokenProxy } from '../../../models';
 import { TOKEN_LIST_DEVNET_SNAPSHOT } from '../../../data';
 import Web3 from 'web3';
-import HttpProvider from "web3-providers-http";
-import { JsonRpcProvider } from '@ethersproject/providers';
 
 export async function getMultiTokenProxy(proxyUrl: string, solanaUrl: string): Promise<MultiTokenProxy> {
   const proxyRpc = new NeonProxyRpcApi({ solanaRpcApi: solanaUrl, neonProxyRpcApi: proxyUrl });

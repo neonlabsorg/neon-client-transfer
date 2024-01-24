@@ -18,5 +18,4 @@ __exportStar(require("./api"), exports);
 __exportStar(require("./core"), exports);
 __exportStar(require("./data"), exports);
 __exportStar(require("./models"), exports);
-__exportStar(require("./react"), exports);
 __exportStar(require("./utils"), exports);

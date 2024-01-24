@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts';
-import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data/abi';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Interface } from '@ethersproject/abi';
+import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '../../data/abi';
 
 export function erc20ForSPLContract(): Interface {
   return new Interface(erc20Abi);

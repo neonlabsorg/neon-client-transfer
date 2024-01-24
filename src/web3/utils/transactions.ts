@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
-import { Amount, SPLToken } from '../../models';
 import { toWei } from 'web3-utils';
+import { Amount, SPLToken } from '../../models';
 import { toFullAmount } from '../../utils';
 import {
   DEFAULT_RETURN_FORMAT,

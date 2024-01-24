@@ -3,12 +3,9 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Signer, Transaction } from '@solana/web3.js';
 import Web3 from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
-import { JsonRpcProvider, TransactionRequest } from "@ethersproject/providers";
-import {
-  createMintSolanaTransaction,
-  signerPrivateKey,
-} from '../../core';
-import { neonTransferMintTransactionWeb3, createMintNeonTransactionWeb3 } from '../../web3'
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
+import { createMintSolanaTransaction, signerPrivateKey } from '../../core';
+import { createMintNeonTransactionWeb3, neonTransferMintTransactionWeb3 } from '../../web3';
 import { NeonProxyRpcApi } from '../../api';
 import { NeonProgramStatus, SPLToken } from '../../models';
 import {
@@ -16,18 +13,17 @@ import {
   FaucetDropper,
   mintTokenBalance,
   neonSignature,
-  sendNeonTransaction, sendNeonTransactionEthers,
+  sendNeonTransaction,
+  sendNeonTransactionEthers,
   sendSolanaTransaction,
   solanaSignature,
   solanaWalletSigner,
   splTokenBalance,
-  toSigner, walletSigner
+  toSigner,
+  walletSigner
 } from '../tools';
-import { Transaction as TransactionConfig} from "web3-types";
-import {
-  createMintNeonTransactionEthers,
-  neonTransferMintTransactionEthers
-} from "../../ethers";
+import { Transaction as TransactionConfig } from 'web3-types';
+import { createMintNeonTransactionEthers, neonTransferMintTransactionEthers } from '../../ethers';
 import { Wallet } from '@ethersproject/wallet';
 
 export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, neonProxyStatus: NeonProgramStatus, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account | Wallet, chainId: number, solanaUrl: string, skipPreflight = false) {
@@ -36,7 +32,7 @@ export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connect
   console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
   try {
     let transaction: Transaction;
-    if(provider instanceof JsonRpcProvider) {
+    if (provider instanceof JsonRpcProvider) {
       const solanaWalletSigner = walletSigner(<JsonRpcProvider>provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
       transaction = await neonTransferMintTransactionEthers(connection, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, solanaWalletSigner, token, amount, chainId);
     } else {
@@ -74,7 +70,7 @@ export async function itNeonTokenMint(connection: Connection, provider: Web3 | J
   const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, neonProxyStatus);
   solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   let neonTransaction: TransactionRequest | TransactionConfig;
-  if(provider instanceof JsonRpcProvider) {
+  if (provider instanceof JsonRpcProvider) {
     neonTransaction = await createMintNeonTransactionEthers(provider, neonWallet.address, associatedToken, token, amount);
   } else {
     neonTransaction = await createMintNeonTransactionWeb3(proxyUrl, neonWallet.address, associatedToken, token, amount);

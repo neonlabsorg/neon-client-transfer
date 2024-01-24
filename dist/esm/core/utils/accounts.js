@@ -1,5 +1,4 @@
-import { SHA256 } from 'crypto-js';
-export function solanaWalletSigner(web3, solanaWallet, neonWallet) {
-    const emulateSignerPrivateKey = `0x${SHA256(solanaWallet.toBase58() + neonWallet).toString()}`;
-    return web3.eth.accounts.privateKeyToAccount(emulateSignerPrivateKey);
+import { sha256 } from 'js-sha256';
+export function signerPrivateKey(solanaWallet, neonWallet) {
+    return `0x${sha256(solanaWallet.toBase58() + neonWallet).toString()}`;
 }

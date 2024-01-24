@@ -1,0 +1,10 @@
+import { PublicKey } from '@solana/web3.js';
+import { TransactionResponse } from '@ethersproject/providers';
+import { Signer } from '@ethersproject/abstract-signer';
+import { Wallet } from '@ethersproject/wallet';
+import { Amount, EthersSignedTransaction, SPLToken } from '../../models';
+export declare function claimTransactionData(associatedToken: PublicKey, neonWallet: string, amount: Amount): string;
+export declare function neonTransactionData(solanaWallet: PublicKey): string;
+export declare function mintNeonTransactionData(associatedToken: PublicKey, splToken: SPLToken, amount: Amount): string;
+export declare function wrappedNeonTransactionData(token: SPLToken, amount: Amount, signer: Signer): Promise<TransactionResponse>;
+export declare function useTransactionFromSignerEthers(claimData: string, walletSigner: Wallet, address: string): Promise<EthersSignedTransaction>;

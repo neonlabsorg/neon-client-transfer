@@ -1,9 +1,9 @@
-import { PublicKey } from "@solana/web3.js";
-import { Amount } from "../models";
-import { neonNeonTransaction } from "../core";
-import { neonTransactionData } from "./utils";
-import { JsonRpcProvider, TransactionRequest } from "@ethersproject/providers";
-import { BigNumber } from "@ethersproject/bignumber";
+import { PublicKey } from '@solana/web3.js';
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Amount } from '../models';
+import { neonNeonTransaction } from '../core';
+import { neonTransactionData } from './utils';
 
 export async function neonNeonTransactionWeb3(provider: JsonRpcProvider, from: string, to: string, solanaWallet: PublicKey, amount: Amount, gasLimit = 5e4): Promise<TransactionRequest> {
   const data = neonTransactionData(solanaWallet);

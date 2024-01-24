@@ -14,23 +14,18 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync
 } from '@solana/spl-token';
-import { ContractAbi } from 'web3-types';
+import { ContractAbi, DEFAULT_RETURN_FORMAT, Transaction as TransactionConfig } from 'web3-types';
 import { Web3Account } from 'web3-eth-accounts';
 import { Contract } from 'web3-eth-contract';
 import { Web3Context } from 'web3-core';
-import {
-  DEFAULT_RETURN_FORMAT,
-  Transaction as TransactionConfig
-} from 'web3-types';
 import Web3 from 'web3';
 import Big from 'big.js';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS } from '../../../data';
 import { SPLToken } from '../../../models';
 import { solanaTransactionLog } from '../../../utils';
 import { delay } from './delay';
-import { getBalance } from "web3-eth";
-import { ReturnFormat} from "../../../web3/utils";
-import { compile } from './contract';
+import { getBalance } from 'web3-eth';
+import { ReturnFormat } from '../../../web3/utils';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };

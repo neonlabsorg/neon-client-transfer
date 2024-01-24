@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer",
-  "version": "3.0.1",
+  "version": "3.0.2-a",
   "description": "JavaScript client-side module for creating transfer transactions from Solana to NeonEVM",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

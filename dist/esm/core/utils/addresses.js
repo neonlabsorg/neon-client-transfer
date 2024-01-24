@@ -1,5 +1,4 @@
 import { PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 import { isValidHex, toBytesInt32, toU256BE } from '../../utils';
 export function neonWalletProgramAddress(etherKey, neonEvmProgram) {
     const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
