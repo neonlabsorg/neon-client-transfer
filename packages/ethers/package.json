@@ -1,0 +1,54 @@
+{
+  "name": "@neonevm-token-transfer/ethers-transfer",
+  "version": "1.0.0",
+  "description": "Neon EVM token transfer methods leveraging the ethers.js library",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "./dist/**/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+    "build": "npm-run-all build:clean compile && echo '{\"type\": \"module\"}' > ./dist/esm/package.json",
+    "build:clean": "rm -rf ./dist",
+    "prepack": "npm run build",
+    "lint": "eslint ./dist",
+    "audit": "npm audit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neonlabsorg/neon-client-transfer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/neonlabsorg/neon-client-transfer/issues"
+  },
+  "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
+  "dependencies": {
+    "@ethersproject/abi": "~5.7.0",
+    "@ethersproject/abstract-provider": "~5.7.0",
+    "@ethersproject/abstract-signer": "~5.7.0",
+    "@ethersproject/address": "~5.7.0",
+    "@ethersproject/bignumber": "^5.7.0",
+    "@ethersproject/constants": "~5.7.0",
+    "@ethersproject/contracts": "~5.7.0",
+    "@ethersproject/providers": "~5.7.0",
+    "@ethersproject/units": "~5.7.0",
+    "@ethersproject/wallet": "^5.7.0",
+    "@neonevm-token-transfer/core": "1.0.0",
+    "@solana/spl-token": "^0.3.8",
+    "@solana/web3.js": "^1.77.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^5.43.0",
+    "eslint": "8.27.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "2.7.1",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.1.6"
+  }
+}

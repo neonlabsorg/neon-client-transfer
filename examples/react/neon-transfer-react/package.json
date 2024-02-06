@@ -59,5 +59,8 @@
     "url": false,
     "crypto": false,
     "stream": false
+  },
+  "nx": {
+    "includedScripts": []
   }
 }
