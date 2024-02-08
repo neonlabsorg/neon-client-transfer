@@ -1,27 +1,19 @@
 import { PublicKey } from '@solana/web3.js';
-import {
-  Amount,
-  EthersSignedTransaction,
-  SPLToken
-} from '@neonevm-token-transfer/core';
+import { Amount, EthersSignedTransaction, SPLToken } from '@neonevm/token-transfer-core';
 import { TransactionRequest, TransactionResponse } from '@ethersproject/providers';
 import { Signer } from '@ethersproject/abstract-signer';
 import { parseUnits } from '@ethersproject/units';
 import { Wallet } from '@ethersproject/wallet';
 import { BigNumber } from '@ethersproject/bignumber';
-import {
-  erc20ForSPLContract,
-  neonWrapperContract,
-  neonWrapper2Contract
-} from './contracts';
+import { erc20ForSPLContract, neonWrapper2Contract, neonWrapperContract } from './contracts';
 
 export function claimTransactionData(associatedToken: PublicKey, neonWallet: string, amount: Amount): string {
   const fullAmount = BigNumber.from(amount);
-    return erc20ForSPLContract().encodeFunctionData('claimTo', [
-      associatedToken.toBuffer(),
-      neonWallet,
-      fullAmount
-    ]);
+  return erc20ForSPLContract().encodeFunctionData('claimTo', [
+    associatedToken.toBuffer(),
+    neonWallet,
+    fullAmount
+  ]);
 }
 
 export function neonTransactionData(solanaWallet: PublicKey): string {

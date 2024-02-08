@@ -1,10 +1,9 @@
-import { SPLToken, erc20Abi } from "@neonevm-token-transfer/core";
-// import { erc20Abi } from "../../../data";
-import { JsonRpcProvider, TransactionRequest } from "@ethersproject/providers";
-import { Contract } from "@ethersproject/contracts";
+import { erc20Abi, SPLToken } from '@neonevm/token-transfer-core';
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
+import { Contract } from '@ethersproject/contracts';
 import { Wallet } from '@ethersproject/wallet';
 import { Signer } from '@ethersproject/abstract-signer';
-import {BigNumber} from "@ethersproject/bignumber";
+import { BigNumber } from '@ethersproject/bignumber';
 
 
 export async function getTokenBalance(provider: JsonRpcProvider, account: string, token: SPLToken, contractAbi: any = erc20Abi): Promise<number> {

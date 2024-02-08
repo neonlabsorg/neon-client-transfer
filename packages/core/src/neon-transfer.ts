@@ -1,4 +1,3 @@
-import { Amount, EvmInstruction, NeonAddress, SPLToken } from './models';
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
   createApproveInstruction,
@@ -9,6 +8,7 @@ import {
 } from '@solana/spl-token';
 import { toWei } from 'web3-utils';
 import { NEON_TOKEN_DECIMALS } from './data';
+import { Amount, EvmInstruction, NeonAddress, SPLToken } from './models';
 import {
   authorityPoolAddress,
   neonBalanceProgramAddress,

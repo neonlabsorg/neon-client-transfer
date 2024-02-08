@@ -4,41 +4,41 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 import {
   Amount,
-  EthersSignedTransaction,
-  NeonProgramStatus,
-  SPLToken,
-  toFullAmount,
-  NeonProxyRpcApi,
+  createAssociatedTokenAccountInstruction,
   createClaimInstruction,
   createMintNeonTransaction,
+  EthersSignedTransaction,
+  NeonProgramStatus,
+  NeonProxyRpcApi,
   neonTransferMintTransaction,
-  createAssociatedTokenAccountInstruction
-} from "@neonevm-token-transfer/core";
+  SPLToken,
+  toFullAmount
+} from '@neonevm/token-transfer-core';
 import {
-  getAssociatedTokenAddressSync,
   createSyncNativeInstruction,
+  getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID
-} from "@solana/spl-token";
+} from '@solana/spl-token';
 import { Wallet } from '@ethersproject/wallet';
-import {
-  JsonRpcProvider,
-  TransactionRequest,
-} from '@ethersproject/providers';
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
 import {
   claimTransactionData,
   mintNeonTransactionData,
   useTransactionFromSignerEthers
-} from "./utils";
+} from './utils';
 
 export async function neonTransferMintTransactionEthers(connection: Connection, proxyApi: NeonProxyRpcApi, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, walletSigner: Wallet, splToken: SPLToken, amount: Amount, chainId: number): Promise<any> {
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const climeData = claimTransactionData(associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await useTransactionFromSignerEthers(climeData, walletSigner, splToken.address);
-  const { neonKeys, legacyAccounts } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
+  const {
+    neonKeys,
+    legacyAccounts
+  } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
   return neonTransferMintTransaction<Wallet, EthersSignedTransaction>(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 }
 
@@ -61,7 +61,10 @@ export async function createWrapAndTransferSOLTransaction(connection: Connection
   const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
   const climeData = claimTransactionData(associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await useTransactionFromSignerEthers(climeData, walletSigner, splToken.address);
-  const { neonKeys, legacyAccounts } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
+  const {
+    neonKeys,
+    legacyAccounts
+  } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
   const mintTransaction = await neonTransferMintTransaction(connection, proxyStatus, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId);
 
   if (!wSOLAccount) {

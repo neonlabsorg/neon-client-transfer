@@ -1,9 +1,9 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { Amount, NeonAddress, SPLToken } from './models';
 import { neonBalanceProgramAddress, toFullAmount } from './utils';
 import { createNeonDepositToBalanceInstruction } from './neon-transfer';
 import { createWrapSOLTransaction } from './mint-transfer';
+import { Amount, NeonAddress, SPLToken } from './models';
 
 export async function solanaSOLTransferTransaction(connection: Connection, solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111): Promise<Transaction> {
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);

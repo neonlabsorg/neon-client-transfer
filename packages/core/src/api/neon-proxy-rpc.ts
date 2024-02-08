@@ -1,18 +1,10 @@
-import {
-  GasToken,
-  NeonEmulate,
-  NeonProgramStatus,
-  RPCResponse,
-  SettingsFormState
-} from '../models';
+import { GasToken, NeonEmulate, NeonProgramStatus, RPCResponse } from '../models';
 
 export class NeonProxyRpcApi {
-  neonProxyRpcApi = '';
-  solanaRpcApi = '';
+  neonProxyRpcUrl = '';
 
-  constructor(params: SettingsFormState) {
-    this.neonProxyRpcApi = params.neonProxyRpcApi ?? '';
-    this.solanaRpcApi = params.solanaRpcApi ?? '';
+  constructor(url: string) {
+    this.neonProxyRpcUrl = url ?? '';
   }
 
   async rpc<T>(url: string, method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
@@ -28,11 +20,7 @@ export class NeonProxyRpcApi {
   }
 
   async proxy<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
-    return this.rpc<T>(this.neonProxyRpcApi, method, params);
-  }
-
-  async solana<T>(method: string, params: unknown[] = []): Promise<RPCResponse<T>> {
-    return this.rpc<T>(this.solanaRpcApi, method, params);
+    return this.rpc<T>(this.neonProxyRpcUrl, method, params);
   }
 
   async neonEmulate(params: string[] = []): Promise<NeonEmulate> {

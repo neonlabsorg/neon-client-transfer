@@ -1,28 +1,12 @@
 import { PublicKey } from '@solana/web3.js';
-import { Amount, SPLToken, toFullAmount } from '@neonevm-token-transfer/core';
+import { Amount, SPLToken, toFullAmount } from '@neonevm/token-transfer-core';
+import { SignTransactionResult, Web3Account } from 'web3-eth-accounts';
+import { DEFAULT_RETURN_FORMAT, Transaction as TransactionConfig } from 'web3-types';
+import { estimateGas, getBlockNumber, getGasPrice, getTransactionCount } from 'web3-eth';
+import { Web3Context } from 'web3-core';
 import { toWei } from 'web3-utils';
-import {
-  DEFAULT_RETURN_FORMAT,
-  Transaction as TransactionConfig
-} from 'web3-types';
-import {
-  ReturnFormat,
-  GasInterface,
-  GasPriceInterface
-} from './types';
-import {
-  erc20ForSPLContract,
-  neonWrapperContract,
-  neonWrapper2Contract
-} from './contracts';
-import { SignTransactionResult, Web3Account } from "web3-eth-accounts";
-import {
-  estimateGas,
-  getBlockNumber,
-  getGasPrice,
-  getTransactionCount
-} from "web3-eth";
-import { Web3Context } from "web3-core";
+import { erc20ForSPLContract, neonWrapper2Contract, neonWrapperContract } from './contracts';
+import { GasInterface, GasPriceInterface, ReturnFormat } from './types';
 
 export function claimTransactionData(proxyUrl: string, associatedToken: PublicKey, neonWallet: string, amount: Amount): string {
   //@ts-ignore

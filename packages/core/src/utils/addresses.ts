@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import { AccountHex, SPLToken } from '../models';
-import { toBytesInt32, toU256BE } from './address';
+import { toBytesInt32, toU256BE } from './amount';
 import { isValidHex } from './hex';
 
 export function neonWalletProgramAddress(etherKey: string, neonEvmProgram: PublicKey): [PublicKey, number] {

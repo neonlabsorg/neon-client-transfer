@@ -41,8 +41,8 @@ Additional for Multi-token gas fee, we added new method (`nativeTokenList`) for 
 const neonNeonEvmUrl = `https://devnet.neonevm.org`;
 const solNeonEvmUrl = `https://devnet.neonevm.org/solana/sol`;
 const solanaUrl = `https://api.devnet.solana.com`;
-const neonProxyApi = new NeonProxyRpcApi({ neonProxyRpcApi: neonNeonEvmUrl, solanaRpcApi: solanaUrl });
-const solProxyApi = new NeonProxyRpcApi({ neonProxyRpcApi: solNeonEvmUrl, solanaRpcApi: solanaUrl });
+const neonProxyApi = new NeonProxyRpcApi(neonNeonEvmUrl);
+const solProxyApi = new NeonProxyRpcApi(solNeonEvmUrl);
 // ...
 const [neonNativeToken, solNativeToken] = await neonProxyApi.nativeTokenList(); // get native tokens for chain networks
 const neonProxyStatus = await neonProxyApi.evmParams(); // get evm params config

@@ -6952,9 +6952,9 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-"token-list@https://github.com/neonlabsorg/token-list.git#v5.3.0":
+"token-list@https://github.com/neonlabsorg/token-list.git#v5.6.1":
   version "0.0.0"
-  resolved "https://github.com/neonlabsorg/token-list.git#68c8926a67121142b726158e7ba61c565892552e"
+  resolved "https://github.com/neonlabsorg/token-list.git#721d415e043e17cee5fecf12364f5c9ed8597d8e"
 
 tr46@~0.0.3:
   version "0.0.3"

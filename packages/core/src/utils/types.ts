@@ -12,6 +12,7 @@ export declare type SignatureObject = {
   s: string;
   v: string;
 };
+
 export declare type SignTransactionResult = SignatureObject & TransactionResult & {
   transactionHash: string;
 };

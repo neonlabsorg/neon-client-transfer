@@ -14,28 +14,21 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync
 } from '@solana/spl-token';
-import { ContractAbi } from 'web3-types';
-import { Web3Account } from 'web3-eth-accounts';
-import { Contract } from 'web3-eth-contract';
-import { Web3Context } from 'web3-core';
-import {
-  DEFAULT_RETURN_FORMAT,
-  Transaction as TransactionConfig
-} from 'web3-types';
-import Web3 from 'web3';
-import Big from 'big.js';
 import {
   erc20Abi,
   NEON_TOKEN_MINT_DECIMALS,
-  SPLToken,
-  solanaTransactionLog
-} from '@neonevm-token-transfer/core';
+  solanaTransactionLog,
+  SPLToken
+} from '@neonevm/token-transfer-core';
+import { ReturnFormat } from '@neonevm/token-transfer-web3';
+import { ContractAbi, DEFAULT_RETURN_FORMAT, Transaction as TransactionConfig } from 'web3-types';
+import { Web3Account } from 'web3-eth-accounts';
+import { Contract } from 'web3-eth-contract';
+import { Web3Context } from 'web3-core';
+import { Big } from 'big.js';
+import { getBalance } from 'web3-eth';
+import { Web3 } from 'web3';
 import { delay } from './delay';
-import { getBalance } from "web3-eth";
-import { ReturnFormat} from "@neonevm-token-transfer/web3-transfer";
-import { compile } from './contract';
-// import { SPLToken } from '../../../models';
-// import { solanaTransactionLog } from '../../../utils';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -132,27 +125,3 @@ export async function createSplAccount(connection: Connection, signer: Signer, t
 export function solanaWalletSigner(web3: Web3, pk: string): Web3Account {
   return web3.eth.accounts.privateKeyToAccount(pk);
 }
-
-// export async function deployContract(web3: Web3, contractPath: string, signer: Account): Promise<any> {
-//   try {
-//     console.log(`Attempting to deploy from account: ${signer.address}`);
-//     const { NeonToken } = await compile(contractPath);
-//     const data = NeonToken?.evm.bytecode.object;
-//     const abi = NeonToken.abi;
-//     const incrementer = new Web3Contract.Contract(abi);
-//     const incrementerTx = incrementer.deploy({ data, arguments: [1] });
-//     const transaction: TransactionConfig = {
-//       from: signer.address,
-//       data: incrementerTx.encodeABI()
-//     };
-//     transaction.gas = await web3.eth.estimateGas(transaction);
-//     const signedTrx = await web3.eth.accounts.signTransaction(transaction, signer.privateKey);
-//     if (signedTrx?.rawTransaction) {
-//       const createReceipt = await web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
-//       return { blockHash: createReceipt.blockHash, contractAddress: createReceipt.contractAddress };
-//     }
-//   } catch (e) {
-//     console.log(e);
-//     throw e;
-//   }
-// }

@@ -3,12 +3,12 @@ import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { Web3Account } from 'web3-eth-accounts';
 import Web3 from 'web3';
 import {
-  solanaSOLTransferTransaction,
   NeonProgramStatus,
-  SPLToken,
   NeonProxyRpcApi,
-  SOL_TRANSFER_CONTRACT_DEVNET
-} from '@neonevm-token-transfer/core';
+  SOL_TRANSFER_CONTRACT_DEVNET,
+  solanaSOLTransferTransaction,
+  SPLToken
+} from '@neonevm/token-transfer-core';
 import {
   createSplAccount,
   delay,
@@ -28,13 +28,10 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { neonNeonTransactionWeb3 } from '@neonevm-token-transfer/web3-transfer';
+import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
-// import { solanaSOLTransferTransaction } from '../../core';
-// import { NeonProxyRpcApi } from '../../api';
-// import { SOL_TRANSFER_CONTRACT_DEVNET } from '../../data';
 
-require('dotenv').config({ path: `./src/__tests__/env/.env` });
+require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(12e4);
 
 const CHAIN_ID = Number(process.env.CHAIN_ID);
@@ -55,7 +52,7 @@ let solanaWallet: Keypair;
 let neonWallet: Web3Account;
 
 beforeAll(async () => {
-  const result = await getMultiTokenProxy(SOL_PROXY_URL, SOLANA_URL!);
+  const result = await getMultiTokenProxy(SOL_PROXY_URL);
   const token = getGasToken(result.tokensList, chainId);
   web3 = getWeb3Provider(SOL_PROXY_URL);
   proxyRpc = result.proxyRpc;

@@ -1,4 +1,4 @@
-import { ChainId, SPLToken } from '@neonevm-token-transfer/core';
+import { ChainId, SPLToken } from '@neonevm/token-transfer-core';
 import { post } from './crud';
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });

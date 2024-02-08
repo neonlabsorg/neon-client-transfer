@@ -1,7 +1,7 @@
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../api';
 import { GasToken } from './token';
-import { SignTransactionResult } from "../utils";
+import { SignTransactionResult } from '../utils';
 
 export const enum ProxyStatus {
   unknown = 'UNKNOWN',

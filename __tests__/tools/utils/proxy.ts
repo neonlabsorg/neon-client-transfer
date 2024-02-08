@@ -1,19 +1,17 @@
 import { PublicKey } from '@solana/web3.js';
-// import { NeonProxyRpcApi } from '@neonevm-token-transfer/core';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import {
   GasToken,
   GasTokenData,
   MultiTokenProxy,
   NeonProxyRpcApi,
   TOKEN_LIST_DEVNET_SNAPSHOT
-} from '@neonevm-token-transfer/core';
-// import { TOKEN_LIST_DEVNET_SNAPSHOT } from '../../../data';
-import Web3 from 'web3';
-import HttpProvider from "web3-providers-http";
-import { JsonRpcProvider } from '@ethersproject/providers';
+} from '@neonevm/token-transfer-core';
+import { HttpProvider } from 'web3-providers-http';
+import { Web3 } from 'web3';
 
-export async function getMultiTokenProxy(proxyUrl: string, solanaUrl: string): Promise<MultiTokenProxy> {
-  const proxyRpc = new NeonProxyRpcApi({ solanaRpcApi: solanaUrl, neonProxyRpcApi: proxyUrl });
+export async function getMultiTokenProxy(proxyUrl: string): Promise<MultiTokenProxy> {
+  const proxyRpc = new NeonProxyRpcApi(proxyUrl);
   const proxyStatus = await proxyRpc.evmParams();
   const tokensList = (await proxyRpc.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
   const evmProgramAddress = new PublicKey(proxyStatus.NEON_EVM_ID);

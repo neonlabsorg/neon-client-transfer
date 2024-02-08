@@ -4,37 +4,33 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
   createMintSolanaTransaction,
   createUnwrapSOLTransaction,
-  wrappedNeonTransaction,
-  signerPrivateKey,
-  NeonProxyRpcApi,
   GasToken,
-  NeonProgramStatus,
-  SPLToken,
   NEON_TRANSFER_CONTRACT_DEVNET,
+  NeonProgramStatus,
+  NeonProxyRpcApi,
   neonWrapper2Abi,
-  TOKEN_LIST_DEVNET_SNAPSHOT
-} from '@neonevm-token-transfer/core';
+  signerPrivateKey,
+  SPLToken,
+  TOKEN_LIST_DEVNET_SNAPSHOT,
+  wrappedNeonTransaction
+} from '@neonevm/token-transfer-core';
 import {
-  neonNeonTransactionWeb3,
-  createWrapAndTransferSOLTransaction,
   createMintNeonTransactionEthers,
+  createWrapAndTransferSOLTransaction,
+  neonNeonTransactionWeb3,
   wrappedNeonTransactionData
-} from '@neonevm-token-transfer/ethers-transfer';
-// import { NeonProxyRpcApi } from '@neonevm-token-transfer/core';
-// import { wrappedNeonTransactionData } from '../../ethers/utils';
-// import { GasToken, NeonProgramStatus, SPLToken } from '../../models';
-// import {
-//   NEON_TRANSFER_CONTRACT_DEVNET,
-//   neonWrapper2Abi,
-//   TOKEN_LIST_DEVNET_SNAPSHOT
-// } from '../../data';
+} from '@neonevm/token-transfer-ethers';
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
+import { Wallet } from '@ethersproject/wallet';
+
 import {
   delay,
   estimateGas,
   FaucetDropper,
+  getEthersProvider,
   getGasToken,
   getMultiTokenProxy,
-  getEthersProvider,
+  getTokenBalance,
   mintTokenBalance,
   NEON_PRIVATE,
   NEON_TOKEN_MODEL,
@@ -46,16 +42,12 @@ import {
   solanaSignature,
   splTokenBalance,
   toSigner,
-  getTokenBalance,
   walletSigner
 } from '../tools';
 
-import { itSolanaTokenSPL, itNeonTokenMint } from "./erc20";
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Wallet } from '@ethersproject/wallet';
-import { TransactionRequest } from "@ethersproject/providers";
+import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
 
-require('dotenv').config({ path: `./src/__tests__/env/.env` });
+require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(12e4);
 
 const skipPreflight = true;
@@ -78,7 +70,7 @@ let neonWallet: Wallet;
 let connection: Connection;
 
 beforeAll(async () => {
-  const result = await getMultiTokenProxy(NEON_PROXY_URL!, SOLANA_URL!);
+  const result = await getMultiTokenProxy(NEON_PROXY_URL!);
   const token = getGasToken(result.tokensList, CHAIN_ID);
   connection = new Connection(SOLANA_URL!, 'confirmed');
   provider = getEthersProvider(NEON_PROXY_URL!);
@@ -99,7 +91,7 @@ afterEach(async () => {
 
 describe('NEON token transfer tests', () => {
 
-  it.skip(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -123,7 +115,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it.skip('Should wrap 1 NEON to wNEON in Neon network', async () => {
+  it('Should wrap 1 NEON to wNEON in Neon network', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -152,7 +144,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it.skip('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
+  it('Should withdraw 0.1 wNEON from Neon to Solana', async () => {
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WNEON');
     if (id > -1) {
       const amount = 0.1;
@@ -226,7 +218,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it.skip(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
+  it(`Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol.toUpperCase() === 'WSOL');
     const signer: Signer = toSigner(solanaWallet);
@@ -274,11 +266,11 @@ describe('NEON token transfer tests', () => {
   });
 
   faucet.supportedTokens.forEach(token => {
-    it.skip(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
       itSolanaTokenSPL(provider, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
-    it.skip(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
+    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
       itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, neonProxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
     });
   });

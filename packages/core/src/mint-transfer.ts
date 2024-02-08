@@ -36,11 +36,11 @@ import {
   collateralPoolAddress,
   neonBalanceProgramAddress,
   neonWalletProgramAddress,
-  Provider,
-  TransactionResult,
   numberTo64BitLittleEndian,
+  Provider,
   toBytesInt32,
-  toFullAmount
+  toFullAmount,
+  TransactionResult
 } from './utils';
 
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(connection: Connection, proxyStatus: NeonProgramStatus, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: W, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number): Promise<Transaction> {

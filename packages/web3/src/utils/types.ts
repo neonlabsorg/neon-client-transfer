@@ -1,7 +1,4 @@
-import {
-  FMT_BYTES,
-  FMT_NUMBER
-} from "web3-types";
+import { FMT_BYTES, FMT_NUMBER } from 'web3-types';
 
 export type ReturnFormat = {
   number: FMT_NUMBER.BIGINT,

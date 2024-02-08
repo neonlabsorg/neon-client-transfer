@@ -1,6 +1,6 @@
 import { Contract } from 'web3-eth-contract';
-import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '@neonevm-token-transfer/core';
-import {Web3Context} from "web3-core";
+import { erc20Abi, neonWrapper2Abi, neonWrapperAbi } from '@neonevm/token-transfer-core';
+import { Web3Context } from 'web3-core';
 
 export function erc20ForSPLContract(proxyUrl: string): Contract<typeof erc20Abi> {
   return new Contract(erc20Abi, new Web3Context(proxyUrl));
