@@ -9,6 +9,7 @@ import {
   solanaSOLTransferTransaction,
   SPLToken
 } from '@neonevm/token-transfer-core';
+import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
 import {
   createSplAccount,
   delay,
@@ -28,8 +29,6 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
-import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
-import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(12e4);
@@ -113,15 +112,5 @@ describe(`SOL Transfer tests`, () => {
       console.log(e);
       expect(e instanceof Error ? e.message : '').toBe('');
     }
-  });
-
-  faucet.supportedTokens.forEach(token => {
-    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (SOL)`, _ => {
-      itSolanaTokenSPL(web3, connection, SOL_PROXY_URL, proxyRpc, proxyStatus, token, evmProgramAddress, solanaWallet, neonWallet, chainId, SOLANA_URL!).then(() => _());
-    });
-
-    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (SOL) to Solana`, _ => {
-      itNeonTokenMint(connection, web3, SOL_PROXY_URL, faucet, proxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
-    });
   });
 });

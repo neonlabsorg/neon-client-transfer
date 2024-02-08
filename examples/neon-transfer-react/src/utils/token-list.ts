@@ -1,4 +1,4 @@
-import { SPLToken } from '@neonevm/token-transfer';
+import { SPLToken } from '@neonevm/token-transfer-core';
 import tokenList from 'token-list/tokenlist.json';
 import { CHAIN_ID } from './consts';
 

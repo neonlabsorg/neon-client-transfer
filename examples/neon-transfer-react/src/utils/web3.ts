@@ -1,5 +1,6 @@
-import Web3 from 'web3';
-import Big from 'big.js';
+import { Transaction as NeonTransaction, Web3 } from 'web3';
+import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
+import { ReturnFormat } from '@neonevm/token-transfer-web3';
 import {
   Connection,
   Keypair,
@@ -12,9 +13,13 @@ import {
   TransactionSignature
 } from '@solana/web3.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
-import { AbiItem } from 'web3-utils';
-import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer';
-import { Account, TransactionConfig } from 'web3-core';
+import { ContractAbi, DEFAULT_RETURN_FORMAT } from 'web3-types';
+import { Contract } from 'web3-eth-contract';
+import { Web3Context } from 'web3-core';
+import { getBalance } from 'web3-eth';
+import { HttpProvider } from 'web3-providers-http';
+import { Web3Account } from 'web3-eth-accounts';
+import { Big } from 'big.js';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -31,26 +36,22 @@ export async function sendTransaction(connection: Connection, transaction: Trans
   return signature;
 }
 
-export async function sendSignedTransaction(web3: Web3, transaction: TransactionConfig, account: Account): Promise<string> {
+export async function sendSignedTransaction(web3: Web3, transaction: NeonTransaction, account: Web3Account): Promise<string> {
   const signedTrx = await web3.eth.accounts.signTransaction(transaction, account.privateKey);
   return new Promise((resolve, reject) => {
     if (signedTrx?.rawTransaction) {
-      web3.eth.sendSignedTransaction(signedTrx.rawTransaction, (error, hash) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(hash);
-        }
-      });
+      const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+      txResult.on('transactionHash', (hash: string) => resolve(hash));
+      txResult.on('error', (error: Error) => reject(error));
     } else {
       reject('Unknown transaction');
     }
   });
 }
 
-export async function neonBalance(web3: Web3, address: string): Promise<Big> {
-  const balance = await web3.eth.getBalance(address);
-  return new Big(balance).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
+export async function neonBalance(proxyUrl: string, address: string): Promise<Big> {
+  const balance = await getBalance(new Web3Context(proxyUrl), address, undefined, DEFAULT_RETURN_FORMAT as ReturnFormat);
+  return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
 
 export async function solanaBalance(connection: Connection, address: PublicKey): Promise<Big> {
@@ -65,9 +66,9 @@ export async function splTokenBalance(connection: Connection, walletPubkey: Publ
   return response?.value;
 }
 
-export async function mintTokenBalance(web3: Web3, account: string, token: SPLToken, contractAbi: AbiItem[] = erc20Abi as AbiItem[]): Promise<Big> {
-  const tokenInstance = new web3.eth.Contract(contractAbi, token.address);
-  const balance = await tokenInstance.methods.balanceOf(account).call();
+export async function mintTokenBalance(proxyUrl: string, account: string, token: SPLToken, contractAbi: ContractAbi = erc20Abi as ContractAbi): Promise<Big> {
+  const tokenInstance = new Contract(contractAbi, token.address, new Web3Context(proxyUrl));
+  const balance: number = await tokenInstance.methods.balanceOf(account).call();
   return new Big(balance).div(Math.pow(10, token.decimals));
 }
 
@@ -82,4 +83,12 @@ export function neonSignature(signature: string): string {
 export function stringShort(data: string, len = 30): string {
   const half = Math.round(len / 2);
   return `${data.slice(0, half)}..${data.slice(-half)}`;
+}
+
+export function getWeb3Provider(proxyUrl: string): Web3<any> {
+  return new Web3(new HttpProvider(proxyUrl));
+}
+
+export function solanaWalletSigner(web3: Web3, pk: string): Web3Account {
+  return web3.eth.accounts.privateKeyToAccount(pk);
 }

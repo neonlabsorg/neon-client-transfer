@@ -1,4 +1,4 @@
-import { NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer';
+import { NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
 
 export const NEON_CHAIN_IDS: any[] = [
   { id: 111, name: 'LOCAL' },

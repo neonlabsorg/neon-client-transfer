@@ -27,7 +27,8 @@ module.exports = function(config, env) {
         crypto: false,
         os: false,
         fs: false,
-        path: false
+        path: false,
+        'process/browser': false
       }
     },
     ignoreWarnings: [/Failed to parse source map/]
