@@ -27,6 +27,7 @@
     "url": "https://github.com/neonlabsorg/neon-client-transfer/issues"
   },
   "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
+  "license": "ISC",
   "dependencies": {
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",

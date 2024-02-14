@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
+  createAssociatedTokenAccountTransaction,
   createMintSolanaTransaction,
   GasToken,
   NEON_STATUS_DEVNET_SNAPSHOT,
@@ -25,7 +26,8 @@ import { Big } from 'big.js';
 
 import {
   CHAIN_ID,
-  delay, getWeb3Provider,
+  delay,
+  getWeb3Provider,
   mintTokenBalance,
   NEON_PRIVATE,
   NEON_TOKEN_MODEL,
@@ -36,7 +38,8 @@ import {
   SOL_TOKEN_MODEL,
   SOLANA_PRIVATE,
   solanaBalance,
-  solanaSignature, solanaWalletSigner,
+  solanaSignature,
+  solanaWalletSigner,
   splTokenBalance,
   stringShort,
   TOKEN_LIST,
@@ -279,14 +282,14 @@ function NeonTransferApp() {
             break;
           }
           case 'wSOL': {
-            const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, proxyStatus, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
+            const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
             transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           default: {
-            const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, proxyStatus, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
+            const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
             transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
@@ -310,7 +313,7 @@ function NeonTransferApp() {
             break;
           }
           case 'wSOL': {
-            const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, NEON_STATUS_DEVNET_SNAPSHOT);
+            const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
             const neonTransaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
             solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
@@ -320,7 +323,7 @@ function NeonTransferApp() {
             break;
           }
           default: {
-            const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, NEON_STATUS_DEVNET_SNAPSHOT);
+            const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
             const neonTransaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
             solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
@@ -351,13 +354,14 @@ function NeonTransferApp() {
       <h1 className="title-1">
         <i className="logo"></i>
         <div className="flex flex-row items-center justify-between w-full">
-          <select value={chainId} onChange={handleEvmNetworkSelect} className="evm-select" disabled={submitDisable}>
+          <select value={chainId} onChange={handleEvmNetworkSelect} className="evm-select"
+                  disabled={submitDisable}>
             {networkUrls.map((i) => <option value={i.id} key={i.id}>{i.token} transfer</option>)}
           </select>
           <span className="text-[18px]">React demo</span>
         </div>
         <a
-          href="https://github.com/neonlabsorg/neon-client-transfer/tree/master/examples/react/neon-transfer-react"
+          href="https://github.com/neonlabsorg/neon-client-transfer/tree/master/examples/neon-transfer-react"
           target="_blank" rel="noreferrer">
           <i className="github"></i>
         </a>
@@ -387,7 +391,8 @@ function NeonTransferApp() {
         </div>
         <div className="form-field">
           <label htmlFor="select" className="form-label">Select token</label>
-          <select value={token} onChange={handleSelect} className="form-select" disabled={submitDisable}>
+          <select value={token} onChange={handleSelect} className="form-select"
+                  disabled={submitDisable}>
             <option value="" disabled={true}>Select Token</option>
             {tokenList.map((i, k) =>
               <option value={i.symbol} key={k}>{i.name} ({i.symbol})</option>)}

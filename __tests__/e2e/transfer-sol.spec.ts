@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { Web3Account } from 'web3-eth-accounts';
-import Web3 from 'web3';
+import { Web3 } from 'web3';
 import {
   NeonProgramStatus,
   NeonProxyRpcApi,
@@ -11,7 +11,7 @@ import {
 } from '@neonevm/token-transfer-core';
 import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
 import {
-  createSplAccount,
+  createAssociatedTokenAccount,
   delay,
   FaucetDropper,
   getGasToken,
@@ -73,7 +73,7 @@ describe(`SOL Transfer tests`, () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solToken: SPLToken = { ...faucet.tokens[id], ...SOL_TOKEN_MODEL, chainId };
-    await createSplAccount(connection, signer, solToken);
+    await createAssociatedTokenAccount(connection, signer, solToken);
     const balanceBefore = (await solanaBalance(connection, solanaWallet.publicKey)).toNumber();
     console.log(`Balance: ${balanceBefore} ${solToken.symbol}`);
     try {

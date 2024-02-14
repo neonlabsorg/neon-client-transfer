@@ -105,7 +105,7 @@ export function neonSignature(comment: string, signature: string): void {
   console.log(`${comment}: ${signature}; url: https://devnet.neonscan.org/tx/${signature}`);
 }
 
-export async function createSplAccount(connection: Connection, signer: Signer, token: SPLToken): Promise<AccountInfo<Buffer>> {
+export async function createAssociatedTokenAccount(connection: Connection, signer: Signer, token: SPLToken): Promise<AccountInfo<Buffer>> {
   const solanaWallet = signer.publicKey;
   const tokenMint = new PublicKey(token.address_spl);
   const tokenAccount = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
@@ -115,7 +115,7 @@ export async function createSplAccount(connection: Connection, signer: Signer, t
     transaction.add(createAssociatedTokenAccountInstruction(solanaWallet, tokenAccount, solanaWallet, tokenMint));
     transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
     const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
-    solanaSignature(`SPL Account created`, signature);
+    solanaSignature(`Token Account created`, signature);
     await delay(2e3);
   }
   account = await connection.getAccountInfo(tokenAccount);

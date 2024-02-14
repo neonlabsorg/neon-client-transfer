@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals'
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
-  createMintSolanaTransaction,
+  createAssociatedTokenAccountTransaction,
   createUnwrapSOLTransaction,
   GasToken,
   NEON_TRANSFER_CONTRACT_DEVNET,
@@ -200,7 +200,7 @@ describe('NEON token transfer tests', () => {
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
         const solanaWalletSigner = walletSigner(<JsonRpcProvider>provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
-        const transaction = await createWrapAndTransferSOLTransaction(connection, neonProxyRpcApi, neonProxyStatus, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, solanaWalletSigner, wSOL, amount, CHAIN_ID);
+        const transaction = await createWrapAndTransferSOLTransaction(connection, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, solanaWalletSigner, wSOL, amount, CHAIN_ID);
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
         expect(signature.length).toBeGreaterThan(0);
@@ -229,7 +229,7 @@ describe('NEON token transfer tests', () => {
 
       const balanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
       console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
-      const solanaTransaction = createMintSolanaTransaction(solanaWallet.publicKey, mintPubkey, associatedToken, neonProxyStatus);
+      const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
       solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const neonTransaction = await createMintNeonTransactionEthers(provider, neonWallet.address, associatedToken, wSOL, amount);
       const wSolBefore = await connection.getBalance(associatedToken);
@@ -267,11 +267,11 @@ describe('NEON token transfer tests', () => {
 
   faucet.supportedTokens.forEach(token => {
     it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-      itSolanaTokenSPL(provider, connection, NEON_PROXY_URL!, neonProxyRpcApi, neonProxyStatus, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+      itSolanaTokenSPL(provider, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
     });
 
     it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
-      itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, neonProxyStatus, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
+      itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
     });
   });
 });

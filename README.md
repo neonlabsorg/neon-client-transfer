@@ -1,4 +1,4 @@
-# Neon Transfer Module for JavaScript client
+# Neon Token Transfer library for JavaScript clients
 
 [![workflows](https://github.com/neonlabsorg/neon-client-transfer/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/neonlabsorg/neon-client-transfer/actions)
 [![npm](https://img.shields.io/npm/v/@neonevm/token-transfer.svg)](https://www.npmjs.com/package/@neonevm/token-transfer)
@@ -9,8 +9,6 @@
 
 The package using on our [NeonPass](https://neonpass.live/) codebase.
 
-You can see Live Demo [here](https://codesandbox.io/s/neon-transfer-demo-z93nlj).
-
 ---
 
 ## Installation and setup
@@ -18,9 +16,25 @@ You can see Live Demo [here](https://codesandbox.io/s/neon-transfer-demo-z93nlj)
 Firstly, install the package:
 
 ```sh
-yarn add @neonevm/token-transfer
+yarn add @neonevm/token-transfer-core
 # or
-npm install @neonevm/token-transfer
+npm install @neonevm/token-transfer-core
+```
+
+For using with web3.js we recommend additional using `@neonemv/token-transfer-web3`
+
+```sh
+yarn add @neonevm/token-transfer-web3
+# or
+npm install @neonevm/token-transfer-web3
+```
+
+For using with ethers.js we recommend additional using `@neonemv/token-transfer-ethers`
+
+```sh
+yarn add @neonevm/token-transfer-ethers
+# or
+npm install @neonevm/token-transfer-ethers
 ```
 
 ### For native
@@ -67,12 +81,19 @@ To generate a transaction for transferring NEON from Solana to Neon EVM, utilize
 
 ```javascript
 const neonToken: SPLToken = {
-  ...NEON_TOKEN_MODEL,
+  address: '',
+  decimals: NEON_TOKEN_MINT_DECIMALS,
+  name: 'Neon',
+  symbol: 'NEON',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png',
   address_spl: neonTokenMint.toBase58(),
   chainId: neonChainId
 };
 const solToken: SPLToken = {
-  ...SOL_TOKEN_MODEL,
+  name: 'Solana SOL',
+  symbol: 'SOL',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg',
+  address: '1111111111',
   address_spl: solTokenMint.toBase58(),
   chainId: solChainId
 };
@@ -80,12 +101,12 @@ const solToken: SPLToken = {
 // for transfer NEON: Solana -> NeonEvm (NEON)
 const transaction = await solanaNEONTransferTransaction(solanaWallet, neonWallet, neonEvmProgram, neonTokenMint, neonToken, amount, neonChainId); // Solana Transaction object
 transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash; // Network blockhash
-const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false }); // method for sign and send transaction to network
+const signature = await connection.sendRawTransaction(transaction.serialize()); // method for sign and send transaction to network
 
 // for transfer SOL: Solana -> NeonEvm (SOL)
 const transaction = await solanaSOLTransferTransaction(solanaWallet, neonWallet, solEvmProgram, solTokenMint, neonToken, amount, solChainId); // Solana Transaction object
 transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash; // Network blockhash
-const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false }); // method for sign and send transaction to network
+const signature = await connection.sendRawTransaction(transaction.serialize()); // method for sign and send transaction to network
 ```
 
 And for transfer NEON from Neon EVM to Solana, you should known token contract address, you can look it in [this file](https://github.com/neonlabsorg/neon-client-transfer/blob/master/src/data/constants.ts).
@@ -93,7 +114,12 @@ And for transfer NEON from Neon EVM to Solana, you should known token contract a
 ```javascript
 const tokenContract = NEON_TRANSFER_CONTRACT_DEVNET; // or SOL_TRANSFER_CONTRACT_DEVNET
 const transaction = await neonNeonTransactionWeb3(web3, neonWallet, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
-const hash = await sendNeonTransaction(web3, transaction, neonWallet); // method for sign and send transaction to network
+const signedTrx = await web3.eth.accounts.signTransaction(transaction, neonWallet.privateKey);
+if (signedTrx?.rawTransaction) {
+  const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+  txResult.on('transactionHash', (hash: string) => console.log(hash));
+  txResult.on('error', (error: Error) => console.error(error));
+}
 ```
 
 #### Transfer ERC20 transactions
@@ -103,23 +129,34 @@ When working with Devnet, Testnet, or Mainnet, different ERC20 tokens are utiliz
 For transfer ERC20 tokens from Solana to Neon EVM, using this patterns:
 
 ```javascript
-const token = tokenList[0];
+import tokenList from 'token-list/tokenlist.json';
+
+const tokens = tokenList.tokens.filter((token) => token.chainId === CHAIN_ID);
+const token = tokens[0];
+
 const transaction = await neonTransferMintTransactionWeb3(connection, web3, proxyApi, proxyStatus, neonEvmProgram/* or solEvmProgram*/, solanaWallet, neonWallet, token, amount, neonChainId /*or solChainId*/);
 transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight: false });
+const signature = await connection.sendRawTransaction(transaction.serialize());
 ```
 
 And for transfer ERC20 tokens from Neon EVM to Solana:
 
 ```javascript
-const token = tokenList[0];
+import tokenList from 'token-list/tokenlist.json';
+
+const tokens = tokenList.tokens.filter((token) => token.chainId === CHAIN_ID);
 const mintPubkey = new PublicKey(token.address_spl);
 const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
-const solanaTransaction = createMintSolanaTransaction(solanaWallet, mintPubkey, associatedToken, proxyStatus);
+const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet, mintPubkey, associatedToken, proxyStatus.NEON_HEAP_FRAME);
 solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 const neonTransaction = await createMintNeonTransactionWeb3(web3, neonWallet.address, associatedToken, token, amount);
-const signedSolanaTransaction = await sendSolanaTransaction(connection, solanaTransaction, [signer], true, { skipPreflight: false });
-const signedNeonTransaction = await sendNeonTransaction(web3, neonTransaction, neonWallet);
+const solanaSignature = await connection.sendRawTransaction(transaction.serialize());
+const neonSignature = await web3.eth.accounts.signTransaction(transaction, neonWallet.privateKey);
+if (signedTrx?.rawTransaction) {
+  const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+  txResult.on('transactionHash', (hash: string) => console.log(hash));
+  txResult.on('error', (error: Error) => console.error(error));
+}
 ```
 
 Within the Neon Transfer codebase, we employ the [web3.js](https://web3js.readthedocs.io/en/v1.10.0/) library to streamline our code. However, if the situation demands, you can opt for alternatives such as [ethers.js](https://docs.ethers.org/v6/) or [WalletConnect](https://walletconnect.com/).

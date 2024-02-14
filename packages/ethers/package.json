@@ -27,6 +27,7 @@
     "url": "https://github.com/neonlabsorg/neon-client-transfer/issues"
   },
   "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
+  "license": "ISC",
   "dependencies": {
     "@ethersproject/abi": "~5.7.0",
     "@ethersproject/abstract-provider": "~5.7.0",
