@@ -1,15 +1,15 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { Wallet } from '@ethersproject/wallet';
 import {
   NEON_TOKEN_MINT_DECIMALS,
   NEON_TRANSFER_CONTRACT_DEVNET,
   solanaNEONTransferTransaction,
   SPLToken
 } from '@neonevm/token-transfer-core';
-import { HttpProvider } from 'web3-providers-http';
-import { Web3 } from 'web3';
+import { neonNeonTransactionEthers } from '@neonevm/token-transfer-ethers';
 import { decode } from 'bs58';
-import { sendNeonTransaction, sendSolanaTransaction, toSigner } from './utils';
+import { sendNeonTransactionEthers, sendSolanaTransaction, toSigner } from './utils';
 
 require('dotenv').config({ path: `./.env` });
 
@@ -20,9 +20,9 @@ const proxyUrl = `https://devnet.neonevm.org`;
 const solanaUrl = `https://api.devnet.solana.com`;
 
 const connection = new Connection(solanaUrl, 'confirmed');
-const web3 = new Web3(new HttpProvider(proxyUrl));
+const provider = new JsonRpcProvider(proxyUrl);
 
-const neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE!);
+const neonWallet = new Wallet(NEON_PRIVATE!, provider);
 const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
@@ -40,14 +40,14 @@ const neonToken: SPLToken = {
 };
 
 export async function transferNeonToSolana(amount: number): Promise<any> {
-  const transaction = await neonNeonTransactionWeb3(proxyUrl, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
-  const hash = await sendNeonTransaction(web3, transaction, neonWallet);
-  console.log(`transferNeonToSolana`, hash);
+  const transaction = await neonNeonTransactionEthers(provider, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+  const hash = await sendNeonTransactionEthers(transaction, neonWallet);
+  console.log(hash);
 }
 
 export async function transferNeonToNeon(amount: number): Promise<any> {
   const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount, chainId);
   transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
-  console.log(`transferNeonToNeon`, signature);
+  console.log(signature);
 }

@@ -1,4 +1,4 @@
-# Token transfer with Web3.js examples
+# Token transfer with Ethers.js examples
 
 ### Install packages
 
@@ -11,8 +11,8 @@ npm install
 ### Add you Solana/NeonEVM wallets to `.env` file
 
 ```dotenv
-NEON_PRIVATE: '<private address.>'
-PHANTOM_PRIVATE: '<provate address.>'
+NEON_PRIVATE: '<private address.>' # neon wallet private address
+PHANTOM_PRIVATE: '<provate address.>' # solana address in base58
 ```
 
 ### Run code
@@ -22,3 +22,4 @@ yarn start
 # or 
 npm start
 ```
+

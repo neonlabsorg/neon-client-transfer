@@ -1,9 +1,8 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { neonNeonTransactionWeb3 } from '@neonevm/token-transfer-web3';
 import {
-  NEON_TOKEN_MINT_DECIMALS,
-  NEON_TRANSFER_CONTRACT_DEVNET,
-  solanaNEONTransferTransaction,
+  SOL_TRANSFER_CONTRACT_DEVNET,
+  solanaSOLTransferTransaction,
   SPLToken
 } from '@neonevm/token-transfer-core';
 import { HttpProvider } from 'web3-providers-http';
@@ -16,7 +15,7 @@ require('dotenv').config({ path: `./.env` });
 const NEON_PRIVATE = process.env.NEON_PRIVATE;
 const PHANTOM_PRIVATE = process.env.PHANTOM_PRIVATE;
 
-const proxyUrl = `https://devnet.neonevm.org`;
+const proxyUrl = `https://devnet.neonevm.org/solana/sol`;
 const solanaUrl = `https://api.devnet.solana.com`;
 
 const connection = new Connection(solanaUrl, 'confirmed');
@@ -26,28 +25,28 @@ const neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE!);
 const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
-const neonTokenMint = new PublicKey(`89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g`);
-const chainId = parseInt(`0xe9ac0ce`);
+const solTokenMint = new PublicKey(`So11111111111111111111111111111111111111112`);
+const chainId = parseInt(`0xe9ac0cf`);
 
-const neonToken: SPLToken = {
+const solToken: SPLToken = {
   chainId,
-  address_spl: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
-  address: '',
-  decimals: NEON_TOKEN_MINT_DECIMALS,
-  name: 'Neon',
-  symbol: 'NEON',
-  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
+  address_spl: 'So11111111111111111111111111111111111111112',
+  address: '0xc7Fc9b46e479c5Cb42f6C458D1881e55E6B7986c',
+  decimals: 9,
+  name: 'Wrapped SOL',
+  symbol: 'wSOL',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-wsol-logo.svg'
 };
 
-export async function transferNeonToSolana(amount: number): Promise<any> {
-  const transaction = await neonNeonTransactionWeb3(proxyUrl, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+export async function transferSolToSolana(amount: number): Promise<any> {
+  const transaction = await neonNeonTransactionWeb3(proxyUrl, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
   const hash = await sendNeonTransaction(web3, transaction, neonWallet);
-  console.log(`transferNeonToSolana`, hash);
+  console.log(`transferSolToSolana`, hash);
 }
 
-export async function transferNeonToNeon(amount: number): Promise<any> {
-  const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount, chainId);
+export async function transferSolToNeon(amount: number): Promise<any> {
+  const transaction = await solanaSOLTransferTransaction(connection, solanaWallet.publicKey, neonWallet.address, neonEvmProgram, solTokenMint, solToken, amount, chainId);
   transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
-  console.log(`transferNeonToNeon`, signature);
+  console.log(`transferSolToNeon`, signature);
 }

@@ -110,6 +110,7 @@ export async function createAssociatedTokenAccount(connection: Connection, signe
   const tokenMint = new PublicKey(token.address_spl);
   const tokenAccount = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
   let account = await connection.getAccountInfo(tokenAccount);
+  console.log(account?.owner);
   if (!account) {
     const transaction = new Transaction();
     transaction.add(createAssociatedTokenAccountInstruction(solanaWallet, tokenAccount, solanaWallet, tokenMint));
@@ -117,8 +118,8 @@ export async function createAssociatedTokenAccount(connection: Connection, signe
     const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight: false });
     solanaSignature(`Token Account created`, signature);
     await delay(2e3);
+    account = await connection.getAccountInfo(tokenAccount);
   }
-  account = await connection.getAccountInfo(tokenAccount);
   return account!;
 }
 

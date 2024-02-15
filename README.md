@@ -21,7 +21,7 @@ yarn add @neonevm/token-transfer-core
 npm install @neonevm/token-transfer-core
 ```
 
-For using with web3.js we recommend additional using `@neonemv/token-transfer-web3`
+For using with `web3.js` we recommend additional using `@neonemv/token-transfer-web3`
 
 ```sh
 yarn add @neonevm/token-transfer-web3
@@ -29,7 +29,7 @@ yarn add @neonevm/token-transfer-web3
 npm install @neonevm/token-transfer-web3
 ```
 
-For using with ethers.js we recommend additional using `@neonemv/token-transfer-ethers`
+For using with `ethers.js` we recommend additional using `@neonemv/token-transfer-ethers`
 
 ```sh
 yarn add @neonevm/token-transfer-ethers
@@ -40,7 +40,6 @@ npm install @neonevm/token-transfer-ethers
 ### For native
 
 Upon installation, it is essential to provide certain mandatory properties when initializing a new instance to ensure proper functionality. When integrating this into your frontend application, it's necessary to grant Solana/Neon wallets access for signing and sending transactions across Solana and Neon EVM networks.
-
 
 ```javascript
 const solanaWallet = `<Your Solana wallet public key>`;

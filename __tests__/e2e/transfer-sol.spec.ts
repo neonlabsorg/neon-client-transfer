@@ -3,8 +3,6 @@ import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { Web3Account } from 'web3-eth-accounts';
 import { Web3 } from 'web3';
 import {
-  NeonProgramStatus,
-  NeonProxyRpcApi,
   SOL_TRANSFER_CONTRACT_DEVNET,
   solanaSOLTransferTransaction,
   SPLToken
@@ -42,8 +40,6 @@ const chainId = CHAIN_ID_SOL;
 const faucet = new FaucetDropper(CHAIN_ID);
 const connection = new Connection(SOLANA_URL!, 'confirmed');
 let signer: Signer;
-let proxyRpc: NeonProxyRpcApi;
-let proxyStatus: NeonProgramStatus;
 let evmProgramAddress: PublicKey;
 let tokenMintAddress: PublicKey;
 let web3: Web3;
@@ -54,8 +50,6 @@ beforeAll(async () => {
   const result = await getMultiTokenProxy(SOL_PROXY_URL);
   const token = getGasToken(result.tokensList, chainId);
   web3 = getWeb3Provider(SOL_PROXY_URL);
-  proxyRpc = result.proxyRpc;
-  proxyStatus = result.proxyStatus;
   evmProgramAddress = result.evmProgramAddress;
   tokenMintAddress = token.tokenMintAddress;
   solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);

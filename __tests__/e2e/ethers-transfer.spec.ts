@@ -17,7 +17,7 @@ import {
 import {
   createMintNeonTransactionEthers,
   createWrapAndTransferSOLTransaction,
-  neonNeonTransactionWeb3,
+  neonNeonTransactionEthers,
   wrappedNeonTransactionData
 } from '@neonevm/token-transfer-ethers';
 import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
@@ -82,7 +82,6 @@ beforeAll(async () => {
   neonWallet = new Wallet(NEON_PRIVATE, provider);
   tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
   gasToken = tokensList.find(i => parseInt(i.token_chain_id, 16) === CHAIN_ID)!;
-
 });
 
 afterEach(async () => {
@@ -100,7 +99,7 @@ describe('NEON token transfer tests', () => {
     };
     try {
       const balanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
-      const transaction = await neonNeonTransactionWeb3(provider, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+      const transaction = await neonNeonTransactionEthers(provider, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransactionEthers(transaction, neonWallet);
       neonSignature(`Signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
@@ -124,7 +123,7 @@ describe('NEON token transfer tests', () => {
       const neonBalanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
       const wneonBalanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi);
       try {
-        const wrapTransaction = await neonNeonTransactionWeb3(provider, neonWallet.address, wneon.address, solanaWallet.publicKey, amount);
+        const wrapTransaction = await neonNeonTransactionEthers(provider, neonWallet.address, wneon.address, solanaWallet.publicKey, amount);
         const wrapHash = await sendNeonTransactionEthers(wrapTransaction, neonWallet);
         neonSignature(`NEON wrap signature`, wrapHash);
         expect(wrapHash.length).toBeGreaterThan(2);
@@ -170,7 +169,7 @@ describe('NEON token transfer tests', () => {
         expect(wneonBalanceAfter).toBeLessThan(wneonBalanceBefore);
 
         const neonBalanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
-        const transaction = await neonNeonTransactionWeb3(provider, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+        const transaction = await neonNeonTransactionEthers(provider, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
         const hash = await sendNeonTransactionEthers(transaction, neonWallet);
         neonSignature(`NEON transfer signature`, hash);
         await delay(5e3);
@@ -271,7 +270,7 @@ describe('NEON token transfer tests', () => {
     });
 
     it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
-      itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet, SOLANA_URL!).then(() => _());
+      itNeonTokenMint(connection, provider, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());
     });
   });
 });
