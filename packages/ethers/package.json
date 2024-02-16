@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer-ethers",
-  "version": "4.0.0-a1",
+  "version": "4.0.0-a2",
   "description": "Neon EVM token transfer methods leveraging the ethers.js library",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -39,7 +39,7 @@
     "@ethersproject/providers": "~5.7.0",
     "@ethersproject/units": "~5.7.0",
     "@ethersproject/wallet": "^5.7.0",
-    "@neonevm/token-transfer-core": "4.0.0-a1",
+    "@neonevm/token-transfer-core": "4.0.0-a2",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3"
   },
@@ -52,5 +52,5 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.1.6"
   },
-  "gitHead": "b66b3155e7e121ddc00ed8ea633a780fd2ccc3c8"
+  "gitHead": "b1a09fa5f8d6b82ba48b40875add4805120c0b25"
 }

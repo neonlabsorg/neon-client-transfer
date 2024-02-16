@@ -28,8 +28,8 @@
     ]
   },
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.0.0-a1",
-    "@neonevm/token-transfer-web3": "4.0.0-a1",
+    "@neonevm/token-transfer-core": "4.0.0-a2",
+    "@neonevm/token-transfer-web3": "4.0.0-a2",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -43,6 +43,7 @@
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.6.1",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0",
+    "web3": "^4.5.0",
     "web3-core": "^4.3.2",
     "web3-eth": "^4.3.1",
     "web3-eth-accounts": "^4.1.0",

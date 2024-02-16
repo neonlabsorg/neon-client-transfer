@@ -13966,28 +13966,6 @@ web3-validator@^2.0.3, web3-validator@^2.0.4:
     web3-types "^1.3.1"
     zod "^3.21.4"
 
-web3@^4.3.0:
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/web3/-/web3-4.4.0.tgz#83e5906675608adf9a14841f257e441c9154a8c7"
-  integrity sha512-WcFA3RgE+cyM96MHLPs5Ec155nkYQuwhjk3JIhxcy6J1QrZK2zvKGzTQCCYHe3JhraduNTMbWy+EeNNGGji9+Q==
-  dependencies:
-    web3-core "^4.3.2"
-    web3-errors "^1.1.4"
-    web3-eth "^4.4.0"
-    web3-eth-abi "^4.2.0"
-    web3-eth-accounts "^4.1.1"
-    web3-eth-contract "^4.2.0"
-    web3-eth-ens "^4.0.8"
-    web3-eth-iban "^4.0.7"
-    web3-eth-personal "^4.0.8"
-    web3-net "^4.0.7"
-    web3-providers-http "^4.1.0"
-    web3-providers-ws "^4.0.7"
-    web3-rpc-methods "^1.1.4"
-    web3-types "^1.3.1"
-    web3-utils "^4.1.1"
-    web3-validator "^2.0.4"
-
 web3@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/web3/-/web3-4.5.0.tgz#dd8472de86824106101386f903b23431c2af1a63"
