@@ -27,6 +27,7 @@ export function toSigner({ publicKey, secretKey }: Keypair): Signer {
 
 export async function sendTransaction(connection: Connection, transaction: Transaction, signers: Signer[],
                                       confirm = false, options?: SendOptions): Promise<TransactionSignature> {
+  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   transaction.sign(...signers);
   const signature = await connection.sendRawTransaction(transaction.serialize(), options);
   if (confirm) {

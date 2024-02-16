@@ -3,7 +3,6 @@ import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
   createAssociatedTokenAccountTransaction,
-  createMintSolanaTransaction,
   GasToken,
   NEON_STATUS_DEVNET_SNAPSHOT,
   NEON_TOKEN_MINT_DEVNET,
@@ -161,7 +160,7 @@ function NeonTransferApp() {
 
   const walletSigner = useMemo(() => {
     return solanaWalletSigner(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
-  }, [web3]);
+  }, [web3, solanaWallet.publicKey, neonWallet.address]);
 
   const handleSelect = (event: any): any => {
     setToken(event.target.value);
@@ -269,28 +268,24 @@ function NeonTransferApp() {
         switch (splToken.symbol) {
           case 'NEON': {
             const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonProgram, networkTokenMint, splToken, amount, chainId);
-            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           case 'SOL': {
             const transaction = await solanaSOLTransferTransaction(connection, solanaWallet.publicKey, neonWallet.address, neonProgram, networkTokenMint, splToken, amount, chainId);
-            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           case 'wSOL': {
             const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
-            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
           }
           default: {
             const transaction = await neonTransferMintTransactionWeb3(connection, networkUrl.neonProxy, proxyApi, neonProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, splToken, amount, chainId);
-            transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
             const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
             setSignature({ solana });
             break;
@@ -313,22 +308,26 @@ function NeonTransferApp() {
             break;
           }
           case 'wSOL': {
-            const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
-            const neonTransaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
-            solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-            const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
-            delay(1e3);
-            const neon = await sendSignedTransaction(web3, neonTransaction, neonWallet);
+            let solana = ``;
+            if (!(await connection.getAccountInfo(associatedToken))) {
+              const transaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
+              solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
+              delay(1e3);
+            }
+            const transaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
+            const neon = await sendSignedTransaction(web3, transaction, neonWallet);
             setSignature({ solana, neon });
             break;
           }
           default: {
-            const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
-            const neonTransaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
-            solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-            const solana = await sendTransaction(connection, solanaTransaction, [solanaSigner], true, { skipPreflight: false });
-            delay(1e3);
-            const neon = await sendSignedTransaction(web3, neonTransaction, neonWallet);
+            let solana = ``;
+            if (!(await connection.getAccountInfo(associatedToken))) {
+              const transaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mintPubkey, associatedToken);
+              solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
+              delay(1e3);
+            }
+            const transaction = await createMintNeonTransactionWeb3(networkUrl.neonProxy, neonWallet.address, associatedToken, splToken, amount);
+            const neon = await sendSignedTransaction(web3, transaction, neonWallet);
             setSignature({ solana, neon });
             break;
           }

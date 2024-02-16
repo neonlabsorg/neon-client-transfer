@@ -9,7 +9,6 @@ import {
 import { Web3 } from 'web3';
 import { Transaction as NeonTransaction } from 'web3-types';
 import { Web3Account } from 'web3-eth-accounts';
-import { solanaTransactionLog } from '@neonevm/token-transfer-core';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };
@@ -19,7 +18,6 @@ export async function sendSolanaTransaction(connection: Connection, transaction:
                                             confirm = false, options?: SendOptions): Promise<TransactionSignature> {
   transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   transaction.sign(...signers);
-  solanaTransactionLog(transaction);
   const signature = await connection.sendRawTransaction(transaction.serialize(), options);
   if (confirm) {
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
