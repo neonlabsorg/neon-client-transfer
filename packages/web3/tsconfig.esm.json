@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "es2020",
-    "outDir": "./dist/esm"
+    "rootDir": "./src",
+    "outDir": "./dist/esm",
+    "module": "es2020"
   },
   "include": ["src/**/*"]
 }

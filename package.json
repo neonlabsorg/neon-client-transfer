@@ -19,6 +19,7 @@
   "scripts": {
     "start": "yarn test",
     "build": "lerna run build --stream",
+    "publish": "lerna publish from-package",
     "prepack": "lerna run prepack --stream",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",

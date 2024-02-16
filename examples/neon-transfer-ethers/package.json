@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Neon token transfer example with ethers.js",
   "main": "src/index.ts",
+  "private": true,
   "scripts": {
     "test": "yarn tests",
     "start": "npx nodemon"
   },
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@ethersproject/abi": "~5.7.0",

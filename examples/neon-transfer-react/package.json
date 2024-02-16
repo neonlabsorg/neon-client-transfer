@@ -1,7 +1,7 @@
 {
   "name": "@neonevm/neon-transfer-demo-react",
   "description": "NeonEVM token transfer library demo with multi-token support",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "start": "react-app-rewired start",

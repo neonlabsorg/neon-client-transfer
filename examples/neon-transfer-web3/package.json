@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Neon token transfer example with web3.js",
   "main": "src/index.ts",
+  "private": true,
   "scripts": {
     "test": "yarn tests",
     "start": "npx nodemon"
   },
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@neonevm/token-transfer-core": "4.0.0-a1",
