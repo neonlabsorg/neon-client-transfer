@@ -3,6 +3,7 @@ import { Connection, Keypair, PublicKey, Signer } from '@solana/web3.js';
 import { Web3Account } from 'web3-eth-accounts';
 import { Web3 } from 'web3';
 import {
+  NeonProxyRpcApi,
   SOL_TRANSFER_CONTRACT_DEVNET,
   solanaSOLTransferTransaction,
   SPLToken
@@ -27,6 +28,7 @@ import {
   splTokenBalance,
   toSigner
 } from '../tools';
+import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(12e4);
@@ -34,7 +36,7 @@ jest.setTimeout(12e4);
 const CHAIN_ID = Number(process.env.CHAIN_ID);
 const CHAIN_ID_SOL = Number(process.env.CHAIN_ID_SOL);
 const SOLANA_URL = process.env.SOLANA_URL;
-const SOL_PROXY_URL = `${process.env.NEON_URL}/solana/sol`;
+const SOL_PROXY_URL = `${process.env.NEON_URL}/sol`;
 const skipPreflight = true;
 const chainId = CHAIN_ID_SOL;
 const faucet = new FaucetDropper(CHAIN_ID);
@@ -45,6 +47,7 @@ let tokenMintAddress: PublicKey;
 let web3: Web3;
 let solanaWallet: Keypair;
 let neonWallet: Web3Account;
+let proxyRpc: NeonProxyRpcApi;
 
 beforeAll(async () => {
   const result = await getMultiTokenProxy(SOL_PROXY_URL);
@@ -52,6 +55,7 @@ beforeAll(async () => {
   web3 = getWeb3Provider(SOL_PROXY_URL);
   evmProgramAddress = result.evmProgramAddress;
   tokenMintAddress = token.tokenMintAddress;
+  proxyRpc = result.proxyRpc;
   solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
   neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
   signer = toSigner(solanaWallet);
@@ -106,5 +110,15 @@ describe(`SOL Transfer tests`, () => {
       console.log(e);
       expect(e instanceof Error ? e.message : '').toBe('');
     }
+  });
+
+  faucet.supportedTokens.forEach(token => {
+    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+      itSolanaTokenSPL(web3, connection, SOL_PROXY_URL!, proxyRpc, token, evmProgramAddress, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+    });
+
+    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
+      itNeonTokenMint(connection, web3, SOL_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());
+    });
   });
 });

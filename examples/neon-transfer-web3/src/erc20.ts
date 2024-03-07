@@ -39,7 +39,6 @@ export async function transferSPLTokenToNeonEvm(token: SPLToken, amount: number)
   const transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, signer, token, amount, chainId);
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
   console.log(`transferSPLTokenToNeonEvm`, signature);
-
 }
 
 export async function transferERC20TokenToSolana(token: SPLToken, amount: number): Promise<any> {

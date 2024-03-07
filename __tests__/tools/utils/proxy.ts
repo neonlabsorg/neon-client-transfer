@@ -5,7 +5,6 @@ import {
   GasTokenData,
   MultiTokenProxy,
   NeonProxyRpcApi,
-  TOKEN_LIST_DEVNET_SNAPSHOT
 } from '@neonevm/token-transfer-core';
 import { HttpProvider } from 'web3-providers-http';
 import { Web3 } from 'web3';
@@ -13,8 +12,9 @@ import { Web3 } from 'web3';
 export async function getMultiTokenProxy(proxyUrl: string): Promise<MultiTokenProxy> {
   const proxyRpc = new NeonProxyRpcApi(proxyUrl);
   const proxyStatus = await proxyRpc.evmParams();
-  const tokensList = (await proxyRpc.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
+  const tokensList = await proxyRpc.nativeTokenList();
   const evmProgramAddress = new PublicKey(proxyStatus.NEON_EVM_ID);
+  console.log(proxyStatus, tokensList);
   return { proxyRpc, proxyStatus, tokensList, evmProgramAddress };
 }
 

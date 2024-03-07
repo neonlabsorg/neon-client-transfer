@@ -1,20 +1,20 @@
-import {expect} from '@jest/globals';
-import {getAssociatedTokenAddressSync} from '@solana/spl-token';
-import {Connection, Keypair, PublicKey, Signer, Transaction} from '@solana/web3.js';
-import Web3 from 'web3';
-import {Web3Account} from 'web3-eth-accounts';
-import {JsonRpcProvider, TransactionRequest} from '@ethersproject/providers';
-import {NeonProxyRpcApi, signerPrivateKey, SPLToken} from '@neonevm/token-transfer-core';
+import { expect } from '@jest/globals';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { Connection, Keypair, PublicKey, Signer, Transaction } from '@solana/web3.js';
+import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
+import { NeonProxyRpcApi, signerPrivateKey, SPLToken } from '@neonevm/token-transfer-core';
 import {
   createMintNeonTransactionWeb3,
   neonTransferMintTransactionWeb3
 } from '@neonevm/token-transfer-web3';
-import {Transaction as TransactionConfig} from 'web3-types';
+import { Web3 } from 'web3';
+import { Web3Account } from 'web3-eth-accounts';
+import { Transaction as TransactionConfig } from 'web3-types';
 import {
   createMintNeonTransactionEthers,
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
-import {Wallet} from '@ethersproject/wallet';
+import { Wallet } from '@ethersproject/wallet';
 import {
   createAssociatedTokenAccount,
   delay,
@@ -46,7 +46,7 @@ export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connect
     }
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const signer: Signer = toSigner(solanaWallet);
-    const signature = await sendSolanaTransaction(connection, transaction, [signer], true, {skipPreflight});
+    const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
     expect(signature.length).toBeGreaterThan(0);
     solanaSignature(`Signature`, signature, solanaUrl);
     await delay(5e3);

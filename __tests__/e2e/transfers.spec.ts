@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import Web3 from 'web3';
+import { Web3 } from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
 import { ContractAbi, Transaction } from 'web3-types';
 import {
@@ -53,7 +53,7 @@ jest.setTimeout(12e4);
 const skipPreflight = false;
 const CHAIN_ID = Number(process.env.CHAIN_ID);
 const SOLANA_URL = process.env.SOLANA_URL;
-const NEON_PROXY_URL = process.env.NEON_URL;
+const NEON_PROXY_URL = `${process.env.NEON_URL}/neon`;
 const faucet = new FaucetDropper(CHAIN_ID);
 
 
