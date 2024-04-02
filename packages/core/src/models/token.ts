@@ -11,9 +11,9 @@ export interface SPLToken {
 }
 
 export interface GasToken {
-  token_name: string;
-  token_mint: string;
-  token_chain_id: `0x${string}`;
+  tokenName: string;
+  tokenMint: string;
+  tokenChainId: `0x${string}`;
 }
 
 export type Amount = number | bigint | string | BigNumber;

@@ -27,7 +27,7 @@ export function getEthersProvider(proxyUrl: string): JsonRpcProvider {
 }
 
 export function getGasToken(tokenList: GasToken[], chainId: number): GasTokenData {
-  const gasToken = tokenList.find(i => parseInt(i.token_chain_id, 16) === chainId)!;
-  const tokenMintAddress = new PublicKey(gasToken.token_mint);
+  const gasToken = tokenList.find(i => parseInt(i.tokenChainId, 16) === chainId)!;
+  const tokenMintAddress = new PublicKey(gasToken.tokenMint);
   return { gasToken, tokenMintAddress };
 }

@@ -81,7 +81,7 @@ beforeAll(async () => {
   solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
   neonWallet = new Wallet(NEON_PRIVATE, provider);
   tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
-  gasToken = tokensList.find(i => parseInt(i.token_chain_id, 16) === CHAIN_ID)!;
+  gasToken = token.gasToken;
 });
 
 afterEach(async () => {
@@ -94,7 +94,7 @@ describe('NEON token transfer tests', () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
-      address_spl: gasToken.token_mint,
+      address_spl: gasToken.tokenMint,
       chainId: CHAIN_ID
     };
     try {
@@ -149,7 +149,7 @@ describe('NEON token transfer tests', () => {
       const amount = 0.1;
       const neon: SPLToken = {
         ...NEON_TOKEN_MODEL,
-        address_spl: gasToken.token_mint,
+        address_spl: gasToken.tokenMint,
         chainId: CHAIN_ID
       };
       const wneon: SPLToken = faucet.tokens[id];
