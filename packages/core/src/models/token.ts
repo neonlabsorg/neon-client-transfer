@@ -1,4 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber';
+import {
+  AccountInfo,
+  PublicKey
+} from '@solana/web3.js';
 
 export interface SPLToken {
   address: string;
@@ -19,3 +23,7 @@ export interface GasToken {
 export type Amount = number | bigint | string | BigNumber;
 
 export type NeonAddress = `0x${string}` | string;
+
+export interface ExtendedAccountInfo extends AccountInfo<Buffer> {
+  delegate: PublicKey;
+}

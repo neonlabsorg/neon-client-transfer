@@ -1,4 +1,5 @@
 import {
+  AccountInfo,
   AccountMeta,
   Connection,
   PublicKey,
@@ -19,6 +20,7 @@ import {
   Amount,
   ClaimInstructionResult,
   EvmInstruction,
+  ExtendedAccountInfo,
   NeonComputeUnits,
   NeonEmulate,
   NeonHeapFrame,
@@ -30,9 +32,10 @@ import {
   COMPUTE_BUDGET_ID,
   NEON_COMPUTE_UNITS,
   NEON_HEAP_FRAME,
-  NEON_STATUS_DEVNET_SNAPSHOT, NEON_TREASURY_POOL_COUNT
+  NEON_STATUS_DEVNET_SNAPSHOT,
+  NEON_TREASURY_POOL_COUNT
 } from './data';
-import { NeonProxyRpcApi } from './api';
+import {NeonProxyRpcApi} from './api';
 import {
   authAccountAddress,
   collateralPoolAddress,
@@ -44,6 +47,7 @@ import {
   toFullAmount,
   TransactionResult
 } from './utils';
+import {HexString} from "web3-types";
 
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(connection: Connection, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: W, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT): Promise<Transaction> {
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
@@ -165,12 +169,22 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
   return { neonKeys: Array.from(accountsMap.values()), legacyAccounts };
 }
 
-export async function createClaimInstruction<TxResult extends TransactionResult>(proxyApi: NeonProxyRpcApi, neonTransaction: TxResult | any): Promise<ClaimInstructionResult> {
+export async function createClaimInstruction<TxResult extends TransactionResult>(config: { proxyApi: NeonProxyRpcApi, neonTransaction: TxResult | any, connection: Connection, signerAddress: HexString, neonEvmProgram: PublicKey, splToken: SPLToken, associatedTokenAddress: PublicKey }): Promise<ClaimInstructionResult> {
+  const { proxyApi, neonTransaction, connection, signerAddress, neonEvmProgram, splToken, associatedTokenAddress } = config;
   if (neonTransaction.rawTransaction) {
+    const sourceAccount = await getOverriddenSourceSplAccount(connection, signerAddress, neonEvmProgram, splToken, associatedTokenAddress);
+    //Need to pass overridden with delegate source account to tx emulator
+    //Optional field: solanaOverrides - array of overridden accounts with delegate prop
     const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
     return createClaimInstructionKeys(neonEmulate);
   }
   return { neonKeys: [], legacyAccounts: [], neonTransaction };
+}
+
+export async function getOverriddenSourceSplAccount(connection: Connection, signerAddress: HexString, neonEvmProgram: PublicKey, splToken: SPLToken, associatedTokenAddress: PublicKey): Promise<ExtendedAccountInfo> {
+  const [authAccountAddressDelegate] = authAccountAddress(signerAddress, neonEvmProgram, splToken);
+  const sourceAccountInfo = <AccountInfo<Buffer>>(await connection.getAccountInfo(associatedTokenAddress));
+  return {...sourceAccountInfo, delegate: authAccountAddressDelegate};
 }
 
 export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus): TransactionInstruction {
