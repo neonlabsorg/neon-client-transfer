@@ -42,7 +42,7 @@ export async function neonTransferMintTransactionWeb3(connection: Connection, pr
   const {
     neonKeys,
     legacyAccounts
-  } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address });
+  } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address, fullAmount });
   return neonTransferMintTransaction<Web3Account, SignTransactionResult>(connection, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId, neonHeapFrame);
 }
 
@@ -70,7 +70,7 @@ export async function createWrapAndTransferSOLTransaction(connection: Connection
   const {
     neonKeys,
     legacyAccounts
-  } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address });
+  } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address, fullAmount });
   const mintTransaction = await neonTransferMintTransaction<Web3Account, SignTransactionResult>(connection, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId, neonHeapFrame);
 
   if (!wSOLAccount) {

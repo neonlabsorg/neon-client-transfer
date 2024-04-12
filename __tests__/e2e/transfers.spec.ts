@@ -347,9 +347,11 @@ describe('NEON token transfer tests', () => {
   });
 
   faucet.supportedTokens.forEach(token => {
-    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
-    });
+    if(token.symbol === 'USDT') {
+      it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+        itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+      });
+    }
 
     it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
       itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());

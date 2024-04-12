@@ -24,6 +24,12 @@ export type Amount = number | bigint | string | BigNumber;
 
 export type NeonAddress = `0x${string}` | string;
 
-export interface ExtendedAccountInfo extends AccountInfo<Buffer> {
-  delegate: PublicKey;
+export type ExtendedAccountInfo = Omit<AccountInfo<Buffer>, 'owner' | 'data' | 'rentEpoch'> & {
+  owner: string;
+  data: string;
+  rent_epoch: number;
+};
+
+export interface SolanaOverrides {
+  solana_overrides: Record<string, ExtendedAccountInfo>;
 }
