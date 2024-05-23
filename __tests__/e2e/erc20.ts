@@ -73,6 +73,7 @@ export async function itNeonTokenMint(connection: Connection, provider: Web3 | J
   console.log(`Balance: ${balanceBefore ?? 0} ${token.symbol}`);
   const signer: Signer = toSigner(solanaWallet);
   await createAssociatedTokenAccount(connection, signer, token);
+
   const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
   let neonTransaction: TransactionRequest | TransactionConfig;
   if (provider instanceof JsonRpcProvider) {

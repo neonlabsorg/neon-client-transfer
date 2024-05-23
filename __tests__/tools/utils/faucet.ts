@@ -3,13 +3,14 @@ import { post } from './crud';
 
 require('dotenv').config({ path: `./src/__tests__/env/.env` });
 
-const tokensData = require('token-list/tokenlist.json');
+// const tokensData = require('token-list/tokenlist.json');
+const tokensData = require('../../mocks/tokenlist.json');
 const FAUCET_URL = process.env.FAUSET_URL!;
 
 export class FaucetDropper {
   public tokens: SPLToken[] = [];
   public supportedTokens: SPLToken[] = [];
-  private _tokens: string[] = ['USDT', 'USDC'];
+  private _tokens: string[] = ['USDT', 'USDC', '$FT1'];
   private chainId: ChainId['id'];
 
   constructor(chainId: ChainId['id']) {

@@ -20,6 +20,12 @@ export interface GasToken {
   tokenChainId: `0x${string}`;
 }
 
+export interface GasTokenV2 {
+  tokenName: string;
+  tokenMint: string;
+  tokenChainID: `0x${string}`;
+}
+
 export type Amount = number | bigint | string | BigNumber;
 
 export type NeonAddress = `0x${string}` | string;
@@ -27,9 +33,9 @@ export type NeonAddress = `0x${string}` | string;
 export type ExtendedAccountInfo = Omit<AccountInfo<Buffer>, 'owner' | 'data' | 'rentEpoch'> & {
   owner: string;
   data: string;
-  rent_epoch: number;
+  rentEpoch: number;
 };
 
 export interface SolanaOverrides {
-  solana_overrides: Record<string, ExtendedAccountInfo>;
+  solanaOverrides: Record<string, ExtendedAccountInfo>;
 }

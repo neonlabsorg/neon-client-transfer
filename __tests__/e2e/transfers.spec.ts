@@ -1,5 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Signer,
+  TokenAmount
+} from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Web3 } from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
@@ -61,7 +68,7 @@ let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
 let signer: Signer = toSigner(solanaWallet);
 let gasToken: GasToken;
-let neonProxyStatus: NeonProgramStatus;
+let neonProxyStatus: Partial<NeonProgramStatus>;
 let neonEvmProgram: PublicKey;
 let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
@@ -144,7 +151,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it(`Should transfer 1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -347,11 +354,9 @@ describe('NEON token transfer tests', () => {
   });
 
   faucet.supportedTokens.forEach(token => {
-    if(token.symbol === 'USDT') {
-      it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-        itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
-      });
-    }
+    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+    });
 
     it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
       itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());

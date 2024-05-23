@@ -61,6 +61,7 @@ export async function sendNeonTransaction(web3: Web3, transaction: TransactionCo
 
 export async function neonBalance(proxyUrl: string, address: string): Promise<Big> {
   const balance = await getBalance(new Web3Context(proxyUrl), address, undefined, DEFAULT_RETURN_FORMAT as ReturnFormat);
+  console.log('NEON balance:', balance, address);
   return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
 
@@ -72,8 +73,7 @@ export async function solanaBalance(connection: Connection, address: PublicKey):
 export async function splTokenBalance(connection: Connection, walletPubkey: PublicKey, token: SPLToken): Promise<TokenAmount> {
   const mintAccount = new PublicKey(token.address_spl);
   const assocTokenAccountAddress = getAssociatedTokenAddressSync(mintAccount, walletPubkey);
-
-  const response = await connection.getTokenAccountBalance(assocTokenAccountAddress);
+  const response = await connection?.getTokenAccountBalance(assocTokenAccountAddress);
   return response?.value;
 }
 

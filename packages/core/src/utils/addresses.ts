@@ -19,6 +19,18 @@ export function neonBalanceProgramAddress(etherKey: string, neonEvmProgram: Publ
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
+//Only for the Solana -> NEON SPL transfer
+export function neonBalanceProgramAddressV2(etherKey: string, operatorKey: PublicKey, neonEvmProgram: PublicKey, chainId: number): [PublicKey, number] {
+  const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
+  const chainIdBytes = toU256BE(BigInt(chainId)); //chain_id as u256be
+  const seed = [
+    new Uint8Array([AccountHex.SeedVersion]),
+    operatorKey.toBytes(), //operator key -> solanaWallet
+    new Uint8Array(keyBuffer),
+    chainIdBytes];
+  return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
+}
+
 export function authAccountAddress(neonWallet: string, neonEvmProgram: PublicKey, splToken: SPLToken): [PublicKey, number] {
   const neonAccountAddressBytes = Buffer.concat([Buffer.alloc(12), Buffer.from(isValidHex(neonWallet) ? neonWallet.replace(/^0x/i, '') : neonWallet, 'hex')]);
   const neonContractAddressBytes = Buffer.from(isValidHex(splToken.address) ? splToken.address.replace(/^0x/i, '') : splToken.address, 'hex');

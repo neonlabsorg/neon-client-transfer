@@ -30,7 +30,8 @@ import {
   SolanaAccount,
   SPLToken,
   SolanaOverrides,
-  ClaimInstructionConfig
+  ClaimInstructionConfig,
+  SourceSplAccountConfig
 } from './models';
 import {
   COMPUTE_BUDGET_ID,
@@ -43,6 +44,7 @@ import {
   authAccountAddress,
   collateralPoolAddress,
   neonBalanceProgramAddress,
+  neonBalanceProgramAddressV2,
   neonWalletProgramAddress,
   numberTo64BitLittleEndian,
   Provider,
@@ -147,7 +149,7 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
   const legacyAccounts: SolanaAccount[] = [];
   const accountsMap = new Map<string, AccountMeta>();
   if (neonEmulate!) {
-    const { accounts = [], solana_accounts = [] } = neonEmulate;
+    const { accounts = [], solanaAccounts = [] } = neonEmulate;
     for (const account of accounts) {
       const key = account['account'];
       accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
@@ -156,14 +158,14 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
         accountsMap.set(key, { pubkey: new PublicKey(key), isSigner: false, isWritable: true });
       }
     }
-    for (const account of solana_accounts) {
-      const { pubkey, is_legacy, is_writable } = account;
+    for (const account of solanaAccounts) {
+      const { pubkey, isLegacy, isWritable } = account;
       accountsMap.set(pubkey, {
         pubkey: new PublicKey(pubkey),
         isSigner: false,
-        isWritable: is_writable
+        isWritable: isWritable
       });
-      if (is_legacy) {
+      if (isLegacy) {
         legacyAccounts.push(account);
       }
     }
@@ -174,35 +176,37 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
 export async function createClaimInstruction<TxResult extends TransactionResult>(config: ClaimInstructionConfig<TxResult>): Promise<ClaimInstructionResult> {
   const { proxyApi, neonTransaction, connection, signerAddress, neonEvmProgram, splToken, associatedTokenAddress, fullAmount } = config;
   if (neonTransaction.rawTransaction) {
-    const overriddenSourceAccount = await getOverriddenSourceSplAccount(connection, signerAddress, neonEvmProgram, splToken, fullAmount, associatedTokenAddress);
-    const solanaOverrides: SolanaOverrides = { solana_overrides: { [associatedTokenAddress.toBase58()]: overriddenSourceAccount } }
-    console.log('OVERRIDDEN ACCOUNT  -------->', overriddenSourceAccount, solanaOverrides);
-
-    // const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2), solanaOverrides]);
+    if(splToken.symbol.toUpperCase() !== 'WSOL') { //TODO: Add support for WSOL
+      const overriddenSourceAccount = await getOverriddenSourceSplAccount({connection, signerAddress, neonEvmProgram, splToken, fullAmount, associatedTokenAddress});
+      const solanaOverrides: SolanaOverrides = { solanaOverrides: { [associatedTokenAddress.toBase58()]: overriddenSourceAccount } }
+      console.log('Solana Overrides', solanaOverrides);
+    }
     const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
+    console.log('Emulator result', neonEmulate);
     return createClaimInstructionKeys(neonEmulate);
   }
   return { neonKeys: [], legacyAccounts: [], neonTransaction };
 }
 
-export async function getOverriddenSourceSplAccount(connection: Connection, signerAddress: string, neonEvmProgram: PublicKey, splToken: SPLToken, fullAmount: bigint, associatedTokenAddress: PublicKey): Promise<ExtendedAccountInfo> {
+export async function getOverriddenSourceSplAccount(config: SourceSplAccountConfig): Promise<ExtendedAccountInfo | any> {
+  const {connection, signerAddress, neonEvmProgram, splToken, fullAmount, associatedTokenAddress} = config;
   const [authAccountAddressDelegate] = authAccountAddress(signerAddress, neonEvmProgram, splToken);
   const sourceAccountInfo = <AccountInfo<Buffer>>(await connection.getAccountInfo(associatedTokenAddress));
   const tokenAccountInfo = AccountLayout.decode(sourceAccountInfo.data);
-  const updatedTokenAccountInfo = <RawAccount>{...tokenAccountInfo, delegateOption: 1, delegatedAmount: fullAmount};
-
+  //For the completely new accounts delegate will be changed
+  const updatedTokenAccountInfo = <RawAccount>{...tokenAccountInfo, delegateOption: 1, delegatedAmount: fullAmount, delegate: authAccountAddressDelegate};
   //Encode data to hex string for the neon proxy
   const buffer = Buffer.alloc(AccountLayout.span);
   AccountLayout.encode(updatedTokenAccountInfo, buffer);
 
-  const datHexString = buffer.toString('hex');
+  const dataHexString = buffer.toString('hex');
 
   return {
     lamports: sourceAccountInfo.lamports,
-    data: datHexString,
+    data: `0x${dataHexString}`,
     owner: sourceAccountInfo.owner.toBase58(),
     executable: sourceAccountInfo.executable,
-    rent_epoch: sourceAccountInfo.rentEpoch || 0,
+    rentEpoch: 0,
   };
 }
 
@@ -229,7 +233,8 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
 export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT): TransactionInstruction {
   const count = Number(neonPoolCount ?? NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
-  const [balanceAccount] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
+  //TODO: check this
+  const [balanceAccount] = neonBalanceProgramAddressV2(neonWallet, solanaWallet, neonEvmProgram, chainId);
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
   const a = Buffer.from([EvmInstruction.TransactionExecuteFromInstruction]);
   const b = Buffer.from(toBytesInt32(treasuryPoolIndex));
