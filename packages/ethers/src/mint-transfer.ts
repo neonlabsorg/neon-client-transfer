@@ -38,7 +38,7 @@ export async function neonTransferMintTransactionEthers(connection: Connection, 
   const {
     neonKeys,
     legacyAccounts
-  } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
+  } = await createClaimInstruction<EthersSignedTransaction>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address, fullAmount });
   return neonTransferMintTransaction<Wallet, EthersSignedTransaction>(connection, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId, neonHeapFrame);
 }
 
@@ -64,7 +64,7 @@ export async function createWrapAndTransferSOLTransaction(connection: Connection
   const {
     neonKeys,
     legacyAccounts
-  } = await createClaimInstruction<EthersSignedTransaction>(proxyApi, signedTransaction);
+  } = await createClaimInstruction<EthersSignedTransaction>({ proxyApi, neonTransaction: signedTransaction, connection, neonEvmProgram, splToken, associatedTokenAddress, signerAddress: walletSigner.address, fullAmount });
   const mintTransaction = await neonTransferMintTransaction(connection, neonEvmProgram, solanaWallet, neonWallet, walletSigner, neonKeys, legacyAccounts, signedTransaction, splToken, fullAmount, chainId, neonHeapFrame);
 
   if (!wSOLAccount) {

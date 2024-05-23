@@ -1,6 +1,6 @@
-import { AccountMeta, PublicKey } from '@solana/web3.js';
+import {AccountMeta, Connection, PublicKey} from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../api';
-import { GasToken } from './token';
+import {GasToken, SPLToken} from './token';
 import { SignTransactionResult } from '../utils';
 
 export const enum ProxyStatus {
@@ -53,25 +53,38 @@ export interface NeonProgramStatus {
   NEON_COMPUTE_UNITS?: string;
 }
 
+export interface NeonProgramStatusV2 {
+  neonAccountSeedVersion: string;
+  neonMaxEvmStepsInLastIteration: string;
+  neonMinEvmStepsInIteration: string;
+  neonGasLimitMultiplierWithoutChainId: string;
+  neonHolderMessageSize: string;
+  neonPaymentToTreasury: string;
+  neonStorageEntriesInContractAccount: string;
+  neonTreasuryPoolCount: string;
+  neonTreasuryPoolSeed: string;
+  neonEvmProgramId: string;
+}
+
 export interface ChainId {
   id: number;
   name: string;
 }
 
 export interface NeonEmulate {
-  exit_status: 'succeed';
+  exitCode: 'succeed';
   result: string;
-  steps_executed: number;
-  used_gas: number;
-  iterations: number;
-  solana_accounts: SolanaAccount[];
+  numEvmSteps: number;
+  gasUsed: number;
+  numIterations: number;
+  solanaAccounts: SolanaAccount[];
   accounts?: NeonAccounts[];
 }
 
 export interface SolanaAccount {
   pubkey: string;
-  is_writable: boolean;
-  is_legacy: boolean;
+  isWritable: boolean;
+  isLegacy: boolean;
 }
 
 export interface NeonAccounts {
@@ -87,7 +100,7 @@ export interface ClaimInstructionResult<R = SignTransactionResult> {
 
 export interface MultiTokenProxy {
   proxyRpc: NeonProxyRpcApi;
-  proxyStatus: NeonProgramStatus;
+  proxyStatus: Partial<NeonProgramStatus>;
   tokensList: GasToken[];
   evmProgramAddress: PublicKey;
 }
@@ -100,3 +113,24 @@ export interface GasTokenData {
 export interface EthersSignedTransaction {
   rawTransaction: string;
 }
+
+export interface ClaimInstructionConfig<T> {
+  proxyApi: NeonProxyRpcApi;
+  neonTransaction: T | any;
+  connection: Connection;
+  signerAddress: string;
+  neonEvmProgram: PublicKey;
+  splToken: SPLToken;
+  associatedTokenAddress: PublicKey;
+  fullAmount: bigint
+}
+
+export interface SourceSplAccountConfig {
+  connection: Connection;
+  signerAddress: string;
+  neonEvmProgram: PublicKey;
+  splToken: SPLToken;
+  fullAmount: bigint;
+  associatedTokenAddress: PublicKey;
+}
+

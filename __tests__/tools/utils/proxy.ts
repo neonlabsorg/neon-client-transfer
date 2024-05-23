@@ -6,7 +6,7 @@ import {
   MultiTokenProxy,
   NeonProxyRpcApi,
 } from '@neonevm/token-transfer-core';
-import { HttpProvider } from 'web3-providers-http';
+import HttpProvider from 'web3-providers-http';
 import { Web3 } from 'web3';
 
 export async function getMultiTokenProxy(proxyUrl: string): Promise<MultiTokenProxy> {
@@ -14,7 +14,6 @@ export async function getMultiTokenProxy(proxyUrl: string): Promise<MultiTokenPr
   const proxyStatus = await proxyRpc.evmParams();
   const tokensList = await proxyRpc.nativeTokenList();
   const evmProgramAddress = new PublicKey(proxyStatus.NEON_EVM_ID);
-  console.log(proxyStatus, tokensList);
   return { proxyRpc, proxyStatus, tokensList, evmProgramAddress };
 }
 
@@ -27,7 +26,7 @@ export function getEthersProvider(proxyUrl: string): JsonRpcProvider {
 }
 
 export function getGasToken(tokenList: GasToken[], chainId: number): GasTokenData {
-  const gasToken = tokenList.find(i => parseInt(i.token_chain_id, 16) === chainId)!;
-  const tokenMintAddress = new PublicKey(gasToken.token_mint);
+  const gasToken = tokenList.find(i => parseInt(i.tokenChainId, 16) === chainId)!;
+  const tokenMintAddress = new PublicKey(gasToken.tokenMint);
   return { gasToken, tokenMintAddress };
 }

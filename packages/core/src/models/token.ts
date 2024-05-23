@@ -1,4 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber';
+import {
+  AccountInfo,
+  PublicKey
+} from '@solana/web3.js';
 
 export interface SPLToken {
   address: string;
@@ -11,11 +15,27 @@ export interface SPLToken {
 }
 
 export interface GasToken {
-  token_name: string;
-  token_mint: string;
-  token_chain_id: `0x${string}`;
+  tokenName: string;
+  tokenMint: string;
+  tokenChainId: `0x${string}`;
+}
+
+export interface GasTokenV2 {
+  tokenName: string;
+  tokenMint: string;
+  tokenChainID: `0x${string}`;
 }
 
 export type Amount = number | bigint | string | BigNumber;
 
 export type NeonAddress = `0x${string}` | string;
+
+export type ExtendedAccountInfo = Omit<AccountInfo<Buffer>, 'owner' | 'data' | 'rentEpoch'> & {
+  owner: string;
+  data: string;
+  rentEpoch: number;
+};
+
+export interface SolanaOverrides {
+  solanaOverrides: Record<string, ExtendedAccountInfo>;
+}

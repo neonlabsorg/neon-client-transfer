@@ -45,13 +45,13 @@ export const NEON_STATUS_DEVNET_SNAPSHOT: NeonProgramStatus = {
 };
 
 export const TOKEN_LIST_DEVNET_SNAPSHOT: GasToken[] = [{
-  token_name: 'NEON',
-  token_mint: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
-  token_chain_id: '0xe9ac0ce'
+  tokenName: 'NEON',
+  tokenMint: '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g',
+  tokenChainId: '0xe9ac0ce'
 }, {
-  token_name: 'SOL',
-  token_mint: 'So11111111111111111111111111111111111111112',
-  token_chain_id: '0xe9ac0cf'
+  tokenName: 'SOL',
+  tokenMint: 'So11111111111111111111111111111111111111112',
+  tokenChainId: '0xe9ac0cf'
 }];
 
 const proxyStatusSnapshot = new Map<string, NeonProgramStatus>();

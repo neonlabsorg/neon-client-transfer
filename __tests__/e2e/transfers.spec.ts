@@ -1,5 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Signer,
+  TokenAmount
+} from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Web3 } from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
@@ -61,7 +68,7 @@ let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
 let signer: Signer = toSigner(solanaWallet);
 let gasToken: GasToken;
-let neonProxyStatus: NeonProgramStatus;
+let neonProxyStatus: Partial<NeonProgramStatus>;
 let neonEvmProgram: PublicKey;
 let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
@@ -84,7 +91,7 @@ describe('NEON token transfer tests', () => {
       solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
       neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
       tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
-      gasToken = tokensList.find(i => parseInt(i.token_chain_id, 16) === CHAIN_ID)!;
+      gasToken = token.gasToken;
     } catch (e) {
       console.log(e);
     }
@@ -144,11 +151,11 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it(`Should transfer 0.1 NEON from Neon to Solana`, async () => {
+  it(`Should transfer 1 NEON from Neon to Solana`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
-      address_spl: gasToken.token_mint,
+      address_spl: gasToken.tokenMint,
       chainId: CHAIN_ID
     };
     try {
@@ -172,7 +179,7 @@ describe('NEON token transfer tests', () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
-      address_spl: gasToken.token_mint,
+      address_spl: gasToken.tokenMint,
       chainId: CHAIN_ID
     };
     await createAssociatedTokenAccount(connection, signer, neonToken);
@@ -231,7 +238,7 @@ describe('NEON token transfer tests', () => {
       const amount = 0.1;
       const neon: SPLToken = {
         ...NEON_TOKEN_MODEL,
-        address_spl: gasToken.token_mint,
+        address_spl: gasToken.tokenMint,
         chainId: CHAIN_ID
       };
       const wneon: SPLToken = faucet.tokens[id];
