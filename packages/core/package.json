@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer-core",
-  "version": "4.0.0-a2",
+  "version": "4.1.0",
   "description": "Core API for the @neonevm/token-transfer project",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
