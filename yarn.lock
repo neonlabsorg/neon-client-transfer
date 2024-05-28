@@ -2250,6 +2250,16 @@
     big.js "^6.2.1"
     web3-utils "^4.1.0"
 
+"@neonevm/token-transfer-core@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.1.0.tgz#763f2efdc71489c0821660ac6f6eb15342e6c5a4"
+  integrity sha512-GRndHxHIbEr4q3HI7EpIL2JbnZ2K+AJ2ik5zMjLmXkBkrJkfLnW5VvVF/Q+GMDvOZyCuqt50ku9jeEO9UY1gDQ==
+  dependencies:
+    "@solana/spl-token" "^0.3.8"
+    "@solana/web3.js" "^1.77.3"
+    big.js "^6.2.1"
+    web3-utils "^4.1.0"
+
 "@neonevm/token-transfer-ethers@4.0.0-a2":
   version "4.0.0-a2"
   resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.0.0-a2.tgz#9b77bdba2e2e764f3344bcc60567d45f25c15b9b"

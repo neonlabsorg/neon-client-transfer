@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "JavaScript client-side module for creating transfer transactions from Solana to NeonEVM",
   "private": true,
   "workspaces": [
@@ -53,9 +53,9 @@
     "@ethersproject/providers": "~5.7.0",
     "@ethersproject/units": "~5.7.0",
     "@ethersproject/wallet": "^5.7.0",
-    "@neonevm/token-transfer-core": "4.1.0",
-    "@neonevm/token-transfer-ethers": "4.0.0",
-    "@neonevm/token-transfer-web3": "4.0.0",
+    "@neonevm/token-transfer-core": "4.1.1",
+    "@neonevm/token-transfer-ethers": "4.0.1",
+    "@neonevm/token-transfer-web3": "4.0.1",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",
     "@types/big.js": "^6.1.6",
