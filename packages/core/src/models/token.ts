@@ -23,7 +23,7 @@ export interface GasToken {
 export interface GasTokenV2 {
   tokenName: string;
   tokenMint: string;
-  tokenChainID: `0x${string}`;
+  tokenChainId: `0x${string}`;
 }
 
 export type Amount = number | bigint | string | BigNumber;

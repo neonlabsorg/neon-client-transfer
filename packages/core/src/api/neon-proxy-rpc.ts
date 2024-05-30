@@ -51,7 +51,7 @@ export class NeonProxyRpcApi {
         return {
           tokenName: d.tokenName,
           tokenMint: d.tokenMint,
-          tokenChainId: d.tokenChainID,
+          tokenChainId: d.tokenChainId,
         };
       });
     });
@@ -63,7 +63,7 @@ export class NeonProxyRpcApi {
         return {
           tokenName: d.tokenName,
           tokenMint: d.tokenMint,
-          tokenChainId: d.tokenChainID,
+          tokenChainId: d.tokenChainId,
         };
       });
     });
