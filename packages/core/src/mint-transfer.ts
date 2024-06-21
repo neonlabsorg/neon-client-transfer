@@ -50,7 +50,8 @@ import {
   Provider,
   toBytesInt32,
   toFullAmount,
-  TransactionResult
+  TransactionResult,
+  holderAccountAddress
 } from './utils';
 
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(connection: Connection, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: W, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT): Promise<Transaction> {
@@ -61,6 +62,7 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
   const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
+  const holderAccountPK = await holderAccountAddress(neonEvmProgram, solanaWallet);
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, neonHeapFrame));
@@ -82,7 +84,10 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   }
 
   if (neonTransaction?.rawTransaction) {
-    transaction.add(createExecFromDataInstructionV2(solanaWallet, neonWallet, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, chainId, neonPoolCount));
+    transaction.add(createHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccountPK));
+    transaction.add(createExecFromDataInstructionV2(solanaWallet, neonWallet, holderAccountPK, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, chainId, neonPoolCount));
+    //TODO: check if the holder account should be deleted
+    // transaction.add(deleteHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccountPK));
   }
 
   return transaction;
@@ -230,7 +235,25 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT): TransactionInstruction {
+export function createHolderAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, holderAccountPK: PublicKey): TransactionInstruction {
+  const data = Buffer.from([EvmInstruction.HolderCreate]);
+  const keys: AccountMeta[] = [
+    { pubkey: holderAccountPK, isSigner: false, isWritable: true },
+    { pubkey: solanaWallet, isSigner: true, isWritable: true },
+  ];
+  return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
+}
+
+export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, holderAccountPK: PublicKey): TransactionInstruction {
+  const data = Buffer.from([EvmInstruction.HolderDelete]);
+  const keys: AccountMeta[] = [
+    { pubkey: holderAccountPK, isSigner: false, isWritable: true },
+    { pubkey: solanaWallet, isSigner: true, isWritable: true },
+  ];
+  return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
+}
+
+export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWallet: string, holderAccountPK: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT): TransactionInstruction {
   const count = Number(neonPoolCount ?? NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [balanceAccount] = neonBalanceProgramAddressV2(neonWallet, solanaWallet, neonEvmProgram, chainId);
@@ -240,6 +263,7 @@ export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWal
   const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
   const data = Buffer.concat([a, b, c]);
   const keys: AccountMeta[] = [
+    { pubkey: holderAccountPK, isSigner: false, isWritable: true },
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: treasuryPoolAddress, isSigner: false, isWritable: true },
     { pubkey: balanceAccount, isSigner: false, isWritable: true },
