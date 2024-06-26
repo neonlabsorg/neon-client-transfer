@@ -5,3 +5,4 @@ export * from './faucet';
 export * from './proxy';
 export * from './web3';
 export * from './ethers';
+export * from './setup';

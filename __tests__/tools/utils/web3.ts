@@ -70,9 +70,13 @@ export async function solanaBalance(connection: Connection, address: PublicKey):
   return new Big(balance).div(LAMPORTS_PER_SOL);
 }
 
-export async function splTokenBalance(connection: Connection, walletPubkey: PublicKey, token: SPLToken): Promise<TokenAmount> {
+export async function splTokenBalance(connection: Connection, walletPubkey: PublicKey, token: SPLToken): Promise<TokenAmount | null> {
   const mintAccount = new PublicKey(token.address_spl);
   const assocTokenAccountAddress = getAssociatedTokenAddressSync(mintAccount, walletPubkey);
+  const account = await connection?.getAccountInfo(assocTokenAccountAddress);
+  if (!account) {
+    return null;
+  }
   const response = await connection?.getTokenAccountBalance(assocTokenAccountAddress);
   return response?.value;
 }
