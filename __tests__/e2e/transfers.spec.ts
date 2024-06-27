@@ -33,6 +33,7 @@ import {
 } from '@neonevm/token-transfer-web3';
 import {
   createAssociatedTokenAccount,
+  customSplToken,
   delay,
   FaucetDropper,
   getGasToken,
@@ -63,7 +64,6 @@ const CHAIN_ID = Number(process.env.CHAIN_ID);
 const SOLANA_URL = process.env.SOLANA_URL;
 const NEON_PROXY_URL = `${process.env.NEON_URL}`;
 const faucet = new FaucetDropper(CHAIN_ID);
-
 
 let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
@@ -354,15 +354,25 @@ describe('NEON token transfer tests', () => {
   // });
 
   //Create and transfer custom SPL token - to test in different environments
-  it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
-    const token = await setupResourceForSpl(CHAIN_ID);
-    console.log('Resource setup complete. SPLToken:', token);
-    //await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
-  });
+  describe('Transfer custom SPL token', () => {
+    let customToken = { ...customSplToken, chainId: CHAIN_ID };
 
-  // it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
-  //
-  // });
+    beforeAll(async () => {
+      // Setup the environment - create custom SPL token and deploy ERC 20 wrapper
+      //TODO: Deploy Factory contract before and pass Factory contract address as parameter
+
+      customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, process.env.FACTORY_ADDRESS);
+      console.log('Resource setup complete. SPLToken:', customToken);
+    });
+
+    it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
+      customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
+    });
+
+    it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
+      customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
+    });
+  });
 
   //Only for the Devnet testing, when there is need to define supported tokens
   // faucet.supportedTokens.forEach(token => {

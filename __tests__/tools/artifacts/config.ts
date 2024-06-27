@@ -37,3 +37,15 @@ export const SOL_TOKEN_MODEL: SPLToken = {
   symbol: 'SOL',
   logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg'
 } as SPLToken;
+
+export const zeroAddress = '0x0000000000000000000000000000000000000000';
+
+export const customSplToken = {
+  "chainId": 111,
+  "address_spl": "",
+  "address": "0x",
+  "decimals": 9,
+  "name": "$FunGible Token 1",
+  "symbol": "$FT1",
+  "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/ethereum-eth-logo.svg"
+} as SPLToken;
