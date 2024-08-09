@@ -355,38 +355,39 @@ describe('NEON token transfer tests', () => {
   });
 
   //Create and transfer custom SPL token - to test in different environments
-  describe('Transfer custom SPL token', () => {
-    let customToken = { ...customSplToken, chainId: CHAIN_ID };
-    let factoryAddress;
-
-    beforeAll(async () => {
-      // Setup the environment - Deploy Factory contract, Create custom SPL token and Deploy ERC 20 wrapper
-      factoryAddress = process.env.FACTORY_ADDRESS || await deployFactory(NEON_PROXY_URL!);
-      console.log('Factory address:', factoryAddress);
-
-      if(factoryAddress) {
-        customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
-        console.log('Resource setup complete. SPLToken:', customToken);
-      }
-    });
-
-    it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
-      customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
-    });
-
-    it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
-      customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
-    });
-  });
-
-  //Only for the Devnet testing, when there is need to define supported tokens
-  // faucet.supportedTokens.forEach(token => {
-  //   it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
-  //     itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+  //Need to have a lot of NEONs on the wallet balance - to deploy ERC-20 wrapper
+  // describe('Transfer custom SPL token', () => {
+  //   let customToken = { ...customSplToken, chainId: CHAIN_ID };
+  //   let factoryAddress;
+  //
+  //   beforeAll(async () => {
+  //     // Setup the environment - Deploy Factory contract, Create custom SPL token and Deploy ERC 20 wrapper
+  //     factoryAddress = process.env.FACTORY_ADDRESS || await deployFactory(NEON_PROXY_URL!);
+  //     console.log('Factory address:', factoryAddress);
+  //
+  //     if(factoryAddress) {
+  //       customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
+  //       console.log('Resource setup complete. SPLToken:', customToken);
+  //     }
   //   });
   //
-  //   it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
-  //     itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());
+  //   it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
+  //     customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
+  //   });
+  //
+  //   it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
+  //     customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
   //   });
   // });
+
+  //Only for the Devnet testing, when there is need to define supported tokens
+  faucet.supportedTokens.forEach(token => {
+    it(`Should transfer 0.1 ${token.symbol} from Solana to NeonEVM (NEON)`, _ => {
+      itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, token, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!).then(() => _());
+    });
+
+    it(`Should transfer 0.1 ${token.symbol} from NeonEVM (NEON) to Solana`, _ => {
+      itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, token, solanaWallet, neonWallet).then(() => _());
+    });
+  });
 });
