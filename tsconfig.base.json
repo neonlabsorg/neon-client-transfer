@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "target": "es2015",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "allowJs": true
+  },
+  "exclude": [
+    "node_modules",
+    "__tests__",
+    "__tests__/**/*",
+    "./**/*.spec.ts"
+  ]
+}
