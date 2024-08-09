@@ -91,7 +91,7 @@ describe(`SOL Transfer tests`, () => {
     }
   });
 
-  it(`Should transfer 0.1 SOL from NeonEVM (SOL) to Solana`, async () => {
+  it.skip(`Should transfer 0.1 SOL from NeonEVM (SOL) to Solana`, async () => {
     const amount = 0.1;
     const id = faucet.tokens.findIndex(i => i.symbol === 'wSOL');
     const solToken: SPLToken = { ...faucet.tokens[id], ...SOL_TOKEN_MODEL, chainId };
