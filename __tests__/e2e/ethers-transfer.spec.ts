@@ -60,7 +60,7 @@ let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
 let signer: Signer = toSigner(solanaWallet);
 let gasToken: GasToken;
-let neonProxyStatus: NeonProgramStatus;
+let neonProxyStatus: Partial<NeonProgramStatus>;
 let neonEvmProgram: PublicKey;
 let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
