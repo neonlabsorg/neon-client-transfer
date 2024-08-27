@@ -1,6 +1,11 @@
 # Neon EVM Token transfer SDK Changelog
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] (2024-08-27)
+### Added
+* Add: Holder account creation
+* Refactor: TransactionExecuteFromInstruction
+
 ## [4.1.1] (2024-08-09)
 ### Added
 * Add: solanaOverrides in simulation request
