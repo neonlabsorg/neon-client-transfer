@@ -63,8 +63,9 @@ jest.setTimeout(12e4);
 const skipPreflight = false;
 const CHAIN_ID = Number(process.env.CHAIN_ID);
 const SOLANA_URL = process.env.SOLANA_URL;
-const NEON_PROXY_URL = `${process.env.NEON_URL}`;
+const NEON_PROXY_URL = `${process.env.NEON_URL}/neon`;
 const faucet = new FaucetDropper(CHAIN_ID);
+
 
 let tokensList: GasToken[] = [];
 let solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
@@ -195,7 +196,8 @@ describe('NEON token transfer tests', () => {
       solanaSignature(`Signature`, signature, SOLANA_URL!);
       await delay(10e3);
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
-      const balanceNeon = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+      const balanceNeon = await neonBalance(NEON_PROXY_URL!
+        , neonWallet.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
       expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
     } catch (e) {
@@ -356,29 +358,30 @@ describe('NEON token transfer tests', () => {
 
   //Create and transfer custom SPL token - to test in different environments
   //Need to have a lot of NEONs on the wallet balance - to deploy ERC-20 wrapper
-  // describe('Transfer custom SPL token', () => {
-  //   let customToken = { ...customSplToken, chainId: CHAIN_ID };
-  //   let factoryAddress;
-  //
-  //   beforeAll(async () => {
-  //     // Setup the environment - Deploy Factory contract, Create custom SPL token and Deploy ERC 20 wrapper
-  //     factoryAddress = process.env.FACTORY_ADDRESS || await deployFactory(NEON_PROXY_URL!);
-  //     console.log('Factory address:', factoryAddress);
-  //
-  //     if(factoryAddress) {
-  //       customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
-  //       console.log('Resource setup complete. SPLToken:', customToken);
-  //     }
-  //   });
-  //
-  //   it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
-  //     customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
-  //   });
-  //
-  //   it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
-  //     customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
-  //   });
-  // });
+  //Use for local development
+  describe.skip('Transfer custom SPL token', () => {
+    let customToken = { ...customSplToken, chainId: CHAIN_ID };
+    let factoryAddress;
+
+    beforeAll(async () => {
+      // Setup the environment - Deploy Factory contract, Create custom SPL token and Deploy ERC 20 wrapper
+      factoryAddress = process.env.FACTORY_ADDRESS || await deployFactory(NEON_PROXY_URL!);
+      console.log('Factory address:', factoryAddress);
+
+      if(factoryAddress) {
+        customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
+        console.log('Resource setup complete. SPLToken:', customToken);
+      }
+    });
+
+    it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
+      customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
+    });
+
+    it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
+      customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
+    });
+  });
 
   //Only for the Devnet testing, when there is need to define supported tokens
   faucet.supportedTokens.forEach(token => {

@@ -1,6 +1,6 @@
-import { PublicKey } from '@solana/web3.js';
+import {Connection, PublicKey} from '@solana/web3.js';
 import { AccountHex, SPLToken } from '../models';
-import { toBytesInt32, toU256BE } from './amount';
+import { toBytesInt32, toU256BE, randRange } from './amount';
 import { isValidHex } from './hex';
 
 export function neonWalletProgramAddress(etherKey: string, neonEvmProgram: PublicKey): [PublicKey, number] {
@@ -50,4 +50,11 @@ export function collateralPoolAddress(neonWalletPDA: PublicKey, collateralPoolIn
 
 export function authorityPoolAddress(programId: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([new Uint8Array(Buffer.from('Deposit', 'utf-8'))], programId);
+}
+
+export async function holderAccountData(neonEvmProgram: PublicKey, solanaWallet: PublicKey): Promise<{holderPk: PublicKey, seed: string}> {
+  const seed = randRange(0, 1000000).toString();
+  const holderPk = await PublicKey.createWithSeed(solanaWallet, seed, neonEvmProgram);
+
+  return { holderPk, seed };
 }

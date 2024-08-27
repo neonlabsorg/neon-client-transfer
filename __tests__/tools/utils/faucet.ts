@@ -10,7 +10,7 @@ const FAUCET_URL = process.env.FAUSET_URL!;
 export class FaucetDropper {
   public tokens: SPLToken[] = [];
   public supportedTokens: SPLToken[] = [];
-  private _tokens: string[] = ['USDT', 'USDC'/*'$FT1'*/];
+  private _tokens: string[] = ['USDT', 'USDC'];
   private chainId: ChainId['id'];
 
   constructor(chainId: ChainId['id']) {
