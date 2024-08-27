@@ -9,29 +9,31 @@ import {
   TransactionInstruction
 } from '@solana/web3.js';
 import {
+  AccountLayout,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createApproveInstruction,
   createCloseAccountInstruction,
   createSyncNativeInstruction,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-  AccountLayout,
-  RawAccount
+  RawAccount,
+  TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import {
   Amount,
+  ClaimInstructionConfig,
   ClaimInstructionResult,
   EvmInstruction,
   ExtendedAccountInfo,
+  ICreateAccountWithSeedParams,
+  ICreateExecFromDataInstructionParams,
   NeonComputeUnits,
   NeonEmulate,
   NeonHeapFrame,
   NeonProgramStatus,
   SolanaAccount,
-  SPLToken,
   SolanaOverrides,
-  ClaimInstructionConfig,
-  SourceSplAccountConfig
+  SourceSplAccountConfig,
+  SPLToken
 } from './models';
 import {
   COMPUTE_BUDGET_ID,
@@ -43,6 +45,7 @@ import {
 import {
   authAccountAddress,
   collateralPoolAddress,
+  holderAccountData,
   neonBalanceProgramAddress,
   neonBalanceProgramAddressV2,
   neonWalletProgramAddress,
@@ -50,8 +53,7 @@ import {
   Provider,
   toBytesInt32,
   toFullAmount,
-  TransactionResult,
-  holderAccountAddress
+  TransactionResult
 } from './utils';
 
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(connection: Connection, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: W, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT): Promise<Transaction> {
@@ -62,7 +64,8 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
   const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
-  const holderAccountPK = await holderAccountAddress(neonEvmProgram, solanaWallet);
+  const holderAccount = await holderAccountData(neonEvmProgram, solanaWallet);
+
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, neonHeapFrame));
@@ -84,10 +87,12 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   }
 
   if (neonTransaction?.rawTransaction) {
-    transaction.add(createHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccountPK));
-    transaction.add(createExecFromDataInstructionV2(solanaWallet, neonWallet, holderAccountPK, neonEvmProgram, neonTransaction.rawTransaction, neonKeys, chainId, neonPoolCount));
-    //TODO: check if the holder account should be deleted
-    // transaction.add(deleteHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccountPK));
+    //Create acc with seed
+    const createAccountWithSeedParams = {neonEvmProgram, solanaWallet, holderAccountPK: holderAccount.holderPk, seed: holderAccount.seed};
+    transaction.add(createAccountWithSeedInstruction(createAccountWithSeedParams));
+    transaction.add(createHolderAccountInstruction(createAccountWithSeedParams));
+    transaction.add(createExecFromDataInstructionV2({solanaWallet, neonWallet, holderAccountPK: holderAccount.holderPk, neonEvmProgram, neonRawTransaction: neonTransaction.rawTransaction, neonKeys, chainId, neonPoolCount}));
+    transaction.add(deleteHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccount.holderPk));
   }
 
   return transaction;
@@ -235,11 +240,35 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createHolderAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, holderAccountPK: PublicKey): TransactionInstruction {
-  const data = Buffer.from([EvmInstruction.HolderCreate]);
+export function createAccountWithSeedInstruction(createAccountWithSeedParams: ICreateAccountWithSeedParams): TransactionInstruction {
+  const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
+  const space=128 * 1024; //128KB
+
+  return SystemProgram.createAccountWithSeed({
+      fromPubkey: solanaWallet,
+      basePubkey: solanaWallet,
+      seed, // should be the same as for derived account
+      newAccountPubkey: holderAccountPK,
+      lamports: 0,
+      space,
+      programId: neonEvmProgram
+    });
+}
+
+export function createHolderAccountInstruction(createAccountWithSeedParams: ICreateAccountWithSeedParams): TransactionInstruction {
+  const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
+  const instruction = Buffer.from([EvmInstruction.HolderCreate]);
+  const seedLength = Buffer.alloc(8);
+  seedLength.writeUInt32LE(seed.length, 0);
+
+  const seedBuffer = Buffer.from(seed, 'utf-8');
+
+  // Combine the opcode, seed length, and seed into a single Buffer
+  const data = Buffer.concat([instruction, seedLength, seedBuffer]);
+
   const keys: AccountMeta[] = [
     { pubkey: holderAccountPK, isSigner: false, isWritable: true },
-    { pubkey: solanaWallet, isSigner: true, isWritable: true },
+    { pubkey: solanaWallet, isSigner: true, isWritable: false },
   ];
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
@@ -248,12 +277,13 @@ export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solana
   const data = Buffer.from([EvmInstruction.HolderDelete]);
   const keys: AccountMeta[] = [
     { pubkey: holderAccountPK, isSigner: false, isWritable: true },
-    { pubkey: solanaWallet, isSigner: true, isWritable: true },
+    { pubkey: solanaWallet, isSigner: true, isWritable: false },
   ];
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createExecFromDataInstructionV2(solanaWallet: PublicKey, neonWallet: string, holderAccountPK: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT): TransactionInstruction {
+export function createExecFromDataInstructionV2(createExecFromDataInstructionParams: ICreateExecFromDataInstructionParams): TransactionInstruction {
+  const { solanaWallet, neonWallet, holderAccountPK, neonEvmProgram, neonRawTransaction, neonPoolCount, chainId, neonKeys } = createExecFromDataInstructionParams;
   const count = Number(neonPoolCount ?? NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [balanceAccount] = neonBalanceProgramAddressV2(neonWallet, solanaWallet, neonEvmProgram, chainId);

@@ -49,3 +49,7 @@ export function toU256BE(bigIntNumber: bigint) {
 
   return new Uint8Array(buffer);
 }
+
+export function randRange(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
