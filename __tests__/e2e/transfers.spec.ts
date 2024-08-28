@@ -1,12 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import {
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  Signer,
-  TokenAmount
-} from '@solana/web3.js';
+import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Web3 } from 'web3';
 import { Web3Account } from 'web3-eth-accounts';
@@ -368,17 +361,17 @@ describe('NEON token transfer tests', () => {
       factoryAddress = process.env.FACTORY_ADDRESS || await deployFactory(NEON_PROXY_URL!);
       console.log('Factory address:', factoryAddress);
 
-      if(factoryAddress) {
+      if (factoryAddress) {
         customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
         console.log('Resource setup complete. SPLToken:', customToken);
       }
     });
 
-    it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async() => {
+    it('Should transfer 0.1 new custom SPL token from Solana to NeonEVM', async () => {
       customToken.address_spl && await itSolanaTokenSPL(web3, connection, NEON_PROXY_URL!, neonProxyRpcApi, customToken, neonEvmProgram, solanaWallet, neonWallet, CHAIN_ID, SOLANA_URL!);
     });
 
-    it('Should transfer 0.1 new custom token from NeonEVM to Solana', async() => {
+    it('Should transfer 0.1 new custom token from NeonEVM to Solana', async () => {
       customToken.address_spl && await itNeonTokenMint(connection, web3, NEON_PROXY_URL!, faucet, customToken, solanaWallet, neonWallet);
     });
   });

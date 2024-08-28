@@ -24,36 +24,6 @@ export type NeonHeapFrame = string;
 export type NeonComputeUnits = string;
 
 export interface NeonProgramStatus {
-  NEON_ACCOUNT_SEED_VERSION: number;
-  NEON_EVM_ID: string;
-  NEON_EVM_STEPS_LAST_ITERATION_MAX: number;
-  NEON_EVM_STEPS_MIN: number;
-  NEON_GAS_LIMIT_MULTIPLIER_NO_CHAINID: number;
-  NEON_HOLDER_MSG_SIZE: number;
-  NEON_OPERATOR_PRIORITY_SLOTS: string;
-  NEON_PAYMENT_TO_TREASURE: number;
-  NEON_STORAGE_ENTRIES_IN_CONTRACT_ACCOUNT: number;
-  NEON_TREASURY_POOL_COUNT: number;
-  NEON_TREASURY_POOL_SEED: string;
-  NEON_PKG_VERSION?: string;
-  NEON_POOL_COUNT?: string;
-  NEON_POOL_SEED?: string;
-  NEON_REQUEST_UNITS_ADDITIONAL_FEE?: string;
-  NEON_REVISION?: string;
-  NEON_SEED_VERSION?: string;
-  NEON_STATUS_NAME?: string;
-  NEON_TOKEN_MINT?: string;
-  NEON_TOKEN_MINT_DECIMALS?: string;
-  NEON_PAYMENT_TO_DEPOSIT?: string;
-  NEON_HEAP_FRAME?: string;
-  NEON_ADDITIONAL_FEE?: string;
-  NEON_CHAIN_ID?: string;
-  NEON_COMPUTE_BUDGET_HEAP_FRAME?: string;
-  NEON_COMPUTE_BUDGET_UNITS?: string;
-  NEON_COMPUTE_UNITS?: string;
-}
-
-export interface NeonProgramStatusV2 {
   neonAccountSeedVersion: number;
   neonMaxEvmStepsInLastIteration: number;
   neonMinEvmStepsInIteration: number;

@@ -34,7 +34,6 @@ import {
 export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connection: Connection, proxyUrl: string, neonProxyRpcApi: NeonProxyRpcApi, token: SPLToken, neonEvmProgram: PublicKey, solanaWallet: Keypair, neonWallet: Web3Account | Wallet, chainId: number, solanaUrl: string, skipPreflight = true) {
   const amount = 0.1;
   const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, token);
-  if(!balanceBefore) return;
   console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${token.symbol}`);
   try {
     let transaction: Transaction;

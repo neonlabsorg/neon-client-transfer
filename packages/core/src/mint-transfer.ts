@@ -22,10 +22,10 @@ import {
   Amount,
   ClaimInstructionConfig,
   ClaimInstructionResult,
+  CreateAccountWithSeedParams,
+  CreateExecFromDataInstructionParams,
   EvmInstruction,
   ExtendedAccountInfo,
-  ICreateAccountWithSeedParams,
-  ICreateExecFromDataInstructionParams,
   NeonComputeUnits,
   NeonEmulate,
   NeonHeapFrame,
@@ -40,7 +40,8 @@ import {
   NEON_COMPUTE_UNITS,
   NEON_HEAP_FRAME,
   NEON_STATUS_DEVNET_SNAPSHOT,
-  NEON_TREASURY_POOL_COUNT
+  NEON_TREASURY_POOL_COUNT,
+  RENT_EPOCH_ZERO
 } from './data';
 import {
   authAccountAddress,
@@ -64,7 +65,7 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   const neonWalletBalanceAccount = await connection.getAccountInfo(neonWalletBalanceAddress);
   const emulateSignerBalanceAccount = await connection.getAccountInfo(emulateSignerBalanceAddress);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
-  const holderAccount = await holderAccountData(neonEvmProgram, solanaWallet);
+  const [holderAccount, holderSeed] = await holderAccountData(neonEvmProgram, solanaWallet);
 
   const transaction = new Transaction({ feePayer: solanaWallet });
 
@@ -88,11 +89,25 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
 
   if (neonTransaction?.rawTransaction) {
     //Create acc with seed
-    const createAccountWithSeedParams = {neonEvmProgram, solanaWallet, holderAccountPK: holderAccount.holderPk, seed: holderAccount.seed};
+    const createAccountWithSeedParams = {
+      neonEvmProgram,
+      solanaWallet,
+      holderAccountPK: holderAccount,
+      seed: holderSeed
+    };
     transaction.add(createAccountWithSeedInstruction(createAccountWithSeedParams));
     transaction.add(createHolderAccountInstruction(createAccountWithSeedParams));
-    transaction.add(createExecFromDataInstructionV2({solanaWallet, neonWallet, holderAccountPK: holderAccount.holderPk, neonEvmProgram, neonRawTransaction: neonTransaction.rawTransaction, neonKeys, chainId, neonPoolCount}));
-    transaction.add(deleteHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccount.holderPk));
+    transaction.add(createExecFromDataInstructionV2({
+      solanaWallet,
+      neonWallet,
+      holderAccount: holderAccount,
+      neonEvmProgram,
+      neonRawTransaction: neonTransaction.rawTransaction,
+      neonKeys,
+      chainId,
+      neonPoolCount
+    }));
+    transaction.add(deleteHolderAccountInstruction(neonEvmProgram, solanaWallet, holderAccount));
   }
 
   return transaction;
@@ -184,11 +199,27 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
 }
 
 export async function createClaimInstruction<TxResult extends TransactionResult>(config: ClaimInstructionConfig<TxResult>): Promise<ClaimInstructionResult> {
-  const { proxyApi, neonTransaction, connection, signerAddress, neonEvmProgram, splToken, associatedTokenAddress, fullAmount } = config;
+  const {
+    proxyApi,
+    neonTransaction,
+    connection,
+    signerAddress,
+    neonEvmProgram,
+    splToken,
+    associatedTokenAddress,
+    fullAmount
+  } = config;
   if (neonTransaction.rawTransaction) {
-    if(splToken.symbol.toUpperCase() !== 'WSOL') { //TODO: Add support for WSOL
-      const overriddenSourceAccount = await getOverriddenSourceSplAccount({connection, signerAddress, neonEvmProgram, splToken, fullAmount, associatedTokenAddress});
-      const solanaOverrides: SolanaOverrides = { solanaOverrides: { [associatedTokenAddress.toBase58()]: overriddenSourceAccount } }
+    if (splToken.symbol.toUpperCase() !== 'WSOL') { //TODO: Add support for WSOL
+      const overriddenSourceAccount = await getOverriddenSourceSplAccount({
+        connection,
+        signerAddress,
+        neonEvmProgram,
+        splToken,
+        fullAmount,
+        associatedTokenAddress
+      });
+      const solanaOverrides: SolanaOverrides = { solanaOverrides: { [associatedTokenAddress.toBase58()]: overriddenSourceAccount } };
       console.log('Solana Overrides', solanaOverrides);
     }
     const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
@@ -199,12 +230,24 @@ export async function createClaimInstruction<TxResult extends TransactionResult>
 }
 
 export async function getOverriddenSourceSplAccount(config: SourceSplAccountConfig): Promise<ExtendedAccountInfo | any> {
-  const {connection, signerAddress, neonEvmProgram, splToken, fullAmount, associatedTokenAddress} = config;
+  const {
+    connection,
+    signerAddress,
+    neonEvmProgram,
+    splToken,
+    fullAmount,
+    associatedTokenAddress
+  } = config;
   const [authAccountAddressDelegate] = authAccountAddress(signerAddress, neonEvmProgram, splToken);
   const sourceAccountInfo = <AccountInfo<Buffer>>(await connection.getAccountInfo(associatedTokenAddress));
   const tokenAccountInfo = AccountLayout.decode(sourceAccountInfo.data);
   //For the completely new accounts delegate will be changed
-  const updatedTokenAccountInfo = <RawAccount>{...tokenAccountInfo, delegateOption: 1, delegatedAmount: fullAmount, delegate: authAccountAddressDelegate};
+  const updatedTokenAccountInfo = <RawAccount>{
+    ...tokenAccountInfo,
+    delegateOption: 1,
+    delegatedAmount: fullAmount,
+    delegate: authAccountAddressDelegate
+  };
   //Encode data to hex string for the neon proxy
   const buffer = Buffer.alloc(AccountLayout.span);
   AccountLayout.encode(updatedTokenAccountInfo, buffer);
@@ -216,12 +259,12 @@ export async function getOverriddenSourceSplAccount(config: SourceSplAccountConf
     data: `0x${dataHexString}`,
     owner: sourceAccountInfo.owner.toBase58(),
     executable: sourceAccountInfo.executable,
-    rentEpoch: 0,
+    rentEpoch: RENT_EPOCH_ZERO
   };
 }
 
 export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus): TransactionInstruction {
-  const count = Number(proxyStatus.NEON_POOL_COUNT);
+  const count = Number(proxyStatus.neonTreasuryPoolCount);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
   const a = Buffer.from([EvmInstruction.TransactionExecuteFromInstruction]);
@@ -240,22 +283,22 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createAccountWithSeedInstruction(createAccountWithSeedParams: ICreateAccountWithSeedParams): TransactionInstruction {
+export function createAccountWithSeedInstruction(createAccountWithSeedParams: CreateAccountWithSeedParams): TransactionInstruction {
   const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
-  const space=128 * 1024; //128KB
+  const space = 128 * 1024; //128KB
 
   return SystemProgram.createAccountWithSeed({
-      fromPubkey: solanaWallet,
-      basePubkey: solanaWallet,
-      seed, // should be the same as for derived account
-      newAccountPubkey: holderAccountPK,
-      lamports: 0,
-      space,
-      programId: neonEvmProgram
-    });
+    seed, // should be the same as for derived account
+    lamports: 0,
+    space,
+    fromPubkey: solanaWallet,
+    basePubkey: solanaWallet,
+    newAccountPubkey: holderAccountPK,
+    programId: neonEvmProgram
+  });
 }
 
-export function createHolderAccountInstruction(createAccountWithSeedParams: ICreateAccountWithSeedParams): TransactionInstruction {
+export function createHolderAccountInstruction(createAccountWithSeedParams: CreateAccountWithSeedParams): TransactionInstruction {
   const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
   const instruction = Buffer.from([EvmInstruction.HolderCreate]);
   const seedLength = Buffer.alloc(8);
@@ -268,7 +311,7 @@ export function createHolderAccountInstruction(createAccountWithSeedParams: ICre
 
   const keys: AccountMeta[] = [
     { pubkey: holderAccountPK, isSigner: false, isWritable: true },
-    { pubkey: solanaWallet, isSigner: true, isWritable: false },
+    { pubkey: solanaWallet, isSigner: true, isWritable: false }
   ];
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
@@ -277,14 +320,17 @@ export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solana
   const data = Buffer.from([EvmInstruction.HolderDelete]);
   const keys: AccountMeta[] = [
     { pubkey: holderAccountPK, isSigner: false, isWritable: true },
-    { pubkey: solanaWallet, isSigner: true, isWritable: false },
+    { pubkey: solanaWallet, isSigner: true, isWritable: false }
   ];
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createExecFromDataInstructionV2(createExecFromDataInstructionParams: ICreateExecFromDataInstructionParams): TransactionInstruction {
-  const { solanaWallet, neonWallet, holderAccountPK, neonEvmProgram, neonRawTransaction, neonPoolCount, chainId, neonKeys } = createExecFromDataInstructionParams;
-  const count = Number(neonPoolCount ?? NEON_STATUS_DEVNET_SNAPSHOT.NEON_POOL_COUNT);
+export function createExecFromDataInstructionV2(params: CreateExecFromDataInstructionParams): TransactionInstruction {
+  const {
+    solanaWallet, neonWallet, holderAccount, neonEvmProgram,
+    neonRawTransaction, neonPoolCount, chainId, neonKeys
+  } = params;
+  const count = Number(neonPoolCount ?? NEON_STATUS_DEVNET_SNAPSHOT.neonTreasuryPoolCount);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [balanceAccount] = neonBalanceProgramAddressV2(neonWallet, solanaWallet, neonEvmProgram, chainId);
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);
@@ -293,7 +339,7 @@ export function createExecFromDataInstructionV2(createExecFromDataInstructionPar
   const c = Buffer.from(neonRawTransaction.slice(2), 'hex');
   const data = Buffer.concat([a, b, c]);
   const keys: AccountMeta[] = [
-    { pubkey: holderAccountPK, isSigner: false, isWritable: true },
+    { pubkey: holderAccount, isSigner: false, isWritable: true },
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: treasuryPoolAddress, isSigner: false, isWritable: true },
     { pubkey: balanceAccount, isSigner: false, isWritable: true },

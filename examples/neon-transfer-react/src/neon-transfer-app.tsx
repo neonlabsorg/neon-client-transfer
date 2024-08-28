@@ -94,15 +94,15 @@ function NeonTransferApp() {
 
   const neonProgram = useMemo(() => {
     if (proxyStatus) {
-      return new PublicKey(proxyStatus?.NEON_EVM_ID!);
+      return new PublicKey(proxyStatus?.neonEvmProgramId!);
     }
-    return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.NEON_EVM_ID);
+    return new PublicKey(NEON_STATUS_DEVNET_SNAPSHOT.neonEvmProgramId);
   }, [proxyStatus]);
 
   const networkTokenMint = useMemo(() => {
-    const id = gasTokens.findIndex(i => parseInt(i.token_chain_id, 16) === chainId);
+    const id = gasTokens.findIndex(i => parseInt(i.tokenChainId, 16) === chainId);
     if (id > -1) {
-      return new PublicKey(gasTokens[id].token_mint);
+      return new PublicKey(gasTokens[id].tokenMint);
     }
     return new PublicKey(NEON_TOKEN_MINT_DEVNET);
   }, [gasTokens, chainId]);
@@ -200,6 +200,7 @@ function NeonTransferApp() {
   const getProxyStatus = useCallback(async () => {
     const proxyStatus = await proxyApi.evmParams();
     const gasTokens = await proxyApi.nativeTokenList();
+    // @ts-ignore
     setProxyStatus(proxyStatus);
     setGasTokens(gasTokens);
   }, [proxyApi]);

@@ -17,3 +17,5 @@ export const NEON_TOKEN_MINT_DEVNET = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2k
 export const SOL_TOKEN_MINT_DEVNET = '89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g';
 export const NEON_TOKEN_MINT_MAINNET = 'NeonTjSjsuo3rexg9o6vHuMXw62f9V7zvmu8M8Zut44';
 export const SOL_TOKEN_MINT_MAINNET = 'NeonTjSjsuo3rexg9o6vHuMXw62f9V7zvmu8M8Zut44';
+
+export const RENT_EPOCH_ZERO = 0;

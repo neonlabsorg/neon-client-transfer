@@ -1,4 +1,4 @@
-import {AccountMeta, PublicKey} from '@solana/web3.js';
+import { AccountMeta, PublicKey } from '@solana/web3.js';
 
 export const enum EvmInstruction {
   CreateAccountV02 = 0x18, // 24
@@ -21,17 +21,17 @@ export const enum AccountHex {
   SeedVersion = 0x03
 }
 
-export type ICreateAccountWithSeedParams = {
+export interface CreateAccountWithSeedParams {
   neonEvmProgram: PublicKey;
   solanaWallet: PublicKey;
   holderAccountPK: PublicKey;
   seed: string;
 }
 
-export type ICreateExecFromDataInstructionParams = {
+export interface CreateExecFromDataInstructionParams {
   solanaWallet: PublicKey;
   neonWallet: string;
-  holderAccountPK: PublicKey;
+  holderAccount: PublicKey;
   neonEvmProgram: PublicKey;
   neonRawTransaction: string;
   neonKeys: AccountMeta[];
