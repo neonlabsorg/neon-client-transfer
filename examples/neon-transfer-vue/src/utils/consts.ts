@@ -1,3 +1,6 @@
+import { NEON_TOKEN_MINT_DECIMALS,  } from '@neonevm/token-transfer-core';
+
+import type { SPLToken } from '@neonevm/token-transfer-core';
 import type { NetworkUrl } from "@/types";
 
 export const NEON_CHAIN_IDS: { 
@@ -21,6 +24,22 @@ export const networkUrls: NetworkUrl[] = [{
     solana: 'https://api.devnet.solana.com',
     neonProxy: 'https://devnet.neonevm.org/solana/sol'
 }];
+
+export const NEON_TOKEN_MODEL: SPLToken = {
+    chainId: 0,
+    address_spl: '',
+    address: '',
+    decimals: NEON_TOKEN_MINT_DECIMALS,
+    name: 'Neon',
+    symbol: 'NEON',
+    logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/main/neon_token_md.png'
+};
+  
+export const SOL_TOKEN_MODEL: SPLToken = {
+    name: 'Solana SOL',
+    symbol: 'SOL',
+    logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-sol-logo.svg'
+} as SPLToken;
 
 export const supportedTokens = ['wSOL', 'USDT', 'USDC']
 

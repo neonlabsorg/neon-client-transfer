@@ -49,18 +49,18 @@ input[type=number] {
 
 .title-1 .logo {
   @apply min-w-[32px] min-h-[32px];
-  background-image: url('~/public/logo192.png');
+  background-image: url('../logo192.png');
   background-size: contain;
 }
 
 .title-1 .github {
   @apply block min-w-[32px] min-h-[32px];
-  background-image: url('~/public/icons/github.svg');
+  background-image: url('../icons/github.svg');
   background-size: contain;
 }
 
 .form-content {
-  @apply p-[20px] max-w-[600px] mx-auto;
+  @apply p-[20px] max-w-[600px] mx-auto h-screen flex flex-col justify-center;
 }
 
 .form-input {
@@ -139,5 +139,10 @@ input[type=number] {
 
 .icon-button {
   @apply w-[36px] h-[36px];
-  background-image: url('~/public/icons/change.svg');
+  background-image: url('../icons/change.svg');
+}
+
+.icon-loader {
+  @apply w-[36px] h-[36px] bg-contain bg-no-repeat;
+  background-image: url('../icons/loader.svg');
 }
