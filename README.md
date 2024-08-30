@@ -63,14 +63,14 @@ const neonProxyStatus = await neonProxyApi.evmParams(); // get evm params config
 const solProxyStatus = await solProxyApi.evmParams();
 
 // for NEON token native network
-const neonChainId = Number(neonNativeToken.token_chain_id);
-const neonTokenMint = new PublicKey(neonNativeToken.token_mint);
-const neonEvmProgram = new PublicKey(neonProxyStatus.NEON_EVM_ID);
+const neonChainId = Number(neonNativeToken.tokenChainId);
+const neonTokenMint = new PublicKey(neonNativeToken.tokenMint);
+const neonEvmProgram = new PublicKey(neonProxyStatus.neonEvmProgramId);
 
 // for SOL token native network
-const solChainId = Number(solNativeToken.token_chain_id);
-const solTokenMint = new PublicKey(solNativeToken.token_mint);
-const solEvmProgram = new PublicKey(solProxyStatus.NEON_EVM_ID);
+const solChainId = Number(solNativeToken.tokenChainId);
+const solTokenMint = new PublicKey(solNativeToken.tokenMint);
+const solEvmProgram = new PublicKey(solProxyStatus.neonEvmProgramId);
 ```
 
 Still, for testing you can use `NEON_TRANSFER_CONTRACT_DEVNET` or `NEON_TRANSFER_CONTRACT_MAINNET` constants. This objects contains snapshots with latest `neonProxyStatus` state. 
