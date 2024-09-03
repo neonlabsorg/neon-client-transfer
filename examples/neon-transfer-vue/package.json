@@ -11,8 +11,8 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.0.0-a2",
-    "@neonevm/token-transfer-web3": "4.0.0-a2",
+    "@neonevm/token-transfer-core": "4.2.0",
+    "@neonevm/token-transfer-web3": "4.2.0",
     "pinia": "^2.1.7",
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.6.1",
     "vue": "^3.4.29",

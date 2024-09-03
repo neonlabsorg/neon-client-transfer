@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { PublicKey as SolanaPublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { 
     NEON_TOKEN_MINT_DEVNET, 
     createAssociatedTokenAccountTransaction,
@@ -16,7 +15,7 @@ import { useFormStore, useWalletsStore, useWeb3Store } from '@/stores';
 
 
 import type { GasToken, SPLToken } from '@neonevm/token-transfer-core'
-import { PublicKey, type Connection, type Transaction as SolanaTransaction } from '@solana/web3.js';
+import type { PublicKey, Connection, Transaction as SolanaTransaction } from '@solana/web3.js';
 import type { Transaction as NeonTransaction } from 'web3'
 import type { TransferSignature } from '@/types';
 
@@ -45,17 +44,17 @@ export const useTransactionStore = defineStore('transaction', {
         setNetworkTokenMint() {
             const web3Store = useWeb3Store()
             const id = this.gasTokens
-                .findIndex(i => parseInt(i.token_chain_id, 16) === web3Store.chainId);
+                .findIndex(i => parseInt(i.tokenChainId, 16) === web3Store.chainId);
 
             this.networkTokenMint = id > -1
-                ? new SolanaPublicKey(this.gasTokens[id].token_mint)
+                ? new SolanaPublicKey(this.gasTokens[id].tokenMint)
                 : new SolanaPublicKey(NEON_TOKEN_MINT_DEVNET)
         },
         setMintPublicKey() {
             const formSore = useFormStore()
 
             if (formSore.currentSplToken) {
-                this.mintPublicKey = new PublicKey(formSore.currentSplToken.address_spl)
+                this.mintPublicKey = new SolanaPublicKey(formSore.currentSplToken.address_spl)
             }
         },
         createAssociatedTokenAccountTransaction(associatedToken: PublicKey) {

@@ -73,10 +73,9 @@ export const useWeb3Store = defineStore('web3', {
             }
         },
         setNeonProgram() {
-            this.neonProgram = new SolanaPublicKey(NEON_STATUS_DEVNET_SNAPSHOT.NEON_EVM_ID);
-            // this.neonProgram = this.proxyStatus 
-            //     ? new SolanaPublicKey(this.proxyStatus?.NEON_EVM_ID!)
-            //     : new SolanaPublicKey(NEON_STATUS_DEVNET_SNAPSHOT.NEON_EVM_ID)
+            this.neonProgram = this.proxyStatus 
+                ? new SolanaPublicKey(this.proxyStatus?.neonEvmProgramId!)
+                : new SolanaPublicKey(NEON_STATUS_DEVNET_SNAPSHOT.neonEvmProgramId)
         },
         async setProxyStatus() {
             try {
