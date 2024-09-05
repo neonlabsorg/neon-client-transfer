@@ -25,7 +25,6 @@ import type { ContractAbi } from 'web3-types'
 
 interface IWalletStore {
     isLoading: boolean,
-    signature: TransferSignature,
     walletBalance: TokenBalance,
     tokenBalance: TokenBalance,
     neonWallet: Web3Account,
@@ -49,7 +48,6 @@ export const useWalletsStore = defineStore('wallets', {
             solana: BIG_ZERO,
             neon: BIG_ZERO
         } as TokenBalance,
-        signature: {} as TransferSignature,
         neonWallet: {} as Web3Account,
         neonBalance: new Big(0),
         solanaWallet: {} as Keypair,
@@ -81,11 +79,7 @@ export const useWalletsStore = defineStore('wallets', {
             const web3Store = useWeb3Store()
 
             this.neonWallet = web3Store.web3Provider?.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
-        },
-        setSignature(signature: TransferSignature) {
-            this.signature = signature
-        },
-        
+        },        
         updateWalletBalance(balance: TokenBalance) {
             this.walletBalance = balance
         },
@@ -113,43 +107,56 @@ export const useWalletsStore = defineStore('wallets', {
         async getTokenBalance(token: SPLToken) {
             const formStore = useFormStore()
 
-            switch (token.symbol) {
-                case 'NEON': {
-                    const solana = await this.getSplTokenBalance(token)
-                    const neon = await this.getNeonBalance()
+            formStore.setIsPendingTokenChange(true)
 
-                    this.updateTokenBalance({
-                        solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals)),
-                        neon
-                    });
-                    break;
-                }
-                case 'SOL': {
-                    const solana = await this.getSolanaBalance();
-                    const neon = await this.getNeonBalance();
+            try {
+                switch (token.symbol) {
+                    case 'NEON': {
+                        const solana = await this.getSplTokenBalance(token)
+                        const neon = await this.getNeonBalance()
+                        
+                        formStore.setError(false)
+                        this.updateTokenBalance({
+                            solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals)),
+                            neon
+                        });
+                        break;
+                    }
+                    case 'SOL': {
+                        const solana = await this.getSolanaBalance();
+                        const neon = await this.getNeonBalance();
+    
+                        formStore.setError(false)
+                        this.updateTokenBalance({ solana, neon });
+                        break;
+                    }
+                    case 'wSOL': {
+                        const address = new PublicKey(formStore.currentSplToken?.address_spl);
+                        const associatedToken = getAssociatedTokenAddressSync(address, this.solanaWallet.publicKey);
+                        const solana = await this.getSolanaBalance(associatedToken);
+                        const neon = await this.getMintTokenBalance();
 
-                    this.updateTokenBalance({ solana, neon });
-                    break;
+                        formStore.setError(false)
+                        this.updateTokenBalance({ solana, neon });
+                        break;
+                    }
+                    default: {
+                        const solana = await this.getSplTokenBalance(token);
+                        const neon = await this.getMintTokenBalance();
+    
+                        formStore.setError(false)
+                        this.updateTokenBalance({
+                            solana: new Big(solana.amount).div(Math.pow(10, solana.decimals)),
+                            neon
+                        });
+                        break;
+                    }
                 }
-                case 'wSOL': {
-                    const address = new PublicKey(formStore.currentSplToken?.address_spl);
-                    const associatedToken = getAssociatedTokenAddressSync(address, this.solanaWallet.publicKey);
-                    const solana = await this.getSolanaBalance(associatedToken);
-                    const neon = await this.getMintTokenBalance();
-                    this.updateTokenBalance({ solana, neon });
-                    break;
-                }
-                default: {
-                    const solana = await this.getSplTokenBalance(token);
-                    const neon = await this.getMintTokenBalance();
-
-                    this.updateTokenBalance({
-                        solana: new Big(solana.amount).div(Math.pow(10, solana.decimals)),
-                        neon
-                    });
-                    break;
-                }
+            } catch (e) {
+                formStore.setError(true)
             }
+
+            formStore.setIsPendingTokenChange(false)
         },
 
         async getMintTokenBalance(contractAbi: ContractAbi = erc20Abi as ContractAbi): Promise<Big> {

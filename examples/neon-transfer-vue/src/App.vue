@@ -2,7 +2,7 @@
 import { onBeforeMount } from 'vue';
 import { storeToRefs } from 'pinia'
 import { useWeb3Store, useWalletsStore, useFormStore, useTransactionStore } from '@/stores'
-import { networkUrls } from './utils';
+import { networkUrls, stringShort } from '@/utils';
 
 import type { TransferDirection } from '@/types';
 
@@ -18,19 +18,26 @@ const {
   transferDirection, 
   directionBalance, 
   isSubmitDisabled,
+  isSubmitting,
   isTransfering,
   totalAmount,
   isLoading, 
   tokenList 
 } = storeToRefs(formStore)
 
+const {
+  signature,
+  solanaSignature,
+  neonSignature,
+} = storeToRefs(transactionStore)
+
 const handleEvmNetworkSelect = (event: any): any => {
   web3Store.setChainId(Number(event.target.value));
   transactionStore.setNetworkTokenMint()
   formStore.setTokenList()
   formStore.setCurrentSplToken('');
-  walletsStore.setSignature({});
-  // walletsStore.setTokenBalance({ solana: BIG_ZERO, neon: BIG_ZERO });
+  transactionStore.setSignature({});
+  walletsStore.setTokenBalance();
 };
 const handleTransferDirection = () => {
   const isSolanaDirection = transferDirection.value.direction === 'solana';
@@ -40,13 +47,14 @@ const handleTransferDirection = () => {
     to: isSolanaDirection ? solanaWallet.value.publicKey.toBase58() : neonWallet.value.address.toString()
   };
   formStore.setTrtansferDirection(changeDirection);
-  walletsStore.setSignature({});
+  transactionStore.setSignature({});
 }
 const handleSelect = (event: Event) => {
   const { value } = event.target as HTMLInputElement
 
   formStore.setCurrentSplToken(value)
   transactionStore.setMintPublicKey()
+  transactionStore.setSignature({});
 }
 const handleSubmit = () => {
   web3Store.setSigner()
@@ -57,7 +65,7 @@ const handleAmountChange = (event: Event) => {
   const { value } = event.target as HTMLInputElement
 
   formStore.setInputAmount(value);
-  walletsStore.setSignature({});
+  transactionStore.setSignature({});
 }
 
 onBeforeMount(async () => {
@@ -128,15 +136,15 @@ onBeforeMount(async () => {
         <input type="number" :value="inputAmount" @input="handleAmountChange" className="form-input" placeholder="0" />
       </div>  
       <button type="button" className="form-button" @click="handleSubmit" :disabled="isSubmitDisabled">
-        Transfer
+        <span v-if="!isSubmitting">Transfer</span>
+        <span v-if="isSubmitting" className="icon-loader"></span>
       </button>
     </form>
-    <!-- {(signature.solana || signature.neon) &&
-      <div className="flex flex-col gap-[10px] p-[12px] bg-[#282230] rounded-[12px] truncate">
-        {signature.solana && <a href={solanaSignature(signature.solana)} target="_blank"
-                                rel="noreferrer">Solana: {stringShort(signature.solana, 40)}</a>}
-        {signature.neon && <a href={neonSignature(signature.neon)} target="_blank"
-                              rel="noreferrer">Neon: {stringShort(signature.neon, 40)}</a>}
-      </div>} -->
+    <div v-show="signature.solana || signature.neon" className="flex flex-col gap-[10px] p-[12px] bg-[#282230] rounded-[12px] truncate">
+      <a v-show="signature.solana" :href="solanaSignature" target="_blank"
+                              rel="noreferrer">Solana: {{stringShort(signature.solana, 40)}}</a>
+      <a v-show="signature.neon" :href="neonSignature" target="_blank"
+                            rel="noreferrer">Neon: {{stringShort(signature.neon, 40)}}</a>
+    </div>
   </div>
 </template>

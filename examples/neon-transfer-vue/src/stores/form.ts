@@ -16,7 +16,9 @@ import type { SPLToken } from "@neonevm/token-transfer-core"
 interface IFormStore {
     amount: string
     isLoading: boolean,
+    isPendingTokenChange: boolean,
     isSubmitting: boolean,
+    hasError: boolean,
     currentSplToken: SPLToken | null
     tokenList: SPLToken[]
     transferDirection: TransferDirection
@@ -26,7 +28,9 @@ export const useFormStore = defineStore('form', {
     state: (): IFormStore => ({
         amount: '0.1',
         isLoading: true,
+        hasError: false,
         isSubmitting: false,
+        isPendingTokenChange: false,
         currentSplToken: null,
         transferDirection: {} as TransferDirection,
         tokenList: [] as SPLToken[],
@@ -52,10 +56,6 @@ export const useFormStore = defineStore('form', {
                 walletStore.getTokenBalance(this.currentSplToken)
             }
         },
-        setCurrentNetwork() {
-            const web3Store = useWeb3Store()
-
-        },
         setSplToken() {
 
         },
@@ -65,8 +65,14 @@ export const useFormStore = defineStore('form', {
         setIsSubmitting(isSubmitting: boolean) {
             this.isSubmitting= isSubmitting
         },
+        setIsPendingTokenChange(isPending: boolean) {
+          this.isPendingTokenChange = isPending
+        },
         setInputAmount(amount: string) {
             this.amount = amount
+        },
+        setError(error: boolean) {
+          this.hasError = error
         },
         setTokenList() {
             const web3Store = useWeb3Store()
@@ -173,7 +179,7 @@ export const useFormStore = defineStore('form', {
     },
     getters: {
         inputAmount: state => state.amount,
-        isSubmitDisabled: state => !state.amount || !state.currentSplToken || state.isSubmitting,
+        isSubmitDisabled: state => !state.amount || !state.currentSplToken || state.isSubmitting || state.hasError || state.isPendingTokenChange,
         isTransfering: state => state.isSubmitting,
         totalAmount: (state: IFormStore) => {
             const walletStore = useWalletsStore()
