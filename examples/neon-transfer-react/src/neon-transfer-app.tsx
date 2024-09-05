@@ -265,7 +265,6 @@ function NeonTransferApp() {
     if (token && splToken) {
       setSubmitDisable(true);
       const solanaSigner: Signer = toSigner(solanaWallet);
-      console.log(solanaSigner)
       if (transfer.direction === 'solana') {
         switch (splToken.symbol) {
           case 'NEON': {
