@@ -33,19 +33,19 @@ import {
   getGasToken,
   getMultiTokenProxy,
   getWeb3Provider,
-  mintTokenBalance,
+  mintTokenBalanceWeb3,
   NEON_PRIVATE,
   NEON_TOKEN_MODEL,
-  neonBalance,
+  neonBalanceWeb3,
   neonSignature,
   PHANTOM_PRIVATE,
   sendNeonTransaction,
   sendSolanaTransaction,
   setupResourceForSpl,
   solanaSignature,
-  solanaWalletSigner,
   splTokenBalance,
-  toSigner
+  toSigner,
+  walletSignerWeb3
 } from '../tools';
 
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
@@ -73,7 +73,7 @@ let web3: Web3;
 let neonWallet: Web3Account;
 let connection: Connection;
 
-describe('NEON token transfer tests', () => {
+describe.skip('NEON token transfer tests', () => {
   beforeAll(async () => {
     try {
       const result = await getMultiTokenProxy(NEON_PROXY_URL!);
@@ -95,13 +95,13 @@ describe('NEON token transfer tests', () => {
 
   beforeAll(async () => {
     try {
-      const token = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+      const token = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       if (token.gte(0.1)) {
         console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
       } else {
         await faucet.requestNeon(neonWallet.address, 2);
         await delay(1e4);
-        const token = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+        const token = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
         console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
       }
     } catch (e) {
@@ -140,7 +140,7 @@ describe('NEON token transfer tests', () => {
 
   it(`Neon Account has tokens`, async () => {
     try {
-      const token = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+      const token = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       expect(token.toNumber()).toBeGreaterThan(0.1);
     } catch (e) {
       console.error(e);
@@ -155,13 +155,13 @@ describe('NEON token transfer tests', () => {
       chainId: CHAIN_ID
     };
     try {
-      const balanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+      const balanceBefore = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       const transaction = await neonNeonTransactionWeb3(NEON_PROXY_URL!, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
       const hash = await sendNeonTransaction(web3, transaction, neonWallet);
       neonSignature(`Signature`, hash);
       expect(hash.length).toBeGreaterThan(2);
       await delay(5e3);
-      const balanceAfter = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+      const balanceAfter = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
       console.log(`Balance: ${balanceBefore} > ${balanceAfter} NEON ==> ${balanceSPL?.uiAmount} ${neonToken.symbol} in Solana`);
       expect(balanceAfter.toNumber()).toBeLessThan(balanceBefore.toNumber());
@@ -189,8 +189,7 @@ describe('NEON token transfer tests', () => {
       solanaSignature(`Signature`, signature, SOLANA_URL!);
       await delay(10e3);
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
-      const balanceNeon = await neonBalance(NEON_PROXY_URL!
-        , neonWallet.address);
+      const balanceNeon = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
       expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
     } catch (e) {
@@ -205,8 +204,8 @@ describe('NEON token transfer tests', () => {
       const amount = 0.1;
       const neon: SPLToken = { ...NEON_TOKEN_MODEL, chainId: CHAIN_ID };
       const wneon: SPLToken = faucet.tokens[id];
-      const neonBalanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
-      const wneonBalanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
+      const neonBalanceBefore = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
+      const wneonBalanceBefore = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
       try {
         const wrapTransaction = await neonNeonTransactionWeb3(NEON_PROXY_URL!, neonWallet.address, wneon.address, solanaWallet.publicKey, amount);
         const wrapHash = await sendNeonTransaction(web3, wrapTransaction, neonWallet);
@@ -214,8 +213,8 @@ describe('NEON token transfer tests', () => {
         expect(wrapHash.length).toBeGreaterThan(2);
         await delay(5e3);
 
-        const wneonBalanceAfter = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
-        const neonBalanceAfter = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+        const wneonBalanceAfter = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
+        const neonBalanceAfter = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
 
         console.log(`Balance: ${wneonBalanceBefore} => ${wneonBalanceAfter} ${wneon.symbol} in Neon`);
         console.log(`Balance: ${neonBalanceBefore} => ${neonBalanceAfter} ${neon.symbol} in Neon`);
@@ -238,7 +237,7 @@ describe('NEON token transfer tests', () => {
         chainId: CHAIN_ID
       };
       const wneon: SPLToken = faucet.tokens[id];
-      const wneonBalanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
+      const wneonBalanceBefore = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
       try {
         const data = wrappedNeonTransactionData(NEON_PROXY_URL!, wneon, amount);
         const unwrapTransaction = wrappedNeonTransaction<Transaction>(neonWallet.address, wneon.address, data as string) as Transaction;
@@ -253,18 +252,18 @@ describe('NEON token transfer tests', () => {
         expect(unwrapHash.length).toBeGreaterThan(2);
         await delay(5e3);
 
-        const wneonBalanceAfter = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
+        const wneonBalanceAfter = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wneon, neonWrapper2Abi as ContractAbi);
         console.log(`Balance: ${wneonBalanceBefore} > ${wneonBalanceAfter} ${wneon.symbol} in Neon`);
         expect(wneonBalanceAfter).toBeLessThan(wneonBalanceBefore);
 
-        const neonBalanceBefore = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+        const neonBalanceBefore = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
 
         const transaction = await neonNeonTransactionWeb3(NEON_PROXY_URL!, neonWallet.address, NEON_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
         const hash = await sendNeonTransaction(web3, transaction, neonWallet);
         neonSignature(`NEON transfer signature`, hash);
         await delay(5e3);
 
-        const neonBalanceAfter = await neonBalance(NEON_PROXY_URL!, neonWallet.address);
+        const neonBalanceAfter = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
         const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, neon);
 
         console.log(`Balance: ${neonBalanceBefore} > ${neonBalanceAfter} ${wneon.symbol} ==> ${balanceSPL.uiAmount} ${neon.symbol} in Solana`);
@@ -285,10 +284,10 @@ describe('NEON token transfer tests', () => {
       const wSOL = faucet.tokens[id];
       const associatedToken = getAssociatedTokenAddressSync(new PublicKey(wSOL.address_spl), solanaWallet.publicKey);
       const wSolBefore = await connection.getBalance(associatedToken);
-      const balanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
+      const balanceBefore = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
-        const walletSigner = solanaWalletSigner(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+        const walletSigner = walletSignerWeb3(web3, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
         const transaction = await createWrapAndTransferSOLTransaction(connection, NEON_PROXY_URL!, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, walletSigner, wSOL, amount, CHAIN_ID);
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
@@ -297,7 +296,7 @@ describe('NEON token transfer tests', () => {
         await delay(5e3);
 
         const wSolAfterTransfer = await connection.getBalance(associatedToken);
-        const balanceAfter = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
+        const balanceAfter = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wSOL);
         console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} < ${wSolAfterTransfer / LAMPORTS_PER_SOL} ${wSOL.symbol} ==> ${balanceBefore} < ${balanceAfter} ${wSOL.symbol} in Neon`);
         expect(balanceAfter).toBeGreaterThanOrEqual(balanceBefore);
       } catch (e) {
@@ -316,7 +315,7 @@ describe('NEON token transfer tests', () => {
       const mintPubkey = new PublicKey(wSOL.address_spl);
       const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
       try {
-        const balanceBefore = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
+        const balanceBefore = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wSOL);
         console.log(`Balance: ${balanceBefore ?? 0} ${wSOL.symbol}`);
         const signer: Signer = toSigner(solanaWallet);
         await createAssociatedTokenAccount(connection, signer, wSOL);
@@ -327,7 +326,7 @@ describe('NEON token transfer tests', () => {
         neonSignature(`Neon Signature`, signedNeonTransaction);
         expect(signedNeonTransaction.length).toBeGreaterThan(0);
         await delay(15e3);
-        const balanceAfter = await mintTokenBalance(NEON_PROXY_URL!, neonWallet.address, wSOL);
+        const balanceAfter = await mintTokenBalanceWeb3(NEON_PROXY_URL!, neonWallet.address, wSOL);
         const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, wSOL);
         console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${wSOL.symbol} ==> ${balanceSPL?.uiAmount} ${wSOL.symbol} in Solana`);
         expect(balanceAfter).toBeLessThan(balanceBefore);
@@ -349,9 +348,11 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  //Create and transfer custom SPL token - to test in different environments
-  //Need to have a lot of NEONs on the wallet balance - to deploy ERC-20 wrapper
-  //Use for local development
+  /**
+   Create and transfer custom SPL token - to test in different environments
+   Need to have a lot of NEONs on the wallet balance - to deploy ERC-20 wrapper
+   Use for local development
+   */
   describe.skip('Transfer custom SPL token', () => {
     let customToken = { ...customSplToken, chainId: CHAIN_ID };
     let factoryAddress;

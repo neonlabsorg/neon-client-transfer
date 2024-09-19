@@ -1,6 +1,6 @@
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { createSignerFromKeypair, signerIdentity } from "@metaplex-foundation/umi";
-import { PHANTOM_PRIVATE } from "../../../tools";
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import { createSignerFromKeypair, signerIdentity } from '@metaplex-foundation/umi';
+import { PHANTOM_PRIVATE } from '../../../tools';
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
 

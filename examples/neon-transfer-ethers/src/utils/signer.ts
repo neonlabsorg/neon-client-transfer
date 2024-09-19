@@ -6,8 +6,7 @@ import {
   Transaction,
   TransactionSignature
 } from '@solana/web3.js';
-import { TransactionRequest } from '@ethersproject/providers';
-import { Signer as NeonSigner } from '@ethersproject/abstract-signer';
+import { Signer as NeonSigner, TransactionRequest } from 'ethers';
 
 export function toSigner({ publicKey, secretKey }: Keypair): Signer {
   return { publicKey, secretKey };

@@ -8,10 +8,13 @@
     "test": "yarn tests",
     "start": "npx nodemon"
   },
+  "workspaces": [
+    "../../packages/*"
+  ],
   "license": "ISC",
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.2.0",
-    "@neonevm/token-transfer-web3": "4.2.0",
+    "@neonevm/token-transfer-core": "4.3.0-devnet",
+    "@neonevm/token-transfer-web3": "4.3.0-devnet",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.1",
     "web3": "^4.5.0"

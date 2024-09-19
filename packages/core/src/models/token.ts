@@ -1,8 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import {
-  AccountInfo,
-  PublicKey
-} from '@solana/web3.js';
+import { AccountInfo } from '@solana/web3.js';
 
 export interface SPLToken {
   address: string;
@@ -26,7 +22,7 @@ export interface GasTokenV2 {
   tokenChainId: `0x${string}`;
 }
 
-export type Amount = number | bigint | string | BigNumber;
+export type Amount = number | bigint | string;
 
 export type NeonAddress = `0x${string}` | string;
 

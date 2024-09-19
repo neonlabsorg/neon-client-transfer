@@ -6,7 +6,7 @@ import {
   TokenInstruction,
   transferInstructionData
 } from '@solana/spl-token';
-import { toWei } from 'web3-utils';
+import { parseUnits } from 'ethers';
 import { NEON_TOKEN_DECIMALS } from './data';
 import { Amount, EvmInstruction, NeonAddress, SPLToken } from './models';
 import {
@@ -99,6 +99,6 @@ export function wrappedNeonTransaction<T>(from: string, to: string, data: string
 }
 
 export function neonNeonTransaction<T>(from: string, to: string, amount: Amount, data: string): T {
-  const value = `0x${BigInt(toWei(amount.toString(), 'ether')).toString(16)}`;
+  const value = `0x${parseUnits(amount.toString(), 'ether').toString(16)}`;
   return { from, to, value, data } as T;
 }

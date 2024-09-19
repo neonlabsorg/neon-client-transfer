@@ -1,7 +1,6 @@
-import {compile, walletSigner} from '../utils';
-import { ContractFactory } from '@ethersproject/contracts';
-import { JsonRpcProvider } from "@ethersproject/providers";
-import { NEON_PRIVATE } from "../artifacts";
+import { ContractFactory, JsonRpcProvider } from 'ethers';
+import { compile, walletSigner } from '../utils';
+import { NEON_PRIVATE } from '../artifacts';
 
 export async function deployFactory(proxyUrl: string): Promise<string> {
   const provider = new JsonRpcProvider(proxyUrl);
@@ -15,7 +14,7 @@ export async function deployFactory(proxyUrl: string): Promise<string> {
   const abi = factoryContract.abi;
   const factory = new ContractFactory(abi, bytecode, wallet);
   const contractInstance = await factory.deploy();
-
-  console.log('Contract deployed to:', contractInstance.address);
-  return contractInstance.address;
+  const address = await contractInstance.getAddress();
+  console.log(`Contract deployed to: ${address}`);
+  return address;
 }

@@ -9,8 +9,7 @@ import {
   createMintNeonTransactionEthers,
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Wallet } from '@ethersproject/wallet';
+import { JsonRpcProvider, Wallet } from 'ethers';
 import { decode } from 'bs58';
 import { sendNeonTransactionEthers, sendSolanaTransaction, toSigner } from './utils';
 

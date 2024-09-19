@@ -1,10 +1,10 @@
 import { PublicKey } from '@solana/web3.js';
-import { JsonRpcProvider } from '@ethersproject/providers';
+import { JsonRpcProvider } from 'ethers';
 import {
   GasToken,
   GasTokenData,
   MultiTokenProxy,
-  NeonProxyRpcApi,
+  NeonProxyRpcApi
 } from '@neonevm/token-transfer-core';
 import HttpProvider from 'web3-providers-http';
 import { Web3 } from 'web3';
@@ -29,4 +29,18 @@ export function getGasToken(tokenList: GasToken[], chainId: number): GasTokenDat
   const gasToken = tokenList.find(i => parseInt(i.tokenChainId, 16) === chainId)!;
   const tokenMintAddress = new PublicKey(gasToken.tokenMint);
   return { gasToken, tokenMintAddress };
+}
+
+export async function getWalletService(host: string): Promise<any> {
+  const response = await fetch(`${host}/info/wallet`);
+  return response.json();
+}
+
+export async function sendSignedTransactionToWalletService(host: string, body: any): Promise<any> {
+  const response = await fetch(`${host}/`, {
+    method: 'POST',
+    mode: 'cors',
+    body: JSON.stringify(body)
+  });
+  return response.json();
 }

@@ -1,12 +1,15 @@
 {
   "name": "@neonevm/token-transfer-ethers",
-  "version": "4.2.0",
+  "version": "4.3.0-devnet",
   "description": "Neon EVM token transfer methods leveraging the ethers.js library",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "./dist/**/*"
+  ],
+  "workspaces": [
+    "../packages/*"
   ],
   "engines": {
     "node": ">=18"
@@ -29,19 +32,12 @@
   "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
   "license": "ISC",
   "dependencies": {
-    "@ethersproject/abi": "~5.7.0",
-    "@ethersproject/abstract-provider": "~5.7.0",
-    "@ethersproject/abstract-signer": "~5.7.0",
-    "@ethersproject/address": "~5.7.0",
-    "@ethersproject/bignumber": "^5.7.0",
-    "@ethersproject/constants": "~5.7.0",
-    "@ethersproject/contracts": "~5.7.0",
-    "@ethersproject/providers": "~5.7.0",
-    "@ethersproject/units": "~5.7.0",
-    "@ethersproject/wallet": "^5.7.0",
-    "@neonevm/token-transfer-core": "4.2.0",
     "@solana/spl-token": "^0.3.8",
-    "@solana/web3.js": "^1.77.3"
+    "@solana/web3.js": "^1.77.3",
+    "ethers": "^6.13.2"
+  },
+  "peerDependencies": {
+    "@neonevm/token-transfer-core": "4.3.0-devnet"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^5.43.0",

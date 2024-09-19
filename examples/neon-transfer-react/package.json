@@ -1,7 +1,7 @@
 {
   "name": "@neonevm/neon-transfer-demo-react",
   "description": "NeonEVM token transfer library demo with multi-token support",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "start": "react-app-rewired start",
@@ -9,6 +9,9 @@
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject"
   },
+  "workspaces": [
+    "../../packages/*"
+  ],
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -28,8 +31,8 @@
     ]
   },
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.2.0",
-    "@neonevm/token-transfer-web3": "4.2.0",
+    "@neonevm/token-transfer-core": "4.3.0-devnet",
+    "@neonevm/token-transfer-web3": "4.3.0-devnet",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",

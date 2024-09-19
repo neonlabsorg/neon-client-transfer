@@ -1,12 +1,15 @@
 {
   "name": "@neonevm/token-transfer-web3",
-  "version": "4.2.0",
+  "version": "4.3.0-devnet",
   "description": "Neon EVM token transfer methods leveraging the web3.js library",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "./dist/**/*"
+  ],
+  "workspaces": [
+    "../packages/*"
   ],
   "engines": {
     "node": ">=18"
@@ -29,7 +32,6 @@
   "homepage": "https://github.com/neonlabsorg/neon-client-transfer#readme",
   "license": "ISC",
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.2.0",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",
     "web3-core": "^4.3.2",
@@ -38,6 +40,9 @@
     "web3-eth-contract": "^4.1.4",
     "web3-types": "^1.3.1",
     "web3-utils": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@neonevm/token-transfer-core": "4.3.0-devnet"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^5.43.0",

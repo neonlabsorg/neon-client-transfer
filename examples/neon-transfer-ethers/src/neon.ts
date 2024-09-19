@@ -1,6 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Wallet } from '@ethersproject/wallet';
+import { JsonRpcProvider, Wallet } from 'ethers';
 import {
   NEON_TOKEN_MINT_DECIMALS,
   NEON_TRANSFER_CONTRACT_DEVNET,

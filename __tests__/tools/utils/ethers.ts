@@ -1,30 +1,40 @@
-import { erc20Abi, SPLToken } from '@neonevm/token-transfer-core';
-import { JsonRpcProvider, TransactionRequest } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
-import { Wallet } from '@ethersproject/wallet';
-import { Signer } from '@ethersproject/abstract-signer';
-import { BigNumber } from '@ethersproject/bignumber';
+import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
+import { Contract, JsonRpcProvider, TransactionRequest, Wallet } from 'ethers';
+import { Big } from 'big.js';
 
-
-export async function getTokenBalance(provider: JsonRpcProvider, account: string, token: SPLToken, contractAbi: any = erc20Abi): Promise<number> {
+export async function getTokenBalance(provider: JsonRpcProvider, wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi): Promise<bigint> {
   const tokenInstance = new Contract(token.address, contractAbi, provider);
-  const balance = await tokenInstance.balanceOf(account);
-  return balance.toNumber() / Math.pow(10, token.decimals);
+  const balance = await tokenInstance.balanceOf(wallet.address);
+  return BigInt(balance) / BigInt(Math.pow(10, token.decimals));
 }
 
-export function walletSigner(provider: JsonRpcProvider, pk: string): Wallet {
-  return new Wallet(pk, provider);
+export function walletSigner(provider: JsonRpcProvider, privateKey: string): Wallet {
+  return new Wallet(privateKey, provider);
 }
 
-export async function sendNeonTransactionEthers(
-  transaction: TransactionRequest,
-  signer: Signer
-): Promise<string> {
+export async function sendNeonTransactionEthers(transaction: TransactionRequest, signer: Wallet): Promise<string> {
   const receipt = await signer.sendTransaction(transaction);
   return receipt.hash;
 }
 
 export async function estimateGas(provider: JsonRpcProvider, transaction: TransactionRequest, gasLimit = 5e4) {
   const gasEstimate = await provider.estimateGas(transaction);
-  return gasEstimate.gt(gasLimit) ? gasEstimate.add(BigNumber.from(1e4)) : gasLimit;
+  return gasEstimate > BigInt(gasLimit) ? gasEstimate + BigInt(1e4) : BigInt(gasLimit);
+}
+
+export async function neonBalanceEthers(provider: JsonRpcProvider, address: Wallet): Promise<Big> {
+  const balance = await provider.getBalance(address);
+  console.log('NEON balance:', balance, address);
+  return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
+}
+
+
+export async function mintTokenBalanceEthers(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<bigint> {
+  const tokenInstance = new Contract(token.address, contractAbi, wallet);
+  if (tokenInstance[method]) {
+    const balanceOf = tokenInstance[method];
+    const balance: bigint = await balanceOf(wallet.address);
+    return balance / BigInt(10 ** token.decimals);
+  }
+  return BigInt(0);
 }

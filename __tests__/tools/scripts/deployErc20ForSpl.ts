@@ -1,17 +1,16 @@
+import { Contract, JsonRpcProvider } from 'ethers';
 import { erc20ForSplAbi } from '../../data/abi/erc20ForSplFactory';
 import { base58ToHex, walletSigner } from '../utils';
 import { NEON_PRIVATE } from '../../tools';
 import { zeroAddress } from '../artifacts';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
 
-export function erc20ForSPLFactoryContract(contractAddress: string, proxyUrl: string, provider: JsonRpcProvider): Contract {
+export function erc20ForSPLFactoryContract(contractAddress: string, provider: JsonRpcProvider): Contract {
   return new Contract(contractAddress, erc20ForSplAbi, provider);
 }
 
 export async function deployErc20ForSplWrapper(contractAddress: string, proxyUrl: string, tokenMint: string): Promise<string | null> {
   const provider = new JsonRpcProvider(proxyUrl);
-  const contract = erc20ForSPLFactoryContract(contractAddress, proxyUrl, provider);
+  const contract = erc20ForSPLFactoryContract(contractAddress, provider);
   const wallet = walletSigner(provider, NEON_PRIVATE);
   const hexAddr = base58ToHex(tokenMint);
 
@@ -20,10 +19,11 @@ export async function deployErc20ForSplWrapper(contractAddress: string, proxyUrl
   //Check if ERC20 wrapper already exists
   let ecr20Address = await contract.getErc20ForSpl(hexAddr);
 
-  if(nonZeroAddress(ecr20Address)) {
+  if (nonZeroAddress(ecr20Address)) {
     return ecr20Address;
   }
 
+  // @ts-ignore
   const tx = await contractWithSigner.createErc20ForSpl(hexAddr);
   console.log(`Transaction hash: ${tx.hash}`);
 

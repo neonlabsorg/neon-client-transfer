@@ -1,9 +1,5 @@
 import { decode } from 'bs58';
-import {
-  ChainId,
-  SPLToken,
-  NEON_TOKEN_MINT_DECIMALS
-} from '@neonevm/token-transfer-core';
+import { ChainId, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
 
 // export const NEON_PRIVATE = '0x7ae72c37b092c82f60b4aa17e8ab476e20d13084570d39d3ea9e17ae3c6f7752';
 // export const wNEON_PRIVATE = '0xf91e9d060544ba23a059b62b8626acefd21c51c83192dcb0bbb534eb48e14159';
@@ -40,12 +36,12 @@ export const SOL_TOKEN_MODEL: SPLToken = {
 
 export const zeroAddress = '0x0000000000000000000000000000000000000000';
 
-export const customSplToken = {
-  "chainId": 111,
-  "address_spl": "",
-  "address": "0x",
-  "decimals": 9,
-  "name": "$FunGible Token 1",
-  "symbol": "$FT1",
-  "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/ethereum-eth-logo.svg"
-} as SPLToken;
+export const customSplToken: SPLToken = {
+  chainId: 111,
+  address_spl: '',
+  address: '0x',
+  decimals: 9,
+  name: '$FunGible Token 1',
+  symbol: '$FT1',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/ethereum-eth-logo.svg'
+};
