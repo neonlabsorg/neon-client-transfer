@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import {
   AccountInfo,
   PublicKey
@@ -26,7 +25,7 @@ export interface GasTokenV2 {
   tokenChainId: `0x${string}`;
 }
 
-export type Amount = number | bigint | string | BigNumber;
+export type Amount = number | bigint | string;
 
 export type NeonAddress = `0x${string}` | string;
 
