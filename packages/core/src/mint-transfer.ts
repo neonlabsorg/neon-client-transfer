@@ -115,7 +115,7 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
 
 export function createComputeBudgetUtilsInstruction(programId: PublicKey, computeUnits: NeonComputeUnits = NEON_COMPUTE_UNITS): TransactionInstruction {
   const a = Buffer.from([0x00]);
-  const b = Buffer.from(toBytesInt32(parseInt(computeUnits ?? NEON_COMPUTE_UNITS)));
+  const b = Buffer.from(toBytesInt32(computeUnits));
   const c = Buffer.from(toBytesInt32(0));
   const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId, data, keys: [] });
@@ -123,7 +123,7 @@ export function createComputeBudgetUtilsInstruction(programId: PublicKey, comput
 
 export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME): TransactionInstruction {
   const a = Buffer.from([0x01]);
-  const b = Buffer.from(toBytesInt32(parseInt(neonHeapFrame ?? NEON_HEAP_FRAME)));
+  const b = Buffer.from(toBytesInt32(neonHeapFrame));
   const data = Buffer.concat([a, b]);
   return new TransactionInstruction({ programId, data, keys: [] });
 }

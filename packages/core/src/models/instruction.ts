@@ -15,6 +15,7 @@ export const enum EvmInstruction {
   AccountCreateBalance = 0x30, // 48
   DepositToBalance = 0x31, // 49
   TransactionExecuteFromInstruction = 0x3D, //  61
+  TransactionExecuteFromInstructionMainnet = 0x32, //  50
 }
 
 export const enum AccountHex {
@@ -36,5 +37,5 @@ export interface CreateExecFromDataInstructionParams {
   neonRawTransaction: string;
   neonKeys: AccountMeta[];
   chainId: number;
-  neonPoolCount: string;
+  neonPoolCount: number;
 }
