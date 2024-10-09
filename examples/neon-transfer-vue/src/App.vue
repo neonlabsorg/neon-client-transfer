@@ -1,40 +1,40 @@
 <script setup lang="ts">
 import { onBeforeMount } from 'vue';
-import { storeToRefs } from 'pinia'
-import { useWeb3Store, useWalletsStore, useFormStore, useTransactionStore } from '@/stores'
+import { storeToRefs } from 'pinia';
+import { useFormStore, useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 import { networkUrls, stringShort } from '@/utils';
 
 import type { TransferDirection } from '@/types';
 
-const web3Store = useWeb3Store()
-const walletsStore = useWalletsStore()
-const formStore = useFormStore()
-const transactionStore = useTransactionStore()
+const web3Store = useWeb3Store();
+const walletsStore = useWalletsStore();
+const formStore = useFormStore();
+const transactionStore = useTransactionStore();
 
-const { solanaWallet, neonWallet } = storeToRefs(walletsStore)
-const { 
+const { solanaWallet, neonWallet } = storeToRefs(walletsStore);
+const {
   inputAmount,
-  currentSplToken, 
-  transferDirection, 
-  directionBalance, 
+  currentSplToken,
+  transferDirection,
+  directionBalance,
   isSubmitDisabled,
   isSubmitting,
   isTransfering,
   totalAmount,
-  isLoading, 
-  tokenList 
-} = storeToRefs(formStore)
+  isLoading,
+  tokenList
+} = storeToRefs(formStore);
 
 const {
   signature,
   solanaSignature,
-  neonSignature,
-} = storeToRefs(transactionStore)
+  neonSignature
+} = storeToRefs(transactionStore);
 
 const handleEvmNetworkSelect = (event: any): any => {
   web3Store.setChainId(Number(event.target.value));
-  transactionStore.setNetworkTokenMint()
-  formStore.setTokenList()
+  transactionStore.setNetworkTokenMint();
+  formStore.setTokenList();
   formStore.setCurrentSplToken('');
   transactionStore.setSignature({});
   walletsStore.setTokenBalance();
@@ -48,32 +48,32 @@ const handleTransferDirection = () => {
   };
   formStore.setTrtansferDirection(changeDirection);
   transactionStore.setSignature({});
-}
+};
 const handleSelect = (event: Event) => {
-  const { value } = event.target as HTMLInputElement
+  const { value } = event.target as HTMLInputElement;
 
-  formStore.setCurrentSplToken(value)
-  transactionStore.setMintPublicKey()
+  formStore.setCurrentSplToken(value);
+  transactionStore.setMintPublicKey();
   transactionStore.setSignature({});
-}
+};
 const handleSubmit = () => {
-  web3Store.setSigner()
-  formStore.initTransfer()
-}
+  web3Store.setSigner();
+  formStore.initTransfer();
+};
 
 const handleAmountChange = (event: Event) => {
-  const { value } = event.target as HTMLInputElement
+  const { value } = event.target as HTMLInputElement;
 
   formStore.setInputAmount(value);
   transactionStore.setSignature({});
-}
+};
 
 onBeforeMount(async () => {
-  await web3Store.initStore()
-  await walletsStore.initStore()
-  await transactionStore.initStore()
-  formStore.initStore()
-})
+  await web3Store.initStore();
+  await walletsStore.initStore();
+  await transactionStore.initStore();
+  formStore.initStore();
+});
 </script>
 
 <template>
@@ -121,7 +121,8 @@ onBeforeMount(async () => {
       </div>
       <div className="form-field">
         <label htmlFor="select" className="form-label">Select token</label>
-        <select :value="currentSplToken?.symbol" @change="handleSelect" className="form-select" :disabled="isTransfering">
+        <select :value="currentSplToken?.symbol" @change="handleSelect" className="form-select"
+                :disabled="isTransfering">
           <option value="" disabled>Select Token</option>
           <option v-for="token in tokenList" :value="token.symbol" :key="token.name">
             {{ `${token.name} ${token.symbol}` }}
@@ -133,18 +134,21 @@ onBeforeMount(async () => {
           <span>Amount</span>
           <span>{{ totalAmount }}</span>
         </label>
-        <input type="number" :value="inputAmount" @input="handleAmountChange" className="form-input" placeholder="0" />
-      </div>  
-      <button type="button" className="form-button" @click="handleSubmit" :disabled="isSubmitDisabled">
+        <input type="number" :value="inputAmount" @input="handleAmountChange" className="form-input"
+               placeholder="0" />
+      </div>
+      <button type="button" className="form-button" @click="handleSubmit"
+              :disabled="isSubmitDisabled">
         <span v-if="!isSubmitting">Transfer</span>
         <span v-if="isSubmitting" className="icon-loader"></span>
       </button>
     </form>
-    <div v-show="signature.solana || signature.neon" className="flex flex-col gap-[10px] p-[12px] bg-[#282230] rounded-[12px] truncate">
+    <div v-show="signature.solana || signature.neon"
+         className="flex flex-col gap-[10px] p-[12px] bg-[#282230] rounded-[12px] truncate">
       <a v-show="signature.solana" :href="solanaSignature" target="_blank"
-                              rel="noreferrer">Solana: {{stringShort(signature.solana, 40)}}</a>
+         rel="noreferrer">Solana: {{ stringShort(signature.solana, 40) }}</a>
       <a v-show="signature.neon" :href="neonSignature" target="_blank"
-                            rel="noreferrer">Neon: {{stringShort(signature.neon, 40)}}</a>
+         rel="noreferrer">Neon: {{ stringShort(signature.neon, 40) }}</a>
     </div>
   </div>
 </template>
