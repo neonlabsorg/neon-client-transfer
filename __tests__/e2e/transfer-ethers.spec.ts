@@ -18,7 +18,7 @@ import {
   neonNeonTransactionEthers,
   wrappedNeonTransactionData
 } from '@neonevm/token-transfer-ethers';
-import { JsonRpcProvider, TransactionRequest, Wallet } from 'ethers';
+import { TransactionRequest, Wallet } from 'ethers';
 
 import {
   delay,
@@ -62,7 +62,7 @@ let neonEvmProgram: PublicKey;
 // let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
 
-let provider: JsonRpcProvider;
+let provider: any;
 let neonWallet: Wallet;
 let connection: Connection;
 
@@ -200,7 +200,7 @@ describe('NEON token transfer tests', () => {
       const balanceBefore = await getTokenBalance(provider, neonWallet, wSOL);
       console.log(`Balance: ${wSolBefore / LAMPORTS_PER_SOL} ${wSOL.symbol}`);
       try {
-        const solanaWalletSigner = walletSigner(provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
+        const solanaWalletSigner: any = walletSigner(provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
         const transaction = await createWrapAndTransferSOLTransaction(connection, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, solanaWalletSigner, wSOL, amount, CHAIN_ID);
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });

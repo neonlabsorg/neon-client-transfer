@@ -23,6 +23,7 @@ export function wrappedNeonTransactionData(token: SPLToken, amount: Amount): str
 
 export async function useTransactionFromSignerEthers(claimData: string, walletSigner: Wallet, address: string): Promise<EthersSignedTransaction> {
   const transaction: TransactionRequest = {
+    type: 0,
     data: claimData,
     gasLimit: `0x5F5E100`, // 100000000
     gasPrice: `0x0`,

@@ -22,9 +22,9 @@ const proxyUrl = `https://devnet.neonevm.org`;
 const solanaUrl = `https://api.devnet.solana.com`;
 
 const connection = new Connection(solanaUrl, 'confirmed');
-const provider = new JsonRpcProvider(proxyUrl);
+const provider: any = new JsonRpcProvider(proxyUrl);
 
-const neonWallet = new Wallet(NEON_PRIVATE!, provider);
+const neonWallet: any = new Wallet(NEON_PRIVATE!, provider);
 const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
