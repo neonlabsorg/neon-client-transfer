@@ -22,14 +22,6 @@ yarn add @neonevm/token-transfer-core
 npm install @neonevm/token-transfer-core
 ```
 
-For using with `web3.js` we recommend additional using `@neonemv/token-transfer-web3`
-
-```sh
-yarn add @neonevm/token-transfer-web3
-# or
-npm install @neonevm/token-transfer-web3
-```
-
 For using with `ethers.js` we recommend additional using `@neonemv/token-transfer-ethers`
 
 ```sh
@@ -113,10 +105,10 @@ And for transfer NEON from Neon EVM to Solana, you should known token contract a
 
 ```javascript
 const tokenContract = NEON_TRANSFER_CONTRACT_DEVNET; // or SOL_TRANSFER_CONTRACT_DEVNET
-const transaction = await neonNeonTransactionWeb3(web3, neonWallet, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
-const signedTrx = await web3.eth.accounts.signTransaction(transaction, neonWallet.privateKey);
+const transaction = await neonNeonTransactionEthers(provider, neonWallet.address, tokenContract, solanaWallet, amount); // Neon EVM Transaction object
+const signedTrx = await neonWallet.signTransaction(transaction);
 if (signedTrx?.rawTransaction) {
-  const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
+  const txResult = neonWallet.sendSignedTransaction(signedTrx.rawTransaction);
   txResult.on('transactionHash', (hash: string) => console.log(hash));
   txResult.on('error', (error: Error) => console.error(error));
 }
@@ -134,7 +126,7 @@ import tokenList from 'token-list/tokenlist.json';
 const tokens = tokenList.tokens.filter((token) => token.chainId === CHAIN_ID);
 const token = tokens[0];
 
-const transaction = await neonTransferMintTransactionWeb3(connection, web3, proxyApi, proxyStatus, neonEvmProgram/* or solEvmProgram*/, solanaWallet, neonWallet, token, amount, neonChainId /*or solChainId*/);
+const transaction = await neonTransferMintTransactionEthers(connection, proxyApi, neonEvmProgram/* or solEvmProgram*/, solanaWallet, neonWallet.address, token, amount, neonChainId /*or solChainId*/);
 transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 const signature = await connection.sendRawTransaction(transaction.serialize());
 ```
@@ -149,14 +141,10 @@ const mintPubkey = new PublicKey(token.address_spl);
 const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet);
 const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet, mintPubkey, associatedToken, proxyStatus.NEON_HEAP_FRAME);
 solanaTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-const neonTransaction = await createMintNeonTransactionWeb3(web3, neonWallet.address, associatedToken, token, amount);
+const neonTransaction = await createMintNeonTransactionEthers(provider, neonWallet.address, associatedToken, token, amount);
 const solanaSignature = await connection.sendRawTransaction(transaction.serialize());
-const neonSignature = await web3.eth.accounts.signTransaction(transaction, neonWallet.privateKey);
-if (signedTrx?.rawTransaction) {
-  const txResult = web3.eth.sendSignedTransaction(signedTrx.rawTransaction);
-  txResult.on('transactionHash', (hash: string) => console.log(hash));
-  txResult.on('error', (error: Error) => console.error(error));
-}
+const neonSignature = await neonWallet.signTransaction(transaction);
+const txResult = neonWallet.sendSignedTransaction(neonSignature.rawTransaction);
 ```
 
 Within the Neon Transfer codebase, we employ the [web3.js](https://web3js.readthedocs.io/en/v1.10.0/) library to streamline our code. However, if the situation demands, you can opt for alternatives such as [ethers.js](https://docs.ethers.org/v6/) or [WalletConnect](https://walletconnect.com/).
