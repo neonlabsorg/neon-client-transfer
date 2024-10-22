@@ -8,7 +8,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
 
     strategy:
       matrix:
@@ -21,6 +21,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+
+      - name: Use Yarn
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
