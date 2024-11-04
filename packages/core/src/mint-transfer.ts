@@ -29,6 +29,7 @@ import {
   NeonComputeUnits,
   NeonEmulate,
   NeonHeapFrame,
+  NeonMintTxParams,
   NeonProgramStatus,
   SolanaAccount,
   SolanaOverrides,
@@ -57,7 +58,8 @@ import {
   TransactionResult
 } from './utils';
 
-export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(connection: Connection, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: W, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT): Promise<Transaction> {
+export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(params: NeonMintTxParams<W, TxResult>): Promise<Transaction> {
+  const { connection, neonEvmProgram, solanaWallet, neonWallet, emulateSigner, neonKeys, legacyAccounts, neonTransaction, splToken, amount, chainId, neonHeapFrame, neonPoolCount } = params;
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const [delegatePDA] = authAccountAddress(emulateSigner.address, neonEvmProgram, splToken);
   const [neonWalletBalanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);

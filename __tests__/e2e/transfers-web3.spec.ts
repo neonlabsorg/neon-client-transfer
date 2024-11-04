@@ -191,7 +191,7 @@ describe.skip('NEON token transfer tests', () => {
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
       const balanceNeon = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
-      expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
+      expect(balanceAfter?.uiAmount).toBeLessThan(balanceBefore?.uiAmount!);
     } catch (e) {
       console.log(e);
       expect(e instanceof Error ? e.message : '').toBe('');
