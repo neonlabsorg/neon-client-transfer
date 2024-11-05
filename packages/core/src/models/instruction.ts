@@ -1,4 +1,6 @@
-import { AccountMeta, PublicKey } from '@solana/web3.js';
+import { AccountMeta, Connection, PublicKey } from '@solana/web3.js';
+import { SolanaAccount } from "./api";
+import { Amount } from "./token";
 
 export const enum EvmInstruction {
   CreateAccountV02 = 0x18, // 24
@@ -21,20 +23,70 @@ export const enum AccountHex {
   SeedVersion = 0x03
 }
 
-export interface CreateAccountWithSeedParams {
-  neonEvmProgram: PublicKey;
+type BaseNeonParams = {
   solanaWallet: PublicKey;
+  neonEvmProgram: PublicKey;
+};
+
+type NeonWalletParams = BaseNeonParams & {
+  neonWallet: string;
+};
+
+type ChainParams = {
+  chainId: number;
+};
+
+export type CreateAccountWithSeedParams = BaseNeonParams & {
   holderAccountPK: PublicKey;
   seed: string;
-}
+};
 
-export interface CreateExecFromDataInstructionParams {
-  solanaWallet: PublicKey;
-  neonWallet: string;
+export type CreateExecFromDataInstructionParams = NeonWalletParams & ChainParams & {
   holderAccount: PublicKey;
-  neonEvmProgram: PublicKey;
   neonRawTransaction: string;
   neonKeys: AccountMeta[];
-  chainId: number;
   neonPoolCount: string;
+};
+
+export type AccountBalanceInstructionParams = NeonWalletParams & ChainParams;
+
+export type LegacyAccountBalanceInstructionParams = BaseNeonParams & ChainParams & {
+  connection: Connection;
+  account: SolanaAccount;
+};
+
+export type AssociatedTokenAccountInstructionParams = {
+  tokenMint: PublicKey;
+  associatedAccount: PublicKey;
+  owner: PublicKey;
+  payer: PublicKey;
+  associatedProgramId?: PublicKey;
+  programId?: PublicKey;
 }
+
+export type ApproveDepositInstructionParams = {
+  solanaWallet: PublicKey;
+  neonPDAWallet: PublicKey;
+  associatedToken: PublicKey;
+  amount: number | bigint;
+};
+
+export type AccountV3InstructionParams = NeonWalletParams & {
+  neonPDAWallet: PublicKey;
+};
+
+export type NeonDepositToBalanceInstructionParams = BaseNeonParams & NeonWalletParams & ChainParams & {
+  tokenAddress: PublicKey;
+  tokenMint: PublicKey;
+  serviceWallet?: PublicKey;
+}
+
+export type NeonTransferInstructionParams = {
+  neonTokenMint: PublicKey;
+  solanaWallet: PublicKey;
+  serviceWallet: PublicKey;
+  rewardAmount: Amount;
+};
+
+
+

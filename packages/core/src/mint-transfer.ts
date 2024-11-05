@@ -19,13 +19,19 @@ import {
   TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import {
+  AccountBalanceInstructionParams,
+  AccountV3InstructionParams,
   Amount,
+  ApproveDepositInstructionParams,
+  AssociatedTokenAccountInstructionParams,
+  AssociatedTokenAccountTransactionParams,
   ClaimInstructionConfig,
   ClaimInstructionResult,
   CreateAccountWithSeedParams,
   CreateExecFromDataInstructionParams,
   EvmInstruction,
   ExtendedAccountInfo,
+  LegacyAccountBalanceInstructionParams,
   NeonComputeUnits,
   NeonEmulate,
   NeonHeapFrame,
@@ -34,7 +40,8 @@ import {
   SolanaAccount,
   SolanaOverrides,
   SourceSplAccountConfig,
-  SPLToken
+  SPLToken,
+  WrapSOLTransactionParams
 } from './models';
 import {
   COMPUTE_BUDGET_ID,
@@ -59,7 +66,7 @@ import {
 } from './utils';
 
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(params: NeonMintTxParams<W, TxResult>): Promise<Transaction> {
-  const { connection, neonEvmProgram, solanaWallet, neonWallet, emulateSigner, neonKeys, legacyAccounts, neonTransaction, splToken, amount, chainId, neonHeapFrame, neonPoolCount } = params;
+  const { connection, neonEvmProgram, solanaWallet, neonWallet, emulateSigner, neonKeys, legacyAccounts, neonTransaction, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT } = params;
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const [delegatePDA] = authAccountAddress(emulateSigner.address, neonEvmProgram, splToken);
   const [neonWalletBalanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
@@ -72,18 +79,18 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, neonHeapFrame));
-  transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
+  transaction.add(createApproveDepositInstruction({ solanaWallet, neonPDAWallet: delegatePDA, associatedToken: associatedTokenAddress, amount }));
 
   if (!neonWalletBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonWallet, chainId));
+    transaction.add(createAccountBalanceInstruction({ solanaWallet, neonEvmProgram, neonWallet, chainId }));
   }
 
   if (!emulateSignerBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, emulateSigner.address, chainId));
+    transaction.add(createAccountBalanceInstruction({ solanaWallet, neonEvmProgram, neonWallet: emulateSigner.address, chainId }));
   }
 
   for (const account of legacyAccounts) {
-    const instruction = await createAccountBalanceForLegacyAccountInstruction(connection, account, solanaWallet, neonEvmProgram, chainId);
+    const instruction = await createAccountBalanceForLegacyAccountInstruction({ connection, account, solanaWallet, neonEvmProgram, chainId });
     if (instruction) {
       transaction.add(instruction);
     }
@@ -130,11 +137,21 @@ export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, ne
   return new TransactionInstruction({ programId, data, keys: [] });
 }
 
-export function createApproveDepositInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, associatedToken: PublicKey, amount: number | bigint): TransactionInstruction {
+export function createApproveDepositInstruction({
+   solanaWallet,
+   neonPDAWallet,
+   associatedToken,
+   amount,
+}: ApproveDepositInstructionParams): TransactionInstruction {
   return createApproveInstruction(associatedToken, neonPDAWallet, solanaWallet, amount);
 }
 
-export function createAccountV3Instruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonWallet: string): TransactionInstruction {
+export function createAccountV3Instruction({
+  solanaWallet,
+  neonPDAWallet,
+  neonEvmProgram,
+  neonWallet,
+}: AccountV3InstructionParams): TransactionInstruction {
   const keys = [
     { pubkey: solanaWallet, isSigner: true, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -146,17 +163,28 @@ export function createAccountV3Instruction(solanaWallet: PublicKey, neonPDAWalle
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export async function createAccountBalanceForLegacyAccountInstruction(connection: Connection, account: SolanaAccount, solanaWallet: PublicKey, neonEvmProgram: PublicKey, chainId: number): Promise<TransactionInstruction | null> {
+export async function createAccountBalanceForLegacyAccountInstruction({
+  connection,
+  account,
+  solanaWallet,
+  neonEvmProgram,
+  chainId
+}: LegacyAccountBalanceInstructionParams): Promise<TransactionInstruction | null> {
   const accountAddress = new PublicKey(account.pubkey);
   const accountInfo = await connection.getAccountInfo(accountAddress);
   if (accountInfo) {
     const neonAddress = `0x${accountInfo?.data.slice(1, 21).toString('hex')}`;
-    return createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonAddress, chainId);
+    return createAccountBalanceInstruction({ solanaWallet, neonEvmProgram, neonWallet: neonAddress, chainId });
   }
   return null!;
 }
 
-export function createAccountBalanceInstruction(solanaWallet: PublicKey, neonEvmProgram: PublicKey, neonWallet: string, chainId: number): TransactionInstruction {
+export function createAccountBalanceInstruction({
+  solanaWallet,
+  neonEvmProgram,
+  neonWallet,
+  chainId,
+}: AccountBalanceInstructionParams): TransactionInstruction {
   const [neonWalletAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const keys = [
@@ -357,11 +385,18 @@ export function createMintNeonTransaction<T>(neonWallet: string, splToken: SPLTo
 }
 
 export function createMintSolanaTransaction(solanaWallet: PublicKey, tokenMint: PublicKey, associatedToken: PublicKey, neonHeapFrame = NEON_HEAP_FRAME): Transaction {
-  return createAssociatedTokenAccountTransaction(solanaWallet, tokenMint, associatedToken, neonHeapFrame);
+  return createAssociatedTokenAccountTransaction({ solanaWallet, tokenMint, associatedToken, neonHeapFrame });
 }
 
 // #region Neon -> Solana
-export function createAssociatedTokenAccountInstruction(tokenMint: PublicKey, associatedAccount: PublicKey, owner: PublicKey, payer: PublicKey, associatedProgramId: PublicKey = ASSOCIATED_TOKEN_PROGRAM_ID, programId: PublicKey = TOKEN_PROGRAM_ID): TransactionInstruction {
+export function createAssociatedTokenAccountInstruction({
+  tokenMint,
+  associatedAccount,
+  owner,
+  payer,
+  associatedProgramId = ASSOCIATED_TOKEN_PROGRAM_ID,
+  programId = TOKEN_PROGRAM_ID,
+}: AssociatedTokenAccountInstructionParams): TransactionInstruction {
   const data = Buffer.from([0x01]);
   const keys = [
     { pubkey: payer, isSigner: true, isWritable: true },
@@ -375,15 +410,25 @@ export function createAssociatedTokenAccountInstruction(tokenMint: PublicKey, as
   return new TransactionInstruction({ programId: associatedProgramId, keys, data });
 }
 
-export function createAssociatedTokenAccountTransaction(solanaWallet: PublicKey, tokenMint: PublicKey, associatedToken: PublicKey, neonHeapFrame = NEON_HEAP_FRAME): Transaction {
+export function createAssociatedTokenAccountTransaction({
+  solanaWallet,
+  tokenMint,
+  associatedToken,
+  neonHeapFrame = NEON_HEAP_FRAME,
+}: AssociatedTokenAccountTransactionParams): Transaction {
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const transaction = new Transaction({ feePayer: solanaWallet });
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, neonHeapFrame));
-  transaction.add(createAssociatedTokenAccountInstruction(tokenMint, associatedToken, solanaWallet, solanaWallet));
+  transaction.add(createAssociatedTokenAccountInstruction({ tokenMint, associatedAccount: associatedToken, owner: solanaWallet, payer: solanaWallet}));
   return transaction;
 }
 
-export async function createWrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, amount: Amount, splToken: SPLToken): Promise<Transaction> {
+export async function createWrapSOLTransaction({
+  connection,
+  solanaWallet,
+  amount,
+  splToken,
+}: WrapSOLTransactionParams): Promise<Transaction> {
   const tokenMint = new PublicKey(splToken.address_spl);
   const lamports = toFullAmount(amount, splToken.decimals);
   const associatedToken = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
@@ -393,7 +438,7 @@ export async function createWrapSOLTransaction(connection: Connection, solanaWal
   const instructions: TransactionInstruction[] = [];
 
   if (!wSOLAccount) {
-    instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedToken, solanaWallet, solanaWallet));
+    instructions.push(createAssociatedTokenAccountInstruction({ tokenMint, associatedAccount: associatedToken, owner: solanaWallet, payer: solanaWallet }));
   }
 
   instructions.push(SystemProgram.transfer({

@@ -26,7 +26,6 @@ import {
   mintNeonTransactionData,
   useTransactionFromSignerEthers
 } from './utils';
-import { NEON_TREASURY_POOL_COUNT } from "@neonevm/token-transfer-core/src";
 
 export async function neonTransferMintTransactionEthers(params: MintTransferParams<Wallet>): Promise<any> {
   const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame } = params;
@@ -59,8 +58,7 @@ export async function neonTransferMintTransactionEthers(params: MintTransferPara
     splToken,
     amount: fullAmount,
     chainId,
-    neonHeapFrame,
-    neonPoolCount: NEON_TREASURY_POOL_COUNT
+    neonHeapFrame
   };
 
   return neonTransferMintTransaction(neonTxParams);
@@ -114,14 +112,13 @@ export async function createWrapAndTransferSOLTransaction(params: MintTransferPa
     splToken,
     amount: fullAmount,
     chainId,
-    neonHeapFrame,
-    neonPoolCount: NEON_TREASURY_POOL_COUNT
+    neonHeapFrame
   };
 
   const mintTransaction = await neonTransferMintTransaction(neonTxParams);
 
   if (!wSOLAccount) {
-    instructions.push(createAssociatedTokenAccountInstruction(tokenMint, associatedTokenAddress, solanaWallet, solanaWallet));
+    instructions.push(createAssociatedTokenAccountInstruction({ tokenMint, associatedAccount: associatedTokenAddress, owner: solanaWallet, payer: solanaWallet }));
   }
 
   instructions.push(SystemProgram.transfer({
