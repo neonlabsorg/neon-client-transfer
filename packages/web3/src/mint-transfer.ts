@@ -70,9 +70,14 @@ export async function neonTransferMintTransactionWeb3(params: MintTransferParams
   return neonTransferMintTransaction(neonTxParams);
 }
 
-export async function createMintNeonTransactionWeb3(params: MintNeonTransactionParams<string>): Promise<TransactionConfig> {
-  const { provider, neonWallet, associatedToken, splToken, amount, gasLimit } = params;
-  const effectiveGasLimit = gasLimit ? BigInt(gasLimit) : BigInt(5e4);
+export async function createMintNeonTransactionWeb3({
+   provider,
+   neonWallet,
+   associatedToken,
+   splToken,
+   amount,
+   gasLimit = BigInt(5e4)
+}: MintNeonTransactionParams<string>): Promise<TransactionConfig> {
   const data = mintNeonTransactionData(provider, associatedToken, splToken, amount);
   const transaction = createMintNeonTransaction<TransactionConfig>(neonWallet, splToken, data);
   const { gasPrice, gas } = await getGasAndEstimationGasPrice(provider, transaction);
@@ -80,7 +85,7 @@ export async function createMintNeonTransactionWeb3(params: MintNeonTransactionP
   transaction.gas = gas;
   const blockNumber = await getBlockNumber(new Web3Context(provider), DEFAULT_RETURN_FORMAT as ReturnFormat);
   transaction.nonce = (await getTransactionCount(new Web3Context(provider), neonWallet, blockNumber, DEFAULT_RETURN_FORMAT as ReturnFormat));
-  transaction['gasLimit'] = getGasLimit(transaction.gas, effectiveGasLimit);
+  transaction['gasLimit'] = getGasLimit(transaction.gas, BigInt(gasLimit));
   return transaction;
 }
 

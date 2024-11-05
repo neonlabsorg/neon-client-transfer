@@ -64,15 +64,20 @@ export async function neonTransferMintTransactionEthers(params: MintTransferPara
   return neonTransferMintTransaction(neonTxParams);
 }
 
-export async function createMintNeonTransactionEthers(params: MintNeonTransactionParams<JsonRpcProvider>): Promise<TransactionRequest> {
-  const { provider, neonWallet, associatedToken, splToken, amount, gasLimit } = params;
-  const effectiveGasLimit = gasLimit ?? BigInt(5e4);
+export async function createMintNeonTransactionEthers({
+  provider,
+  neonWallet,
+  associatedToken,
+  splToken,
+  amount,
+  gasLimit = BigInt(5e4)
+}: MintNeonTransactionParams<JsonRpcProvider>): Promise<TransactionRequest> {
   const data = mintNeonTransactionData(associatedToken, splToken, amount);
   const transaction = createMintNeonTransaction<TransactionRequest>(neonWallet, splToken, data);
   const feeData = await provider.getFeeData();
   const gasEstimate = await provider.estimateGas(transaction);
   transaction.gasPrice = feeData.gasPrice;
-  transaction.gasLimit = gasEstimate > effectiveGasLimit ? gasEstimate + BigInt(1e4) : effectiveGasLimit;
+  transaction.gasLimit = gasEstimate > gasLimit ? gasEstimate + BigInt(1e4) : gasLimit;
   return transaction;
 }
 
