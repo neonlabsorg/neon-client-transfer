@@ -9,6 +9,7 @@ import {
   createClaimInstruction,
   createMintNeonTransaction,
   EthersSignedTransaction,
+  NEON_HEAP_FRAME,
   MintNeonTransactionParams,
   MintTransferParams,
   NeonMintTxParams,
@@ -28,7 +29,7 @@ import {
 } from './utils';
 
 export async function neonTransferMintTransactionEthers(params: MintTransferParams<Wallet>): Promise<any> {
-  const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame } = params;
+  const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME } = params;
   const fullAmount = toFullAmount(amount, splToken.decimals);
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const climeData = claimTransactionData(associatedTokenAddress, neonWallet, fullAmount);
@@ -82,7 +83,7 @@ export async function createMintNeonTransactionEthers({
 }
 
 export async function createWrapAndTransferSOLTransaction(params: MintTransferParams<Wallet>): Promise<Transaction> {
-  const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame } = params;
+  const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME } = params;
   const instructions: TransactionInstruction[] = [];
   const transaction: Transaction = new Transaction({ feePayer: solanaWallet });
   const tokenMint = new PublicKey(splToken.address_spl);

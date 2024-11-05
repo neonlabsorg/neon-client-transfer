@@ -34,7 +34,7 @@
   "dependencies": {
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",
-    "ethers": "^6.13.2"
+    "ethers": "^6.13.3"
   },
   "peerDependencies": {
     "@neonevm/token-transfer-core": "4.3.3-devnet"
