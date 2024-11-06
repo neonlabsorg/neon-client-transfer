@@ -5,7 +5,6 @@ import type { GasToken, SPLToken } from '@neonevm/token-transfer-core';
 import {
   createAssociatedTokenAccountTransaction,
   NEON_TOKEN_MINT_DEVNET,
-  solanaNEONTransferTransaction,
   solanaSOLTransferTransaction
 } from '@neonevm/token-transfer-core';
 import {
@@ -14,7 +13,7 @@ import {
   neonTransferMintTransactionWeb3
 } from '@neonevm/token-transfer-web3';
 import { useFormStore, useWalletsStore, useWeb3Store } from '@/stores';
-import type { Transaction as NeonTransaction } from 'web3';
+import type { TransactionRequest } from 'ethers'
 import type { TransferSignature } from '@/types';
 
 interface ITransactionStore {
@@ -78,20 +77,11 @@ export const useTransactionStore = defineStore('transaction', {
 
       this.gasTokens = await web3Store.apiProxy.nativeTokenList();
     },
-    async sendNeonTranaction() {
+    async sendNeonTranaction(transaction: TransactionRequest) {
       const walletStore = useWalletsStore();
-      const web3Store = useWeb3Store();
-      const formStore = useFormStore();
 
-      return await solanaNEONTransferTransaction(
-        walletStore.solanaWallet.publicKey,
-        walletStore.neonWallet.address,
-        web3Store.neonProgram,
-        this.networkTokenMint,
-        formStore.currentSplToken as SPLToken,
-        formStore.inputAmount,
-        web3Store.chainId
-      );
+      const receipt = await walletStore.neonWallet.sendTransaction(transaction);
+      return receipt.hash;
     },
     async sendSolTransaction() {
       const walletStore = useWalletsStore();
@@ -159,21 +149,6 @@ export const useTransactionStore = defineStore('transaction', {
 
       return signature;
     },
-    async sendSignedTransaction(transaction: NeonTransaction) {
-      const web3Store = useWeb3Store();
-      const walletSore = useWalletsStore();
-
-      const signedTrx = await web3Store.web3Provider.eth.accounts.signTransaction(transaction, walletSore.neonWallet.privateKey);
-      return new Promise((resolve, reject) => {
-        if (signedTrx?.rawTransaction) {
-          const txResult = web3Store.web3Provider.eth.sendSignedTransaction(signedTrx.rawTransaction);
-          txResult.on('transactionHash', (hash: string) => resolve(hash));
-          txResult.on('error', (error: Error) => reject(error));
-        } else {
-          reject('Unknown transaction');
-        }
-      });
-    }
   },
   getters: {
     solanaSignature: (state) => `https://explorer.solana.com/tx/${state.signature.solana}?cluster=devnet`,

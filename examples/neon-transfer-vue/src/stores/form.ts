@@ -8,6 +8,15 @@ import {
 } from '@/utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 
+import { 
+  createMintNeonTransactionEthers, 
+  neonNeonTransactionEthers 
+} from '@neonevm/token-transfer-ethers';
+import { 
+  solanaNEONTransferTransaction,
+  NEON_TRANSFER_CONTRACT_DEVNET
+} from '@neonevm/token-transfer-core'
+
 import { useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 
 import type { TransferDirection } from '@/types';
@@ -108,7 +117,15 @@ export const useFormStore = defineStore('form', {
       if (this.transferDirection.direction === 'solana') {
         switch (this.currentSplToken?.symbol) {
           case 'NEON': {
-            const transaction = await transactionStore.sendNeonTranaction();
+            const transaction = await solanaNEONTransferTransaction(
+              walletSore.solanaWallet.publicKey,
+              walletSore.neonWallet.address,
+              web3Store.neonProgram,
+              transactionStore.networkTokenMint,
+              this.currentSplToken,
+              this.amount,
+              web3Store.chainId
+            );
             const solana = await transactionStore.sendTransaction(transaction);
             transactionStore.setSignature({ solana });
             break;
@@ -136,14 +153,26 @@ export const useFormStore = defineStore('form', {
         const associatedToken = getAssociatedTokenAddressSync(transactionStore.mintPublicKey, walletSore.solanaWallet.publicKey);
         switch (this.currentSplToken?.symbol) {
           case 'NEON': {
-            const transaction = await transactionStore.sendNeonWeb3Tranaction();
-            const neon = await transactionStore.sendSignedTransaction(transaction);
+            const transaction = await neonNeonTransactionEthers(
+              web3Store.ethersProvider,
+              walletSore.neonWallet.address,
+              NEON_TRANSFER_CONTRACT_DEVNET,
+              walletSore.solanaWallet.publicKey,
+              this.amount
+            );
+            const neon = await transactionStore.sendNeonTranaction(transaction);
             transactionStore.setSignature({ neon });
             break;
           }
           case 'SOL': {
-            const transaction = await transactionStore.sendNeonWeb3Tranaction();
-            const neon = await transactionStore.sendSignedTransaction(transaction);
+            const transaction = await neonNeonTransactionEthers(
+              web3Store.ethersProvider,
+              walletSore.neonWallet.address,
+              NEON_TRANSFER_CONTRACT_DEVNET,
+              walletSore.solanaWallet.publicKey,
+              this.amount
+            );
+            const neon = await transactionStore.sendNeonTranaction(transaction);
             transactionStore.setSignature({ neon });
             break;
           }
@@ -154,8 +183,14 @@ export const useFormStore = defineStore('form', {
               solana = await transactionStore.sendTransaction(transaction);
               this.handleDelay(1e3);
             }
-            const transaction = await transactionStore.sendMintNeonTransactionWeb3(associatedToken);
-            const neon = await transactionStore.sendSignedTransaction(transaction);
+            const transaction = await createMintNeonTransactionEthers(
+              web3Store.ethersProvider,
+              walletSore.neonWallet.address,
+              associatedToken,
+              this.currentSplToken,
+              this.amount
+            );
+            const neon = await transactionStore.sendNeonTranaction(transaction);
             transactionStore.setSignature({ solana, neon });
             break;
           }
@@ -166,8 +201,14 @@ export const useFormStore = defineStore('form', {
               solana = await transactionStore.sendTransaction(transaction);
               this.handleDelay(1e3);
             }
-            const transaction = await transactionStore.sendMintNeonTransactionWeb3(associatedToken);
-            const neon = await transactionStore.sendSignedTransaction(transaction);
+            const transaction = await createMintNeonTransactionEthers(
+              web3Store.ethersProvider,
+              walletSore.neonWallet.address,
+              associatedToken,
+              this.currentSplToken,
+              this.amount
+            );
+            const neon = await transactionStore.sendNeonTranaction(transaction);
             transactionStore.setSignature({ solana, neon });
             break;
           }

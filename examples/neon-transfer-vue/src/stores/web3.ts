@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-import { Web3 } from 'web3';
-import { HttpProvider } from 'web3-providers-http';
+import { JsonRpcProvider } from 'ethers';
 import type { NeonProgramStatus } from '@neonevm/token-transfer-core';
 import { NEON_STATUS_DEVNET_SNAPSHOT, NeonProxyRpcApi } from '@neonevm/token-transfer-core';
 import type { Connection, PublicKey, Signer } from '@solana/web3.js';
@@ -15,7 +14,7 @@ interface IWeb3Store {
   solanaSigner: Signer,
   isLoading: boolean,
   chainId: number,
-  web3Provider: Web3,
+  ethersProvider: JsonRpcProvider,
   networkTokenMint: PublicKey,
   solanaConnection: Connection,
   networkUrl: NetworkUrl,
@@ -31,7 +30,7 @@ export const useWeb3Store = defineStore('web3', {
     chainId: CHAIN_ID,
     networkUrl: {} as NetworkUrl,
     neonProgram: {} as PublicKey,
-    web3Provider: {} as Web3,
+    ethersProvider: {} as JsonRpcProvider,
     networkTokenMint: {} as PublicKey,
     solanaConnection: {} as Connection,
     proxyStatus: {} as NeonProgramStatus,
@@ -55,7 +54,7 @@ export const useWeb3Store = defineStore('web3', {
       this.networkUrl = networkUrl || networkUrls.find(chain => chain.id === this.chainId) || networkUrls[0];
     },
     setWeb3Provider() {
-      this.web3Provider = new Web3(new HttpProvider(this.networkUrl.neonProxy || ''));
+      this.ethersProvider = new JsonRpcProvider(this.networkUrl.neonProxy);
     },
     setSolanaConnection() {
       this.solanaConnection = new SolanaConnection(this.networkUrl.solana, 'confirmed');

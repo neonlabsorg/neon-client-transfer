@@ -4,28 +4,24 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddress, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import type { SPLToken } from '@neonevm/token-transfer-core';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, signerPrivateKey } from '@neonevm/token-transfer-core';
-import type { ContractAbi } from 'web3-types';
-import { DEFAULT_RETURN_FORMAT } from 'web3-types';
-import { Contract } from 'web3-eth-contract';
-import { getBalance } from 'web3-eth';
-import { Web3Context } from 'web3-core';
+import { Contract } from 'ethers';
 import { decode } from 'bs58';
 import { Big } from 'big.js';
+import { Wallet as EthersWallet } from 'ethers';
 
 import { NEON_PRIVATE, SOLANA_PRIVATE } from '@/utils';
 import { useFormStore, useWeb3Store } from '@/stores';
-import type { ReturnFormat } from '@neonevm/token-transfer-web3';
-import type { Web3Account } from 'web3-eth-accounts';
 import type { TokenBalance } from '@/types';
+import type { Wallet } from 'ethers';
 
 interface IWalletStore {
   isLoading: boolean,
   walletBalance: TokenBalance,
   tokenBalance: TokenBalance,
-  neonWallet: Web3Account,
+  neonWallet: Wallet,
   neonBalance: Big,
   solanaWallet: Keypair,
-  solanaWalletSigner: Web3Account,
+  solanaWalletSigner: Wallet,
   solanaBalance: Big,
   splTokenBalance: TokenAmount,
 }
@@ -43,10 +39,10 @@ export const useWalletsStore = defineStore('wallets', {
       solana: BIG_ZERO,
       neon: BIG_ZERO
     } as TokenBalance,
-    neonWallet: {} as Web3Account,
+    neonWallet: {} as Wallet,
     neonBalance: new Big(0),
     solanaWallet: {} as Keypair,
-    solanaWalletSigner: {} as Web3Account,
+    solanaWalletSigner: {} as Wallet,
     solanaBalance: new Big(0),
     splTokenBalance: {} as TokenAmount
   }),
@@ -66,14 +62,12 @@ export const useWalletsStore = defineStore('wallets', {
     setSolanaWalletSigner() {
       const web3Store = useWeb3Store();
 
-      this.solanaWalletSigner = web3Store.web3Provider.eth.accounts.privateKeyToAccount(
-        signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address)
-      );
+      this.solanaWalletSigner = new EthersWallet(signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address), web3Store.ethersProvider);
     },
     setNeonWallet() {
       const web3Store = useWeb3Store();
 
-      this.neonWallet = web3Store.web3Provider?.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
+      this.neonWallet = new EthersWallet(NEON_PRIVATE, web3Store.ethersProvider)
     },
     updateWalletBalance(balance: TokenBalance) {
       this.walletBalance = balance;
@@ -154,17 +148,16 @@ export const useWalletsStore = defineStore('wallets', {
       formStore.setIsPendingTokenChange(false);
     },
 
-    async getMintTokenBalance(contractAbi: ContractAbi = erc20Abi as ContractAbi): Promise<Big> {
-      const web3Store = useWeb3Store();
+    async getMintTokenBalance(contractAbi: any = erc20Abi): Promise<Big> {
       const formStore = useFormStore();
 
       const tokenInstance = new Contract(
-        contractAbi,
         formStore.currentSplToken?.address,
-        new Web3Context(web3Store.networkUrl.neonProxy)
+        contractAbi,
+        this.neonWallet
       );
       const balance: number = await tokenInstance.methods.balanceOf(this.neonWallet.address).call();
-      return new Big(balance).div(Math.pow(10, formStore.currentSplToken?.decimals));
+      return new Big(balance.toString()).div(Math.pow(10, formStore.currentSplToken?.decimals));
     },
 
     async getSolanaBalance(address?: PublicKey) {
@@ -182,10 +175,7 @@ export const useWalletsStore = defineStore('wallets', {
     async getNeonBalance() {
       const web3Store = useWeb3Store();
       try {
-        const balance = await getBalance(
-          new Web3Context(web3Store.networkUrl.neonProxy),
-          this.neonWallet.address, undefined, DEFAULT_RETURN_FORMAT as ReturnFormat
-        );
+        const balance = await web3Store.ethersProvider.getBalance(this.neonWallet);
 
         return Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
       } catch (e) {
