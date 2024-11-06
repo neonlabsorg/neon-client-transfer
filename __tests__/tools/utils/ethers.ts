@@ -24,17 +24,17 @@ export async function estimateGas(provider: JsonRpcProvider, transaction: Transa
 
 export async function neonBalanceEthers(provider: JsonRpcProvider, address: Wallet): Promise<Big> {
   const balance = await provider.getBalance(address);
-  console.log('NEON balance:', balance, address);
   return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
 
 
-export async function mintTokenBalanceEthers(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<bigint> {
+export async function mintTokenBalanceEthers(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<number> {
   const tokenInstance = new Contract(token.address, contractAbi, wallet);
   if (tokenInstance[method]) {
     const balanceOf = tokenInstance[method];
     const balance: bigint = await balanceOf(wallet.address);
-    return balance / BigInt(10 ** token.decimals);
+
+    return (new Big(balance.toString()).div(Big(10).pow(token.decimals))).toNumber();
   }
-  return BigInt(0);
+  return 0;
 }

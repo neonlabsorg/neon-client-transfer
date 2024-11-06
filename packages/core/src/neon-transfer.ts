@@ -8,7 +8,14 @@ import {
 } from '@solana/spl-token';
 import { parseUnits } from 'ethers';
 import { NEON_TOKEN_DECIMALS } from './data';
-import { Amount, EvmInstruction, NeonAddress, SPLToken } from './models';
+import {
+  Amount,
+  EvmInstruction,
+  NeonDepositToBalanceInstructionParams,
+  NeonTransferInstructionParams,
+  SolanaNEONTransferTransactionParams,
+  SPLToken
+} from './models';
 import {
   authorityPoolAddress,
   neonBalanceProgramAddress,
@@ -18,7 +25,17 @@ import {
   toFullAmount
 } from './utils';
 
-export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
+export async function solanaNEONTransferTransaction({
+  solanaWallet,
+  neonWallet,
+  neonEvmProgram,
+  neonTokenMint,
+  token,
+  amount,
+  chainId = 111,
+  serviceWallet,
+  rewardAmount,
+}: SolanaNEONTransferTransactionParams): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
@@ -26,16 +43,24 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
-  transaction.add(createNeonDepositToBalanceInstruction(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+  transaction.add(createNeonDepositToBalanceInstruction({ chainId, solanaWallet, tokenAddress: associatedTokenAddress, neonWallet, neonEvmProgram, tokenMint: neonTokenMint, serviceWallet }));
 
   if (serviceWallet && rewardAmount) {
-    transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
+    transaction.add(createNeonTransferInstruction({ neonTokenMint, solanaWallet, serviceWallet, rewardAmount }));
   }
 
   return transaction;
 }
 
-export function createNeonDepositToBalanceInstruction(chainId: number, solanaWallet: PublicKey, tokenAddress: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, tokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
+export function createNeonDepositToBalanceInstruction({
+  chainId,
+  solanaWallet,
+  tokenAddress,
+  neonWallet,
+  neonEvmProgram,
+  tokenMint,
+  serviceWallet,
+}: NeonDepositToBalanceInstructionParams): TransactionInstruction {
   const [depositWallet] = authorityPoolAddress(neonEvmProgram);
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const [contractAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
@@ -76,7 +101,12 @@ export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWal
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction {
+export function createNeonTransferInstruction({
+  neonTokenMint,
+  solanaWallet,
+  serviceWallet,
+  rewardAmount,
+}: NeonTransferInstructionParams): TransactionInstruction {
   const from = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet, true);
   const to = getAssociatedTokenAddressSync(neonTokenMint, serviceWallet, true);
   const fullAmount = toBigInt(rewardAmount);
