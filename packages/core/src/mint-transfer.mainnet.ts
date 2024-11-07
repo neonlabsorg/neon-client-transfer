@@ -1,23 +1,28 @@
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
   AccountMeta,
-  Connection,
   PublicKey,
   SystemProgram,
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js';
-import { Wallet } from 'ethers';
 import {
   authAccountAddress,
   collateralPoolAddress,
   neonBalanceProgramAddress,
-  neonBalanceProgramAddressV2,
+  neonBalanceProgramAddressV2, Provider,
   toBytesInt32,
   TransactionResult
 } from './utils';
-import { EvmInstruction, NeonHeapFrame, SolanaAccount, SPLToken } from './models';
-import { COMPUTE_BUDGET_ID, NEON_HEAP_FRAME, NEON_TREASURY_POOL_COUNT } from './data';
+import {
+  EvmInstruction,
+  NeonMintTxParams
+} from './models';
+import {
+  COMPUTE_BUDGET_ID,
+  NEON_HEAP_FRAME,
+  NEON_TREASURY_POOL_COUNT
+} from './data';
 import {
   createAccountBalanceForLegacyAccountInstruction,
   createAccountBalanceInstruction,
@@ -25,7 +30,8 @@ import {
   createComputeBudgetHeapFrameInstruction
 } from './mint-transfer';
 
-export async function neonTransferMintTransactionMainnet<TxResult extends TransactionResult>(connection: Connection, neonEvmProgram: PublicKey, solanaWallet: PublicKey, neonWallet: string, emulateSigner: Wallet, neonKeys: AccountMeta[], legacyAccounts: SolanaAccount[], neonTransaction: TxResult, splToken: SPLToken, amount: bigint, chainId: number, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT): Promise<Transaction> {
+export async function neonTransferMintTransactionMainnet<W extends Provider, TxResult extends TransactionResult>(params: NeonMintTxParams<W, TxResult>): Promise<Transaction> {
+  const { connection, neonEvmProgram, solanaWallet, neonWallet, emulateSigner, neonKeys, legacyAccounts, neonTransaction, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT } = params;
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
   const [delegatePDA] = authAccountAddress(emulateSigner.address, neonEvmProgram, splToken);
   const [neonWalletBalanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
@@ -36,18 +42,18 @@ export async function neonTransferMintTransactionMainnet<TxResult extends Transa
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createComputeBudgetHeapFrameInstruction(computedBudgetProgram, neonHeapFrame));
-  transaction.add(createApproveDepositInstruction(solanaWallet, delegatePDA, associatedTokenAddress, amount));
+  transaction.add(createApproveDepositInstruction({ solanaWallet, neonPDAWallet: delegatePDA, associatedToken: associatedTokenAddress, amount }));
 
   if (!neonWalletBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, neonWallet, chainId));
+    transaction.add(createAccountBalanceInstruction({ solanaWallet, neonEvmProgram, neonWallet, chainId }));
   }
 
   if (!emulateSignerBalanceAccount) {
-    transaction.add(createAccountBalanceInstruction(solanaWallet, neonEvmProgram, emulateSigner.address, chainId));
+    transaction.add(createAccountBalanceInstruction({ solanaWallet, neonEvmProgram, neonWallet: emulateSigner.address, chainId }));
   }
 
   for (const account of legacyAccounts) {
-    const instruction = await createAccountBalanceForLegacyAccountInstruction(connection, account, solanaWallet, neonEvmProgram, chainId);
+    const instruction = await createAccountBalanceForLegacyAccountInstruction({ connection, account, solanaWallet, neonEvmProgram, chainId });
     if (instruction) {
       transaction.add(instruction);
     }
@@ -62,7 +68,7 @@ export async function neonTransferMintTransactionMainnet<TxResult extends Transa
 
 
 export function createExecFromDataInstructionV2Mainnet(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_TREASURY_POOL_COUNT): TransactionInstruction {
-  const count = neonPoolCount ?? NEON_TREASURY_POOL_COUNT;
+  const count = Number(neonPoolCount ?? NEON_TREASURY_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
   const [balanceAccount] = neonBalanceProgramAddressV2(neonWallet, solanaWallet, neonEvmProgram, chainId);
   const [treasuryPoolAddress] = collateralPoolAddress(neonEvmProgram, treasuryPoolIndex);

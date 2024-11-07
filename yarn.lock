@@ -896,39 +896,6 @@
     "@emnapi/runtime" "^1.1.0"
     "@tybys/wasm-util" "^0.9.0"
 
-"@neonevm/token-transfer-core@4.3.1-devnet":
-  version "4.3.1-devnet"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.3.1-devnet.tgz#7c5f7bddb25b4724bc4d19df4308e844455dd3e0"
-  integrity sha512-fdt0CgHk47SjRIK/SMRgXSXx54ItyDQX1TbydbqEFuxOce7B44JDEzo/X5PLtfM6ibxr5bg6nGCcJkFcG5znhA==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    big.js "^6.2.1"
-    ethers "^6.13.2"
-
-"@neonevm/token-transfer-ethers@4.3.1-devnet":
-  version "4.3.1-devnet"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.3.1-devnet.tgz#25675bf24bc943bf7ff7eb7b821e0a09a5f2d7ad"
-  integrity sha512-sEBke2O+sLeoO+YZsqFcgpOcPZNVsV3KxcOehu+WZ+W/9K8W2Zx6822UKX49clWnkDQUm3sS8KTWsI3VkxcC1Q==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    ethers "^6.13.2"
-
-"@neonevm/token-transfer-web3@4.3.1-devnet":
-  version "4.3.1-devnet"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-web3/-/token-transfer-web3-4.3.1-devnet.tgz#af2092df1d9094e4314245066b3ff387f73924d4"
-  integrity sha512-t9YbZcr9k37qD3kylotQhj2njFR0r7kEfnw08o79hh5ulG0Q2T/I1AuohU/5Hw0oZodkrnS36+n9qY8QFGg0nw==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    web3-core "^4.3.2"
-    web3-eth "^4.3.1"
-    web3-eth-accounts "^4.1.0"
-    web3-eth-contract "^4.1.4"
-    web3-types "^1.3.1"
-    web3-utils "^4.1.0"
-
 "@noble/curves@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.2.0.tgz#92d7e12e4e49b23105a2555c6984d41733d65c35"
@@ -3264,10 +3231,10 @@ ethereum-cryptography@^2.0.0, ethereum-cryptography@^2.1.2:
     "@scure/bip32" "1.4.0"
     "@scure/bip39" "1.3.0"
 
-ethers@^6.13.2:
-  version "6.13.2"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.2.tgz#4b67d4b49e69b59893931a032560999e5e4419fe"
-  integrity sha512-9VkriTTed+/27BGuY1s0hf441kqwHJ1wtN2edksEtiRvXx+soxRX3iSXTfFqq2+YwrOqbDoTHjIhQnjJRlzKmg==
+ethers@^6.13.3:
+  version "6.13.3"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.3.tgz#b87afdadb91cc8df5f56b9c59c96e5b206f4a600"
+  integrity sha512-/DzbZOLVtoO4fKvvQwpEucHAQgIwBGWuRvBdwE/lMXgXvvHHTSkn7XqAQ2b+gjJzZDJjWA9OD05bVceVOsBHbg==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"
     "@noble/curves" "1.2.0"

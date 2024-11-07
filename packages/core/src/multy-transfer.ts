@@ -3,16 +3,25 @@ import { createApproveInstruction, getAssociatedTokenAddressSync } from '@solana
 import { neonBalanceProgramAddress, toFullAmount } from './utils';
 import { createNeonDepositToBalanceInstruction } from './neon-transfer';
 import { createWrapSOLTransaction } from './mint-transfer';
-import { Amount, NeonAddress, SPLToken } from './models';
+import { SolanaSOLTransferTransactionParams } from './models';
 
-export async function solanaSOLTransferTransaction(connection: Connection, solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111): Promise<Transaction> {
+export async function solanaSOLTransferTransaction({
+  connection,
+  solanaWallet,
+  neonWallet,
+  neonEvmProgram,
+  neonTokenMint,
+  splToken,
+  amount,
+  chainId = 111
+}: SolanaSOLTransferTransactionParams): Promise<Transaction> {
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
-  const fullAmount = toFullAmount(amount, token.decimals);
-  const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(token.address_spl), solanaWallet);
-  const transaction = await createWrapSOLTransaction(connection, solanaWallet, amount, token);
+  const fullAmount = toFullAmount(amount, splToken.decimals);
+  const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
+  const transaction = await createWrapSOLTransaction({ connection, solanaWallet, amount, splToken });
 
   transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
-  transaction.add(createNeonDepositToBalanceInstruction(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint));
+  transaction.add(createNeonDepositToBalanceInstruction({ chainId, solanaWallet, tokenAddress: associatedTokenAddress, neonWallet, neonEvmProgram, tokenMint: neonTokenMint }));
 
   return transaction;
 }

@@ -20,8 +20,8 @@ export interface SettingsFormState {
   neonProxyRpcApi: string;
 }
 
-export type NeonHeapFrame = number;
-export type NeonComputeUnits = number;
+export type NeonHeapFrame = string;
+export type NeonComputeUnits = string;
 
 export interface NeonProgramStatus {
   neonAccountSeedVersion: number;

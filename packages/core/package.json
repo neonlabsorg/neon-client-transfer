@@ -1,12 +1,12 @@
 {
   "name": "@neonevm/token-transfer-core",
-  "version": "4.3.1",
+  "version": "4.4.1",
   "description": "Core API for the @neonevm/token-transfer project",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "files": [
-    "./dist/**/*"
+    "dist/**/*"
   ],
   "workspaces": [
     "../packages/*"
@@ -35,7 +35,7 @@
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.77.3",
     "big.js": "^6.2.1",
-    "ethers": "^6.13.2"
+    "ethers": "^6.13.3"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^5.43.0",

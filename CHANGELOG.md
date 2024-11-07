@@ -1,6 +1,10 @@
 # Neon EVM Token transfer SDK Changelog
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] (2024-11-06)
+### Added
+* Refactor: Updated method signatures to accept parameter objects
+
 ## [4.2.0] (2024-08-27)
 ### Added
 * Add: Holder account creation
