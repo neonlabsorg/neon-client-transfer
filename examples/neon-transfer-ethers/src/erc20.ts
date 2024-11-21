@@ -33,7 +33,17 @@ const chainId = parseInt(`0xe9ac0ce`);
 const neonProxyRpcApi = new NeonProxyRpcApi(proxyUrl);
 
 export async function transferSPLTokenToNeonEvm(token: SPLToken, amount: number): Promise<any> {
-  const transaction = await neonTransferMintTransactionEthers(connection, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, neonWallet, token, amount, chainId);
+  const transaction = await neonTransferMintTransactionEthers({
+    connection,
+    proxyApi: neonProxyRpcApi,
+    neonEvmProgram,
+    solanaWallet: solanaWallet.publicKey,
+    neonWallet: neonWallet.address,
+    walletSigner: neonWallet,
+    splToken: token,
+    amount,
+    chainId
+  });
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
   console.log(signature);
 }
@@ -44,11 +54,21 @@ export async function transferERC20TokenToSolana(token: SPLToken, amount: number
   try {
     await getAccount(connection, associatedToken);
   } catch (e) {
-    const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mint, associatedToken);
+    const solanaTransaction = createAssociatedTokenAccountTransaction({
+      solanaWallet: solanaWallet.publicKey,
+      tokenMint: mint,
+      associatedToken
+    });
     const signature = sendSolanaTransaction(connection, solanaTransaction, [toSigner(solanaWallet)]);
     console.log(signature);
   }
-  const transaction = await createMintNeonTransactionEthers(provider, neonWallet.address, associatedToken, token, amount);
+  const transaction = await createMintNeonTransactionEthers({
+    provider,
+    neonWallet: neonWallet.address,
+    associatedToken,
+    splToken: token,
+    amount
+  });
   const hash = await sendNeonTransactionEthers(transaction, neonWallet);
   console.log(hash);
 }

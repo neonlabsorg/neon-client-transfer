@@ -113,7 +113,15 @@ describe('NEON token transfer tests', () => {
     const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
     console.log(`Balance: ${balanceBefore?.uiAmount ?? 0} ${neonToken.symbol}`);
     try {
-      const transaction = await solanaNEONTransferTransaction(solanaWallet.publicKey, neonWallet.address, neonEvmProgram, neonTokenMint, neonToken, amount, CHAIN_ID);
+      const transaction = await solanaNEONTransferTransaction({
+        solanaWallet: solanaWallet.publicKey,
+        neonWallet: neonWallet.address,
+        neonEvmProgram,
+        neonTokenMint,
+        token: neonToken,
+        amount,
+        chainId: CHAIN_ID
+      });
       transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
       const signature = await sendSolanaTransaction(connection, transaction, [signer], false, { skipPreflight });
       expect(signature.length).toBeGreaterThan(0);
@@ -123,7 +131,7 @@ describe('NEON token transfer tests', () => {
       const balanceNeon = await neonBalanceWeb3(NEON_PROXY_URL!
         , neonWallet.address);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
-      expect(balanceAfter.uiAmount).toBeLessThan(balanceBefore.uiAmount!);
+      expect(balanceAfter?.uiAmount).toBeLessThan(balanceBefore?.uiAmount!);
     } catch (e) {
       console.log(e);
       expect(e instanceof Error ? e.message : '').toBe('');

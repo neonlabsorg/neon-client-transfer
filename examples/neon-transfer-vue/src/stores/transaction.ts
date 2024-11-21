@@ -53,24 +53,24 @@ export const useTransactionStore = defineStore('transaction', {
     createAssociatedTokenAccountTransaction(associatedToken: PublicKey) {
       const walletSore = useWalletsStore();
 
-      return createAssociatedTokenAccountTransaction(
-        walletSore.solanaWallet.publicKey,
-        this.mintPublicKey,
+      return createAssociatedTokenAccountTransaction({
+        solanaWallet: walletSore.solanaWallet.publicKey,
+        tokenMint: this.mintPublicKey,
         associatedToken
-      );
+      });
     },
     async sendMintNeonTransactionWeb3(associatedToken: PublicKey) {
       const web3Store = useWeb3Store();
       const walletSore = useWalletsStore();
       const formSore = useFormStore();
 
-      return await createMintNeonTransactionWeb3(
-        web3Store.networkUrl.neonProxy,
-        walletSore.neonWallet.address,
+      return await createMintNeonTransactionWeb3({
+        provider: web3Store.networkUrl.neonProxy,
+        neonWallet: walletSore.neonWallet.address,
         associatedToken,
-        formSore.currentSplToken as SPLToken,
-        formSore.inputAmount
-      );
+        splToken: formSore.currentSplToken as SPLToken,
+        amount: formSore.inputAmount
+      });
     },
     async setGasTokens() {
       const web3Store = useWeb3Store();
@@ -88,47 +88,47 @@ export const useTransactionStore = defineStore('transaction', {
       const web3Store = useWeb3Store();
       const formStore = useFormStore();
 
-      return await solanaSOLTransferTransaction(
-        web3Store.solanaConnection as Connection,
-        walletStore.solanaWallet.publicKey,
-        walletStore.neonWallet.address,
-        web3Store.neonProgram,
-        this.networkTokenMint,
-        formStore.currentSplToken as SPLToken,
-        formStore.inputAmount,
-        web3Store.chainId
-      );
+      return await solanaSOLTransferTransaction({
+        connection: web3Store.solanaConnection as Connection,
+        solanaWallet: walletStore.solanaWallet.publicKey,
+        neonWallet: walletStore.neonWallet.address,
+        neonEvmProgram: web3Store.neonProgram,
+        neonTokenMint: this.networkTokenMint,
+        splToken: formStore.currentSplToken as SPLToken,
+        amount: formStore.inputAmount,
+        chainId: web3Store.chainId
+      });
     },
     async sendNeonMintTranaction() {
       const walletStore = useWalletsStore();
       const web3Store = useWeb3Store();
       const formStore = useFormStore();
 
-      return await neonTransferMintTransactionWeb3(
-        web3Store.solanaConnection as Connection,
-        web3Store.networkUrl.neonProxy,
-        web3Store.apiProxy,
-        web3Store.neonProgram,
-        walletStore.solanaWallet.publicKey,
-        walletStore.neonWallet.address,
-        walletStore.solanaWalletSigner,
-        formStore.currentSplToken as SPLToken,
-        formStore.inputAmount,
-        web3Store.chainId
-      );
+      return await neonTransferMintTransactionWeb3({
+        connection: web3Store.solanaConnection as Connection,
+        proxyUrl: web3Store.networkUrl.neonProxy,
+        proxyApi: web3Store.apiProxy,
+        neonEvmProgram: web3Store.neonProgram,
+        solanaWallet: walletStore.solanaWallet.publicKey,
+        neonWallet: walletStore.neonWallet.address,
+        walletSigner: walletStore.solanaWalletSigner,
+        splToken: formStore.currentSplToken as SPLToken,
+        amount: formStore.inputAmount,
+        chainId: web3Store.chainId
+      });
     },
     async sendNeonWeb3Tranaction() {
       const walletStore = useWalletsStore();
       const web3Store = useWeb3Store();
       const formStore = useFormStore();
 
-      return await neonNeonTransactionWeb3(
-        web3Store.networkUrl.neonProxy,
-        walletStore.neonWallet.address,
-        NEON_TOKEN_MINT_DEVNET,
-        walletStore.solanaWallet.publicKey,
-        formStore.inputAmount
-      );
+      return await neonNeonTransactionWeb3({
+        provider: web3Store.networkUrl.neonProxy,
+        from: walletStore.neonWallet.address,
+        to: NEON_TOKEN_MINT_DEVNET,
+        solanaWallet: walletStore.solanaWallet.publicKey,
+        amount: formStore.inputAmount
+      });
     },
     async sendTransaction(transaction: SolanaTransaction) {
       const web3Store = useWeb3Store();

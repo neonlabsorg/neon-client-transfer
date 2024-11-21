@@ -274,7 +274,7 @@ describe.skip('NEON token transfer tests', () => {
         const neonBalanceAfter = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
         const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, neon);
 
-        console.log(`Balance: ${neonBalanceBefore} > ${neonBalanceAfter} ${wneon.symbol} ==> ${balanceSPL.uiAmount} ${neon.symbol} in Solana`);
+        console.log(`Balance: ${neonBalanceBefore} > ${neonBalanceAfter} ${wneon.symbol} ==> ${balanceSPL?.uiAmount} ${neon.symbol} in Solana`);
         expect(neonBalanceAfter.toNumber()).toBeLessThan(neonBalanceBefore.toNumber());
       } catch (e) {
         console.log(e);
@@ -382,6 +382,7 @@ describe.skip('NEON token transfer tests', () => {
       console.log('Factory address:', factoryAddress);
 
       if (factoryAddress) {
+        //@ts-ignore
         customToken = await setupResourceForSpl(CHAIN_ID, NEON_PROXY_URL!, factoryAddress);
         console.log('Resource setup complete. SPLToken:', customToken);
       }

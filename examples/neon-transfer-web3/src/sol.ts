@@ -39,13 +39,28 @@ const solToken: SPLToken = {
 };
 
 export async function transferSolToSolana(amount: number): Promise<any> {
-  const transaction = await neonNeonTransactionWeb3(proxyUrl, neonWallet.address, SOL_TRANSFER_CONTRACT_DEVNET, solanaWallet.publicKey, amount);
+  const transaction = await neonNeonTransactionWeb3({
+    provider: proxyUrl,
+    from: neonWallet.address,
+    to: SOL_TRANSFER_CONTRACT_DEVNET,
+    solanaWallet: solanaWallet.publicKey,
+    amount
+  });
   const hash = await sendNeonTransaction(web3, transaction, neonWallet);
   console.log(`transferSolToSolana`, hash);
 }
 
 export async function transferSolToNeon(amount: number): Promise<any> {
-  const transaction = await solanaSOLTransferTransaction(connection, solanaWallet.publicKey, neonWallet.address, neonEvmProgram, solTokenMint, solToken, amount, chainId);
+  const transaction = await solanaSOLTransferTransaction({
+    connection,
+    solanaWallet: solanaWallet.publicKey,
+    neonWallet: neonWallet.address,
+    neonEvmProgram,
+    neonTokenMint: solTokenMint,
+    splToken: solToken,
+    amount,
+    chainId
+  });
   transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
   console.log(`transferSolToNeon`, signature);
