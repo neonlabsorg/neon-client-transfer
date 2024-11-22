@@ -21,6 +21,8 @@ import { useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 
 import type { TransferDirection } from '@/types';
 import type { SPLToken } from '@neonevm/token-transfer-core';
+import {JsonRpcProvider} from "ethers";
+import { toRaw } from "vue";
 
 interface IFormStore {
   amount: string
@@ -154,7 +156,7 @@ export const useFormStore = defineStore('form', {
         switch (this.currentSplToken?.symbol) {
           case 'NEON': {
             const transaction = await neonNeonTransactionEthers({
-              provider: web3Store.ethersProvider,
+              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               from: walletSore.neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: walletSore.solanaWallet.publicKey,
@@ -166,7 +168,7 @@ export const useFormStore = defineStore('form', {
           }
           case 'SOL': {
             const transaction = await neonNeonTransactionEthers({
-              provider: web3Store.ethersProvider,
+              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               from: walletSore.neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: walletSore.solanaWallet.publicKey,
@@ -184,7 +186,7 @@ export const useFormStore = defineStore('form', {
               this.handleDelay(1e3);
             }
             const transaction = await createMintNeonTransactionEthers({
-              provider: web3Store.ethersProvider,
+              provider: web3Store.ethersProvider as JsonRpcProvider,
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
               splToken: this.currentSplToken,
@@ -202,10 +204,10 @@ export const useFormStore = defineStore('form', {
               this.handleDelay(1e3);
             }
             const transaction = await createMintNeonTransactionEthers({
-              provider: web3Store.ethersProvider,
+              provider: web3Store.ethersProvider as JsonRpcProvider,
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
-              splToken: this.currentSplToken,
+              splToken: this.currentSplToken!,
               amount: this.amount
             });
             const neon = await transactionStore.sendNeonTranaction(transaction);

@@ -2,6 +2,10 @@
 
 This template should help get you started developing with Vue 3 in Vite.
 
+## !Important
+
+This example is currently under development due to incompatibility with Vue's reactivity system and proxies. The current version of the Neon Transfer Vue example is not working as expected because Ethers.js class private methods are incompatible with proxies.
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).

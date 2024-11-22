@@ -8,13 +8,14 @@ import {
   solanaSOLTransferTransaction
 } from '@neonevm/token-transfer-core';
 import {
-  createMintNeonTransactionWeb3,
-  neonNeonTransactionWeb3,
-  neonTransferMintTransactionWeb3
-} from '@neonevm/token-transfer-web3';
+  createMintNeonTransactionEthers,
+  neonNeonTransactionEthers,
+  neonTransferMintTransactionEthers
+} from '@neonevm/token-transfer-ethers';
 import { useFormStore, useWalletsStore, useWeb3Store } from '@/stores';
-import type { TransactionRequest } from 'ethers'
+import { JsonRpcProvider, type TransactionRequest, type Wallet } from 'ethers'
 import type { TransferSignature } from '@/types';
+import { toRaw } from 'vue';
 
 interface ITransactionStore {
   signature: TransferSignature
@@ -64,8 +65,12 @@ export const useTransactionStore = defineStore('transaction', {
       const walletSore = useWalletsStore();
       const formSore = useFormStore();
 
-      return await createMintNeonTransactionWeb3({
-        provider: web3Store.networkUrl.neonProxy,
+      /*
+       * toRaw used for the direct access to the target of the Proxy
+       * to get the provider object and call the connect private method getNetwork and getFeeData
+       */
+      return await createMintNeonTransactionEthers({
+        provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
         neonWallet: walletSore.neonWallet.address,
         associatedToken,
         splToken: formSore.currentSplToken as SPLToken,
@@ -79,9 +84,13 @@ export const useTransactionStore = defineStore('transaction', {
     },
     async sendNeonTranaction(transaction: TransactionRequest) {
       const walletStore = useWalletsStore();
-
-      const receipt = await walletStore.neonWallet.sendTransaction(transaction);
-      return receipt.hash;
+      const rawWallet = toRaw(walletStore.neonWallet); //Doesn't work without due to the internal objects wrapping
+      try {
+        const receipt = await rawWallet.sendTransaction(transaction);
+        return receipt.hash;
+      } catch(err) {
+        console.error(err);
+      }
     },
     async sendSolTransaction() {
       const walletStore = useWalletsStore();
@@ -104,14 +113,14 @@ export const useTransactionStore = defineStore('transaction', {
       const web3Store = useWeb3Store();
       const formStore = useFormStore();
 
-      return await neonTransferMintTransactionWeb3({
+      return await neonTransferMintTransactionEthers({
         connection: web3Store.solanaConnection as Connection,
         proxyUrl: web3Store.networkUrl.neonProxy,
         proxyApi: web3Store.apiProxy,
         neonEvmProgram: web3Store.neonProgram,
         solanaWallet: walletStore.solanaWallet.publicKey,
         neonWallet: walletStore.neonWallet.address,
-        walletSigner: walletStore.solanaWalletSigner,
+        walletSigner: walletStore.solanaWalletSigner as Wallet,
         splToken: formStore.currentSplToken as SPLToken,
         amount: formStore.inputAmount,
         chainId: web3Store.chainId
@@ -122,8 +131,12 @@ export const useTransactionStore = defineStore('transaction', {
       const web3Store = useWeb3Store();
       const formStore = useFormStore();
 
-      return await neonNeonTransactionWeb3({
-        provider: web3Store.networkUrl.neonProxy,
+      /*
+       * toRaw used for the direct access to the target of the Proxy
+       * to get the provider object and call the connect private method getNetwork and getFeeData
+       */
+      return await neonNeonTransactionEthers({
+        provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
         from: walletStore.neonWallet.address,
         to: NEON_TOKEN_MINT_DEVNET,
         solanaWallet: walletStore.solanaWallet.publicKey,

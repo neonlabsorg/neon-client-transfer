@@ -9,7 +9,7 @@ import {
   createMintNeonTransactionEthers,
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
-import { JsonRpcProvider, Wallet } from 'ethers';
+import { JsonRpcProvider, keccak256, Wallet } from 'ethers';
 import { decode } from 'bs58';
 import { sendNeonTransactionEthers, sendSolanaTransaction, toSigner } from './utils';
 
@@ -33,13 +33,14 @@ const chainId = parseInt(`0xe9ac0ce`);
 const neonProxyRpcApi = new NeonProxyRpcApi(proxyUrl);
 
 export async function transferSPLTokenToNeonEvm(token: SPLToken, amount: number): Promise<any> {
+  const walletSigner = new Wallet(keccak256(Buffer.from(`${neonWallet.address.slice(2)}${solanaWallet.publicKey.toBase58()}`, 'utf-8')), provider);
   const transaction = await neonTransferMintTransactionEthers({
     connection,
     proxyApi: neonProxyRpcApi,
     neonEvmProgram,
     solanaWallet: solanaWallet.publicKey,
     neonWallet: neonWallet.address,
-    walletSigner: neonWallet,
+    walletSigner,
     splToken: token,
     amount,
     chainId
