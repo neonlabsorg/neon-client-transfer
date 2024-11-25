@@ -67,9 +67,6 @@ export const useFormStore = defineStore('form', {
         walletStore.getTokenBalance(this.currentSplToken);
       }
     },
-    setSplToken() {
-
-    },
     setTrtansferDirection(direction: TransferDirection) {
       this.transferDirection = direction;
     },
@@ -110,6 +107,8 @@ export const useFormStore = defineStore('form', {
       });
     },
     async initTransfer() {
+      //TODO: Refactor this!!!
+      //Get rid of the repeated code
       const web3Store = useWeb3Store();
       const transactionStore = useTransactionStore();
       const walletSore = useWalletsStore();
@@ -186,7 +185,7 @@ export const useFormStore = defineStore('form', {
               this.handleDelay(1e3);
             }
             const transaction = await createMintNeonTransactionEthers({
-              provider: web3Store.ethersProvider as JsonRpcProvider,
+              provider: toRaw(web3Store.ethersProvider) as JsonRpcProvider,
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
               splToken: this.currentSplToken,
@@ -204,7 +203,7 @@ export const useFormStore = defineStore('form', {
               this.handleDelay(1e3);
             }
             const transaction = await createMintNeonTransactionEthers({
-              provider: web3Store.ethersProvider as JsonRpcProvider,
+              provider: toRaw(web3Store.ethersProvider) as JsonRpcProvider,
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
               splToken: this.currentSplToken!,
@@ -260,6 +259,5 @@ export const useFormStore = defineStore('form', {
         }
       }
     }
-
   }
 });

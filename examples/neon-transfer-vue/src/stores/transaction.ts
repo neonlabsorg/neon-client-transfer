@@ -64,13 +64,12 @@ export const useTransactionStore = defineStore('transaction', {
       const web3Store = useWeb3Store();
       const walletSore = useWalletsStore();
       const formSore = useFormStore();
-
       /*
        * toRaw used for the direct access to the target of the Proxy
        * to get the provider object and call the connect private method getNetwork and getFeeData
        */
       return await createMintNeonTransactionEthers({
-        provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
+        provider: toRaw(web3Store.ethersProvider) as JsonRpcProvider,
         neonWallet: walletSore.neonWallet.address,
         associatedToken,
         splToken: formSore.currentSplToken as SPLToken,
@@ -84,7 +83,7 @@ export const useTransactionStore = defineStore('transaction', {
     },
     async sendNeonTranaction(transaction: TransactionRequest) {
       const walletStore = useWalletsStore();
-      const rawWallet = toRaw(walletStore.neonWallet); //Doesn't work without due to the internal objects wrapping
+      const rawWallet = toRaw(walletStore.neonWallet);
       try {
         const receipt = await rawWallet.sendTransaction(transaction);
         return receipt.hash;
@@ -120,7 +119,7 @@ export const useTransactionStore = defineStore('transaction', {
         neonEvmProgram: web3Store.neonProgram,
         solanaWallet: walletStore.solanaWallet.publicKey,
         neonWallet: walletStore.neonWallet.address,
-        walletSigner: walletStore.solanaWalletSigner as Wallet,
+        walletSigner: toRaw(walletStore.solanaWalletSigner) as Wallet,
         splToken: formStore.currentSplToken as SPLToken,
         amount: formStore.inputAmount,
         chainId: web3Store.chainId

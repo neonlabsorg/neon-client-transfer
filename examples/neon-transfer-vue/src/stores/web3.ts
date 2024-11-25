@@ -52,6 +52,7 @@ export const useWeb3Store = defineStore('web3', {
     },
     setNetworkUrl(networkUrl?: NetworkUrl) {
       this.networkUrl = networkUrl || networkUrls.find(chain => chain.id === this.chainId) || networkUrls[0];
+
     },
     setWeb3Provider() {
       this.ethersProvider = new JsonRpcProvider(this.networkUrl.neonProxy);

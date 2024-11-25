@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFormStore, useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 import { networkUrls, stringShort } from '@/utils';
+import useNeonWallet from '@/composables/useNeonWallet';
 
 import type { TransferDirection } from '@/types';
 
@@ -30,6 +31,8 @@ const {
   solanaSignature,
   neonSignature
 } = storeToRefs(transactionStore);
+
+const { initNeonWallet } = useNeonWallet();
 
 const handleEvmNetworkSelect = (event: any): any => {
   web3Store.setChainId(Number(event.target.value));
@@ -74,6 +77,10 @@ onBeforeMount(async () => {
   await transactionStore.initStore();
   formStore.initStore();
 });
+
+onMounted(() => {
+  initNeonWallet();
+})
 </script>
 
 <template>
@@ -125,7 +132,7 @@ onBeforeMount(async () => {
                 :disabled="isTransfering">
           <option value="" disabled>Select Token</option>
           <option v-for="token in tokenList" :value="token.symbol" :key="token.name">
-            {{ `${token.name} ${token.symbol}` }}
+            {{ `${token.symbol}` }}
           </option>
         </select>
       </div>

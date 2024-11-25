@@ -8,6 +8,7 @@ import { Contract } from 'ethers';
 import { decode } from 'bs58';
 import { Big } from 'big.js';
 import { Wallet as EthersWallet } from 'ethers';
+import { toRaw } from 'vue';
 
 import { NEON_PRIVATE, SOLANA_PRIVATE } from '@/utils';
 import { useFormStore, useWeb3Store } from '@/stores';
@@ -49,7 +50,6 @@ export const useWalletsStore = defineStore('wallets', {
   actions: {
     async initStore() {
       this.isLoading = true;
-      this.setNeonWallet();
       this.setSolanaWallet();
       this.setSolanaWalletSigner();
       await this.setTokenBalance();
@@ -61,13 +61,10 @@ export const useWalletsStore = defineStore('wallets', {
     },
     setSolanaWalletSigner() {
       const web3Store = useWeb3Store();
-
-      this.solanaWalletSigner = new EthersWallet(signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address), web3Store.ethersProvider);
+      this.solanaWalletSigner = new EthersWallet(signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address), toRaw(web3Store.ethersProvider));
     },
-    setNeonWallet() {
-      const web3Store = useWeb3Store();
-
-      this.neonWallet = new EthersWallet(NEON_PRIVATE, web3Store.ethersProvider)
+    setNeonWallet(wallet: EthersWallet) {
+      this.neonWallet = wallet; //Or use this signature: new EthersWallet(NEON_PRIVATE, toRaw(web3Store.ethersProvider))
     },
     updateWalletBalance(balance: TokenBalance) {
       this.walletBalance = balance;
@@ -94,8 +91,9 @@ export const useWalletsStore = defineStore('wallets', {
       };
     },
     async getTokenBalance(token: SPLToken) {
+      //TODO: optimize this method, avoid unnecessary calls based on direction
+      //don’t need to work out balances of the other direction
       const formStore = useFormStore();
-
       formStore.setIsPendingTokenChange(true);
 
       try {
@@ -132,7 +130,6 @@ export const useWalletsStore = defineStore('wallets', {
           default: {
             const solana = await this.getSplTokenBalance(token);
             const neon = await this.getMintTokenBalance();
-
             formStore.setError(false);
             this.updateTokenBalance({
               solana: new Big(solana.amount).div(Math.pow(10, solana.decimals)),
@@ -142,6 +139,7 @@ export const useWalletsStore = defineStore('wallets', {
           }
         }
       } catch (e) {
+        console.error(`Can't fetch ${token.symbol} balance`, e);
         formStore.setError(true);
       }
 
@@ -150,14 +148,19 @@ export const useWalletsStore = defineStore('wallets', {
 
     async getMintTokenBalance(contractAbi: any = erc20Abi): Promise<Big> {
       const formStore = useFormStore();
+      const rawWallet = toRaw(this.neonWallet);
 
       const tokenInstance = new Contract(
         formStore.currentSplToken?.address,
         contractAbi,
-        this.neonWallet
+        rawWallet
       );
-      const balance: number = await tokenInstance.methods.balanceOf(this.neonWallet.address).call();
-      return new Big(balance.toString()).div(Math.pow(10, formStore.currentSplToken?.decimals));
+
+      Big.DP = 18;
+      Big.RM = Big.roundDown; //Set round mode and precision to avoid 19999999 to be rounded to 10
+
+      const balance: number = await tokenInstance.balanceOf(rawWallet.address);
+      return new Big(balance.toString()).div(new Big(10).pow(formStore.currentSplToken?.decimals));
     },
 
     async getSolanaBalance(address?: PublicKey) {
@@ -175,8 +178,8 @@ export const useWalletsStore = defineStore('wallets', {
     async getNeonBalance() {
       const web3Store = useWeb3Store();
       try {
-        const balance = await web3Store.ethersProvider.getBalance(this.neonWallet);
-
+        const provider = toRaw(web3Store.ethersProvider);
+        const balance = await provider.getBalance(this.neonWallet);
         return Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
       } catch (e) {
         console.log(e);
@@ -190,11 +193,6 @@ export const useWalletsStore = defineStore('wallets', {
 
       return response?.value;
     }
-    // async setSplTokenBalance(token: SPLToken) {
-    //     const splTokenBalance = await this.getSplTokenBalance(token)
-
-    //     this.splTokenBalance = splTokenBalance
-    // }
   },
   getters: {
     getWalletBalance: (state) => ({

@@ -2,9 +2,9 @@
 
 This template should help get you started developing with Vue 3 in Vite.
 
-## !Important
+## Important!
 
-This example is currently under development due to incompatibility with Vue's reactivity system and proxies. The current version of the Neon Transfer Vue example is not working as expected because Ethers.js class private methods are incompatible with proxies.
+In this example, we use Vue's `toRaw` utility to bypass reactivity proxies, addressing compatibility issues with private methods in the Ethers.js library. This ensures that the reactive state does not interfere with Ethers.js functionality, providing direct access to the raw data needed for proper interaction with the library.
 
 ## Recommended IDE Setup
 
