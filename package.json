@@ -4,7 +4,7 @@
   "description": "JavaScript client-side module for creating transfer transactions from Solana to NeonEVM",
   "private": true,
   "workspaces": [
-    "./packages/*"
+    "packages/*"
   ],
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
