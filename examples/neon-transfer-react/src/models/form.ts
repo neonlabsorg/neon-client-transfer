@@ -15,3 +15,11 @@ export interface TransferSignature {
   neon?: string;
   solana?: string;
 }
+
+export type TransactionFunction = () => Promise<any>;
+
+export type SplTokenSymbol = 'NEON' | 'SOL' | 'wSOL' | 'DEFAULT';
+
+export type TransactionFunctionsMap = {
+  DEFAULT: TransactionFunction;
+} & Partial<Record<Exclude<SplTokenSymbol, 'DEFAULT'>, TransactionFunction>>;

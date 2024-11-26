@@ -43,7 +43,7 @@ import {
   TOKEN_LIST,
   toSigner
 } from './utils';
-import { TokenBalance, TransferDirection, TransferSignature } from './models';
+import { TokenBalance, TransactionFunctionsMap, TransferDirection, TransferSignature } from './models';
 
 const BIG_ZERO = new Big(0);
 
@@ -261,28 +261,39 @@ function NeonTransferApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ethersProvider, splToken]);
 
+  const handleSolanaTransaction = useCallback(
+    async (transactionFunction: () => Promise<any>, solanaSigner: Signer) => {
+      try {
+        const transaction = await transactionFunction();
+        const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
+        setSignature({ solana });
+      } catch (error) {
+        console.error("Transaction failed", error);
+      }
+    },
+    [connection, setSignature]
+  );
+
   const handleSubmit = useCallback(async () => {
     if (token && splToken) {
       setSubmitDisable(true);
       const solanaSigner: Signer = toSigner(solanaWallet);
+      let transactionFunctions: TransactionFunctionsMap;
+
       if (transfer.direction === 'solana') {
-        switch (splToken.symbol) {
-          case 'NEON': {
-            const transaction = await solanaNEONTransferTransaction({
+        transactionFunctions = {
+          NEON: () =>
+            solanaNEONTransferTransaction({
               solanaWallet: solanaWallet.publicKey,
               neonWallet: neonWallet.address,
               neonEvmProgram: neonProgram,
               neonTokenMint: networkTokenMint,
               token: splToken,
               amount,
-              chainId
-            });
-            const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-            setSignature({ solana });
-            break;
-          }
-          case 'SOL': {
-            const transaction = await solanaSOLTransferTransaction({
+              chainId,
+            }),
+          SOL: () =>
+            solanaSOLTransferTransaction({
               connection,
               solanaWallet: solanaWallet.publicKey,
               neonWallet: neonWallet.address,
@@ -290,14 +301,11 @@ function NeonTransferApp() {
               neonTokenMint: networkTokenMint,
               splToken,
               amount,
-              chainId
-            });
-            const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-            setSignature({ solana });
-            break;
-          }
-          case 'wSOL': {
-            const transaction = await neonTransferMintTransactionEthers({
+              chainId,
+            }),
+          DEFAULT: () =>
+            //Used for all SPL token transaction (including wSOL)
+            neonTransferMintTransactionEthers({
               connection,
               proxyApi,
               neonEvmProgram: neonProgram,
@@ -306,111 +314,68 @@ function NeonTransferApp() {
               walletSigner,
               splToken,
               amount,
-              chainId
-            });
-            const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-            setSignature({ solana });
-            break;
-          }
-          default: {
-            const transaction = await neonTransferMintTransactionEthers({
-              connection,
-              proxyApi,
-              neonEvmProgram: neonProgram,
-              solanaWallet: solanaWallet.publicKey,
-              neonWallet: neonWallet.address,
-              walletSigner,
-              splToken,
-              amount,
-              chainId
-            });
-            const solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-            setSignature({ solana });
-            break;
-          }
-        }
+              chainId,
+            }),
+        };
+
+        const transactionFunction = transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT;
+        await handleSolanaTransaction(transactionFunction, solanaSigner);
       } else {
         const mintPubkey = new PublicKey(splToken.address_spl);
         const associatedToken = getAssociatedTokenAddressSync(mintPubkey, solanaWallet.publicKey);
-        switch (splToken.symbol) {
-          case 'NEON': {
-            const transaction = await neonNeonTransactionEthers({
+
+        //Need to create associated token account for wSOL and other SPL tokens
+        let solana = '';
+        if (!['SOL', 'NEON'].includes(splToken.symbol) && !(await connection.getAccountInfo(associatedToken))) {
+          const transaction = createAssociatedTokenAccountTransaction({
+            solanaWallet: solanaWallet.publicKey,
+            tokenMint: mintPubkey,
+            associatedToken,
+          });
+          solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
+          delay(1e3);
+        }
+
+        transactionFunctions = {
+          NEON: () =>
+            neonNeonTransactionEthers({
               provider: ethersProvider,
               from: neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: solanaWallet.publicKey,
-              amount
-            });
-            const neon = await sendNeonTransaction(transaction, neonWallet);
-            setSignature({ neon });
-            break;
-          }
-          case 'SOL': {
-            const transaction = await neonNeonTransactionEthers({
+              amount,
+            }),
+          SOL: () =>
+            neonNeonTransactionEthers({
               provider: ethersProvider,
               from: neonWallet.address,
               to: SOL_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: solanaWallet.publicKey,
-              amount
-            });
-            const neon = await sendNeonTransaction(transaction, neonWallet);
-            setSignature({ neon });
-            break;
-          }
-          case 'wSOL': {
-            let solana = ``;
-            if (!(await connection.getAccountInfo(associatedToken))) {
-              const transaction = createAssociatedTokenAccountTransaction({
-                solanaWallet: solanaWallet.publicKey,
-                tokenMint: mintPubkey,
-                associatedToken
-              });
-              solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-              delay(1e3);
-            }
-            const transaction = await createMintNeonTransactionEthers({
+              amount,
+            }),
+          DEFAULT: () =>
+            //Used for all ERC20 token transaction (including wSOL)
+            createMintNeonTransactionEthers({
               provider: ethersProvider,
               neonWallet: neonWallet.address,
               associatedToken,
               splToken,
-              amount
-            });
-            const neon = await sendNeonTransaction(transaction, neonWallet);
-            setSignature({ solana, neon });
-            break;
-          }
-          default: {
-            let solana = ``;
-            if (!(await connection.getAccountInfo(associatedToken))) {
-              const transaction = createAssociatedTokenAccountTransaction({
-                solanaWallet: solanaWallet.publicKey,
-                tokenMint: mintPubkey,
-                associatedToken
-              });
-              solana = await sendTransaction(connection, transaction, [solanaSigner], true, { skipPreflight: false });
-              delay(1e3);
-            }
-            const transaction = await createMintNeonTransactionEthers({
-              provider: ethersProvider,
-              neonWallet: neonWallet.address,
-              associatedToken,
-              splToken,
-              amount
-            });
-            const neon = await sendNeonTransaction(transaction, neonWallet);
-            setSignature({ solana, neon });
-            break;
-          }
-        }
+              amount,
+            }),
+        };
+
+        const transaction = await (transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT)();
+        const neon = await sendNeonTransaction(transaction, neonWallet);
+        setSignature({ solana, neon });
       }
+
       await delay(1e3);
       await getTokenBalance();
       await getWalletBalance();
       await delay(5e3);
       setSubmitDisable(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, splToken, solanaWallet, transfer.direction, getTokenBalance, getWalletBalance, amount, connection, ethersProvider, neonWallet]);
+  }, [token, splToken, neonProgram, chainId, solanaWallet, walletSigner, networkTokenMint, proxyApi, transfer.direction, getTokenBalance, getWalletBalance, amount, connection, ethersProvider, neonWallet, handleSolanaTransaction]);
 
   useEffect(() => {
     getProxyStatus();
