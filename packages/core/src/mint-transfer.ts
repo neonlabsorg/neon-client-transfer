@@ -379,6 +379,29 @@ export function createExecFromDataInstructionV2(params: CreateExecFromDataInstru
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates a transaction object to mint Neon tokens.
+ *
+ * This function returns an object containing the necessary fields to create a mint transaction.
+ * The fields include the data payload, source wallet address, target SPL token address, and a default value of `0`.
+ *
+ * @template T - The type to which the resulting object should be cast.
+ * @param {string} neonWallet - The address of the Neon wallet that will be the source of the transaction.
+ * @param {SPLToken} splToken - The SPL token object that contains the address to which the tokens are to be minted.
+ * @param {string} data - Additional data payload to be included in the transaction.
+ *
+ * @returns {T} An object representing the mint transaction, cast to the specified type `T`.
+ *
+ * @example
+ * // Example usage with TransactionRequest type from ethers.js:
+ * import { TransactionRequest } from 'ethers';
+ *
+ * const transaction: TransactionRequest = createMintNeonTransaction<TransactionRequest>(
+ *   '0xYourNeonWalletAddress',
+ *   { address: '0xTokenAddress', address_spl: 'splTokenAddress', decimals: 18, symbol: 'TOKEN', ... },
+ *   '0xTransactionData'
+ * );
+ */
 export function createMintNeonTransaction<T>(neonWallet: string, splToken: SPLToken, data: string): T {
   return { data, from: neonWallet, to: splToken.address, value: `0x0` } as T;
 }
@@ -409,6 +432,21 @@ export function createAssociatedTokenAccountInstruction({
   return new TransactionInstruction({ programId: associatedProgramId, keys, data });
 }
 
+/**
+ * Creates a transaction to initialize an associated token account for a given wallet and token mint.
+ *
+ * This function generates a transaction that includes:
+ * 1. A compute budget instruction to increase the heap frame size for Neon compatibility.
+ * 2. An instruction to create an associated token account for the specified wallet and token mint.
+ *
+ * @param {AssociatedTokenAccountTransactionParams} params - Parameters to configure the associated token account creation.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet that will own the associated token account and pay for the transaction fees.
+ * @param {PublicKey} params.tokenMint - The public key of the token mint for which the associated token account will be created.
+ * @param {PublicKey} params.associatedToken - The public key of the associated token account.
+ * @param {number} [params.neonHeapFrame=NEON_HEAP_FRAME] - Optional heap frame size for Neon compatibility, defaulting to NEON_HEAP_FRAME.
+ *
+ * @returns {Transaction} A new Solana `Transaction` containing the instructions to create the associated token account.
+ */
 export function createAssociatedTokenAccountTransaction({
   solanaWallet,
   tokenMint,
@@ -450,6 +488,42 @@ export async function createWrapSOLTransaction({
   return transaction;
 }
 
+/**
+ * Creates a transaction to unwrap a Wrapped SOL (wSOL) account.
+ *
+ * This function is used to generate a transaction that will close an associated token account,
+ * which contains Wrapped SOL (wSOL), effectively unwrapping it back to SOL. It first verifies
+ * if the associated token account exists before attempting to close it.
+ *
+ * @param {Connection} connection - The Solana blockchain connection object used to interact with the network.
+ * @param {PublicKey} solanaWallet - The public key of the user's Solana wallet.
+ * @param {SPLToken} splToken - The SPL token object that contains details of the Wrapped SOL.
+ * @returns {Promise<Transaction>} - A Promise that resolves to the generated transaction to close the Wrapped SOL account.
+ * @throws {Error} If the associated token account has not been created.
+ *
+ * @example
+ * ```typescript
+ * const connection = new Connection("https://api.mainnet-beta.solana.com");
+ * const solanaWallet = new PublicKey("your_solana_wallet_public_key");
+ * const splToken: SPLToken = {
+ *   address: "erc20_wsol_address",
+ *   address_spl: "address_spl_value",
+ *   chainId: 111,
+ *   decimals: 9,
+ *   logoURI: "logo_url",
+ *   name: "Wrapped SOL",
+ *   symbol: "wSOL",
+ * };
+ *
+ * createUnwrapSOLTransaction(connection, solanaWallet, splToken)
+ *   .then((transaction) => {
+ *     console.log("Unwrap transaction created successfully:", transaction);
+ *   })
+ *   .catch((error) => {
+ *     console.error("Failed to create unwrap transaction:", error);
+ *   });
+ * ```
+ */
 export async function createUnwrapSOLTransaction(connection: Connection, solanaWallet: PublicKey, splToken: SPLToken): Promise<Transaction> {
   const tokenMint = new PublicKey(splToken.address_spl);
   const associatedToken = getAssociatedTokenAddressSync(tokenMint, solanaWallet);

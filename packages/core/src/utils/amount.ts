@@ -8,6 +8,13 @@ export function toBytesInt32(number: number, littleEndian = true): ArrayBuffer {
   return arrayBuffer;
 }
 
+/**
+ * Converts a token amount to its full precision based on the given decimals.
+ *
+ * @param amount - The base amount to convert. This can be a number, string, or bigint.
+ * @param decimals - The number of decimal places the token uses.
+ * @returns The full amount as a `bigint`, representing the value with all decimals.
+ */
 export function toFullAmount(amount: Amount, decimals: number): bigint {
   const data = new Big(amount.toString()).times(Big(10).pow(decimals));
   return BigInt(data.toString());

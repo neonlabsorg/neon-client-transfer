@@ -9,6 +9,17 @@ export function neonWalletProgramAddress(etherKey: string, neonEvmProgram: Publi
   return PublicKey.findProgramAddressSync(seed, neonEvmProgram);
 }
 
+/**
+ * Computes the program address for a NEON token balance.
+ *
+ * This function generates a program address based on the provided Ethereum address, the NEON EVM program, and chain ID.
+ * It is used to identify the NEON token balance associated with the provided address on the given chain.
+ *
+ * @param etherKey - The Ethereum address, provided as a hexadecimal string. This should be the address for which the NEON balance is queried.
+ * @param neonEvmProgram - The NEON EVM program address as a `PublicKey`.
+ * @param chainId - The ID of the blockchain network where the NEON token is being used.
+ * @returns A tuple containing the derived program `PublicKey` and a bump seed number used in the derivation process.
+ */
 export function neonBalanceProgramAddress(etherKey: string, neonEvmProgram: PublicKey, chainId: number): [PublicKey, number] {
   const keyBuffer = Buffer.from(isValidHex(etherKey) ? etherKey.replace(/^0x/i, '') : etherKey, 'hex');
   const chainIdBytes = toU256BE(BigInt(chainId)); //chain_id as u256be

@@ -123,11 +123,53 @@ export function createNeonTransferInstruction({
   return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
 }
 
+/**
+ * Creates a transaction-like object that represents an unwrap WNEON in NEON token.
+ *
+ * @template T - The expected type of the transaction-like object, commonly `TransactionRequest` from ethers.js.
+ * @param from - The sender address in hexadecimal format.
+ * @param to - The recipient address in hexadecimal format - commonly wneon token contract address.
+ * @param data - The additional data to include in the transaction, represented as a string.
+ * @returns An object representing the transaction, cast to the expected type `T`.
+ *
+ * @example
+ * ```typescript
+ * import { TransactionRequest } from 'ethers';
+ *
+ * const fromAddress = "0x1234567890abcdef1234567890abcdef12345678";
+ * const toAddress = wneon.address;
+ * const data = "0x";
+ *
+ * const unwrapTransaction = wrappedNeonTransaction<TransactionRequest>(fromAddress, toAddress, data);
+ * ```
+ */
 export function wrappedNeonTransaction<T>(from: string, to: string, data: string): T {
   const value = `0x0`;
   return { from, to, value, data } as T;
 }
 
+/**
+ * Creates a transaction-like object that represents a NEON token transfer.
+ *
+ * @template T - The expected type of the transaction-like object, commonly `TransactionRequest` from ethers.js.
+ * @param from - The sender address in hexadecimal format - Neon EVM address.
+ * @param to - The recipient address in hexadecimal format - commonly token transfer contract address.
+ * @param amount - The amount of tokens to transfer, represented as a number, string, or bigint.
+ * @param data - The additional data to include in the transaction, represented as a string.
+ * @returns An object representing the transaction, cast to the expected type `T`.
+ *
+ * @example
+ * ```typescript
+ * import { TransactionRequest } from 'ethers';
+ *
+ * const fromAddress = "0x1234567890abcdef1234567890abcdef12345678";
+ * const toAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
+ * const amount = "10";
+ * const data = "0x";
+ *
+ * const transaction: TransactionRequest = neonNeonTransaction<TransactionRequest>(fromAddress, toAddress, amount, data);
+ * ```
+ */
 export function neonNeonTransaction<T>(from: string, to: string, amount: Amount, data: string): T {
   const value = `0x${parseUnits(amount.toString(), 'ether').toString(16)}`;
   return { from, to, value, data } as T;
