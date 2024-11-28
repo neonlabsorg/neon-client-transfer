@@ -64,6 +64,33 @@ import {
   TransactionResult
 } from './utils';
 
+/**
+ * Creates a devnet version of the Neon Transfer Mint Transaction with holder account creation.
+ *
+ * This function generates a transaction to transfer SPL tokens from Solana to NeonEVM on the devnet.
+ * Unlike the mainnet version, this transaction creates a holder account to enhance performance. The
+ * holder account is utilized temporarily during the transaction, allowing for optimized execution.
+ *
+ * @template W - The type of the provider, generally extending the `Provider` type.
+ * @template TxResult - The type of the transaction result, generally extending `TransactionResult`.
+ *
+ * @param {NeonMintTxParams<W, TxResult>} params - The parameters required to create the Neon mint transaction.
+ * @param {Connection} params.connection - The Solana connection object used to interact with the blockchain.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program on Solana.
+ * @param {PublicKey} params.solanaWallet - The public key of the user's Solana wallet, which will serve as the fee payer.
+ * @param {string} params.neonWallet - The address of the Neon wallet.
+ * @param {EmulateSigner} params.emulateSigner - The signer to emulate the transaction.
+ * @param {NeonKeys[]} params.neonKeys - The keys needed for the Neon transaction.
+ * @param {LegacyAccount[]} params.legacyAccounts - The legacy accounts that need to have their balance accounts to be created.
+ * @param {NeonTransaction} params.neonTransaction - The transaction data for the NeonEVM chain.
+ * @param {SPLToken} params.splToken - The SPL token object representing the token being transferred.
+ * @param {Amount} params.amount - The amount of tokens to be transferred.
+ * @param {number} params.chainId - Neon EVM chain ID for which the transaction is being created.
+ * @param {number} [params.neonHeapFrame=NEON_HEAP_FRAME] - The heap frame value for computing the budget program.
+ * @param {number} [params.neonPoolCount=NEON_TREASURY_POOL_COUNT] - The number of treasury pools.
+ *
+ * @returns {Promise<Transaction>} - A Promise that resolves to the generated Solana transaction.
+ */
 export async function neonTransferMintTransaction<W extends Provider, TxResult extends TransactionResult>(params: NeonMintTxParams<W, TxResult>): Promise<Transaction> {
   const { connection, neonEvmProgram, solanaWallet, neonWallet, emulateSigner, neonKeys, legacyAccounts, neonTransaction, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME, neonPoolCount = NEON_TREASURY_POOL_COUNT } = params;
   const computedBudgetProgram = new PublicKey(COMPUTE_BUDGET_ID);
@@ -460,6 +487,44 @@ export function createAssociatedTokenAccountTransaction({
   return transaction;
 }
 
+/**
+ * Creates a transaction to wrap SOL into Wrapped SOL (wSOL).
+ *
+ * This function is used to generate a transaction that will wrap the specified amount of SOL
+ * into Wrapped SOL (wSOL). It first verifies if the associated token account exists and creates
+ * it if necessary, then transfers the SOL and synchronizes it as Wrapped SOL.
+ *
+ * @param {WrapSOLTransactionParams} params - An object containing the parameters required to wrap SOL.
+ * @param {Connection} params.connection - The Solana blockchain connection object used to interact with the network.
+ * @param {PublicKey} params.solanaWallet - The public key of the user's Solana wallet.
+ * @param {Amount} params.amount - The amount of SOL to be wrapped as wSOL.
+ * @param {SPLToken} params.splToken - The SPL token object representing SOL.
+ * @returns {Promise<Transaction>} - A Promise that resolves to the generated transaction to wrap SOL as wSOL.
+ *
+ * @example
+ * ```typescript
+ * const connection = new Connection("https://api.devnet.solana.com");
+ * const solanaWallet = new PublicKey("your_solana_wallet_public_key");
+ * const amount = 1; // Amount of SOL to wrap
+ * const splToken: SPLToken = {
+ *   address: "erc20_sol_address",
+ *   address_spl: "address_spl_value",
+ *   chainId: 245022926,
+ *   decimals: 9,
+ *   logoURI: "logo_url",
+ *   name: "Solana SOL",
+ *   symbol: "SOL",
+ * };
+ *
+ * createWrapSOLTransaction({ connection, solanaWallet, amount, splToken })
+ *   .then((transaction) => {
+ *     console.log("Wrap transaction created successfully:", transaction);
+ *   })
+ *   .catch((error) => {
+ *     console.error("Failed to create wrap transaction:", error);
+ *   });
+ * ```
+ */
 export async function createWrapSOLTransaction({
   connection,
   solanaWallet,
@@ -503,12 +568,12 @@ export async function createWrapSOLTransaction({
  *
  * @example
  * ```typescript
- * const connection = new Connection("https://api.mainnet-beta.solana.com");
+ * const connection = new Connection("https://api.devnet.solana.com");
  * const solanaWallet = new PublicKey("your_solana_wallet_public_key");
  * const splToken: SPLToken = {
  *   address: "erc20_wsol_address",
  *   address_spl: "address_spl_value",
- *   chainId: 111,
+ *   chainId: 245022926,
  *   decimals: 9,
  *   logoURI: "logo_url",
  *   name: "Wrapped SOL",

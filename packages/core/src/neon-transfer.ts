@@ -25,6 +25,55 @@ import {
   toFullAmount
 } from './utils';
 
+/**
+ * Creates a Solana transaction to transfer NEON tokens.
+ *
+ * This function generates a transaction for transferring NEON tokens from the Solana blockchain to Neon EVM.
+ * It creates the necessary instructions to approve the associated token account and deposit to
+ * a balance program address. Optionally, it adds a reward transfer instruction if a service wallet
+ * and reward amount are provided.
+ *
+ * @param {SolanaNEONTransferTransactionParams} params - An object containing the parameters required to perform the NEON token transfer.
+ * @param {PublicKey} params.solanaWallet - The public key of the user's Solana wallet, which will serve as the fee payer.
+ * @param {string} params.neonWallet - The address of the NEON wallet - receiver of NEON tokens.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the NEON EVM program on Solana.
+ * @param {PublicKey} params.neonTokenMint - The public key of the NEON token mint on Solana.
+ * @param {SPLToken} params.token - The SPL token object representing the NEON token being transferred.
+ * @param {Amount} params.amount - The amount of NEON tokens to transfer.
+ * @param {number} [params.chainId=111] - Neon EVM chain ID.
+ * @param {PublicKey} [params.serviceWallet] - An optional public key of a service wallet to which rewards should be transferred.
+ * @param {Amount} [params.rewardAmount] - An optional reward amount to be transferred to the service wallet.
+ * @returns {Promise<Transaction>} - A Promise that resolves to the generated Solana transaction.
+ *
+ * @example
+ * ```typescript
+ * const connection = new Connection("https://api.devnet.solana.com");
+ * const solanaWallet = new PublicKey("your_solana_wallet_public_key");
+ * const neonWallet = "your_neon_wallet_address";
+ * const neonEvmProgram = new PublicKey("neon_evm_program_public_key");
+ * const neonTokenMint = new PublicKey("neon_token_mint_public_key");
+ * const token: SPLToken = {
+ *   address: "erc20_token_address",
+ *   address_spl: "address_spl_value",
+ *   chainId: 245022926,
+ *   decimals: 18,
+ *   logoURI: "logo_url",
+ *   name: "NEON Token",
+ *   symbol: "NEON",
+ * };
+ *
+ * const transaction = await solanaNEONTransferTransaction({
+ *   solanaWallet,
+ *   neonWallet,
+ *   neonEvmProgram,
+ *   neonTokenMint,
+ *   token,
+ *   amount: 1,
+ *   chainId: 245022926
+ * });
+ * console.log("Transaction created successfully:", transaction);
+ * ```
+ */
 export async function solanaNEONTransferTransaction({
   solanaWallet,
   neonWallet,
