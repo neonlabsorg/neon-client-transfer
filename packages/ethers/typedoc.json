@@ -1,8 +1,4 @@
 {
-  "entryPoints": ["src/index.ts"],
-  "out": "docs",
-  "tsconfig": "./tsconfig.typedoc.json",
-  "exclude": [
-    "node_modules"
-  ]
+  "extends": ["../../typedoc.base.jsonc"],
+  "entryPoints": ["./src/index.ts"]
 }

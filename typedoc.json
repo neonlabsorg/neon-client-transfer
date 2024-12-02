@@ -1,0 +1,8 @@
+{
+  "name": "Transfer SDK Documentation",
+  "entryPoints": ["packages/*"],
+  "entryPointStrategy": "packages",
+  "out": "docs",
+  "includeVersion": false,
+  "logLevel": "Verbose"
+}

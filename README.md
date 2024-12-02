@@ -164,3 +164,13 @@ yarn test
 # or
 npm run test
 ```
+
+### Building Docs
+
+We can run TypeDoc with packages mode to generate a single docs folder in the root of the project.
+
+```sh
+yarn docs
+# or
+npm run docs
+```
