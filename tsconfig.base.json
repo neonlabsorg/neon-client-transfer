@@ -9,11 +9,13 @@
     "module": "es2020",
     "moduleResolution": "node",
     "strict": true,
+    "composite": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "declarationMap": true,
     "allowJs": true
   },
   "exclude": [

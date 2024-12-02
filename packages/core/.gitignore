@@ -1,8 +1,10 @@
 /node_modules
 /dist
+/docs
 .idea
 .DS_Store
 tmp.json
 *.tmp
 imp
 .nx/cache
+*.tsbuildinfo

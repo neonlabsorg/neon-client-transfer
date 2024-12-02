@@ -9,8 +9,18 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
   "files": [
-    "./dist/**/*"
+    "/dist/cjs",
+    "/dist/esm",
+    "/dist/types",
+    "/src"
   ],
   "engines": {
     "node": ">=18"
@@ -22,7 +32,8 @@
     "prepack": "lerna run prepack --stream",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
-    "audit": "lerna run audit --stream"
+    "audit": "lerna run audit --stream",
+    "docs": "typedoc"
   },
   "repository": {
     "type": "git",
@@ -69,7 +80,8 @@
     "token-list": "https://github.com/neonlabsorg/token-list.git#v5.6.1",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "~5.1.6",
+    "typedoc": "^0.27.0",
+    "typescript": "^5.7.2",
     "web3": "^4.5.0",
     "web3-core": "^4.3.2",
     "web3-eth": "^4.3.1",
