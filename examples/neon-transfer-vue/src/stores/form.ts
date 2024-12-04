@@ -15,24 +15,24 @@ import {
 import {
   solanaNEONTransferTransaction,
   NEON_TRANSFER_CONTRACT_DEVNET
-} from '@neonevm/token-transfer-core'
+} from '@neonevm/token-transfer-core';
 
 import { useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 
 import type { TransferDirection } from '@/types';
 import type { SPLToken } from '@neonevm/token-transfer-core';
-import {JsonRpcProvider} from "ethers";
-import { toRaw } from "vue";
+import { JsonRpcProvider } from 'ethers';
+import { toRaw } from 'vue';
 
 interface IFormStore {
-  amount: string
-  isLoading: boolean,
-  isPendingTokenChange: boolean,
-  isSubmitting: boolean,
-  hasError: boolean,
-  currentSplToken: SPLToken | null
-  tokenList: SPLToken[]
-  transferDirection: TransferDirection
+  amount: string;
+  isLoading: boolean;
+  isPendingTokenChange: boolean;
+  isSubmitting: boolean;
+  hasError: boolean;
+  currentSplToken: SPLToken | null;
+  tokenList: SPLToken[];
+  transferDirection: TransferDirection;
 }
 
 export const useFormStore = defineStore('form', {
@@ -50,7 +50,7 @@ export const useFormStore = defineStore('form', {
     initStore() {
       const walletStore = useWalletsStore();
 
-      this.setTrtansferDirection({
+      this.setTransferDirection({
         direction: 'solana',
         from: walletStore.solanaWallet.publicKey.toBase58(),
         to: walletStore.neonWallet.address.toString()
@@ -61,13 +61,13 @@ export const useFormStore = defineStore('form', {
     },
     setCurrentSplToken(symbol: string) {
       const walletStore = useWalletsStore();
-      this.currentSplToken = this.tokenList.find(token => token.symbol === symbol) || null;
+      this.currentSplToken = this.tokenList.find((token) => token.symbol === symbol) || null;
 
       if (this.currentSplToken) {
         walletStore.getTokenBalance(this.currentSplToken);
       }
     },
-    setTrtansferDirection(direction: TransferDirection) {
+    setTransferDirection(direction: TransferDirection) {
       this.transferDirection = direction;
     },
     setIsSubmitting(isSubmitting: boolean) {
@@ -86,7 +86,7 @@ export const useFormStore = defineStore('form', {
       const web3Store = useWeb3Store();
       const transactionStore = useTransactionStore();
 
-      this.tokenList = TOKEN_LIST.filter(i => supportedTokens.includes(i.symbol));
+      this.tokenList = TOKEN_LIST.filter((i) => supportedTokens.includes(i.symbol));
 
       if (web3Store.chainId === networkUrls[0].id) {
         this.tokenList.unshift({
@@ -94,9 +94,10 @@ export const useFormStore = defineStore('form', {
           address_spl: transactionStore.networkTokenMint.toBase58()
         });
       } else {
-        const wSOL = this.tokenList.find(i => i.symbol === 'wSOL');
+        const wSOL = this.tokenList.find((i) => i.symbol === 'wSOL');
         this.tokenList.unshift({
-          ...wSOL, ...SOL_TOKEN_MODEL,
+          ...wSOL,
+          ...SOL_TOKEN_MODEL,
           address_spl: transactionStore.networkTokenMint.toBase58()
         });
       }
@@ -151,7 +152,10 @@ export const useFormStore = defineStore('form', {
           }
         }
       } else {
-        const associatedToken = getAssociatedTokenAddressSync(transactionStore.mintPublicKey, walletSore.solanaWallet.publicKey);
+        const associatedToken = getAssociatedTokenAddressSync(
+          transactionStore.mintPublicKey,
+          walletSore.solanaWallet.publicKey
+        );
         switch (this.currentSplToken?.symbol) {
           case 'NEON': {
             const transaction = await neonNeonTransactionEthers({
@@ -180,7 +184,8 @@ export const useFormStore = defineStore('form', {
           case 'wSOL': {
             let solana = ``;
             if (!(await web3Store.solanaConnection.getAccountInfo(associatedToken))) {
-              const transaction = transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
+              const transaction =
+                transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
               solana = await transactionStore.sendTransaction(transaction);
               this.handleDelay(1e3);
             }
@@ -198,7 +203,8 @@ export const useFormStore = defineStore('form', {
           default: {
             let solana = ``;
             if (!(await web3Store.solanaConnection.getAccountInfo(associatedToken))) {
-              const transaction = transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
+              const transaction =
+                transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
               solana = await transactionStore.sendTransaction(transaction);
               this.handleDelay(1e3);
             }
@@ -216,29 +222,36 @@ export const useFormStore = defineStore('form', {
         }
       }
 
-
       await this.handleDelay(1e3);
       await walletSore.setWalletBalance();
-      await walletSore.setTokenBalance();
+      await walletSore.getTokenBalance(this.currentSplToken);
+      // await walletSore.setTokenBalance();
       await this.handleDelay(5e3);
 
       this.setIsSubmitting(false);
     }
   },
   getters: {
-    inputAmount: state => state.amount,
-    isSubmitDisabled: state => !state.amount || !state.currentSplToken || state.isSubmitting || state.hasError || state.isPendingTokenChange,
-    isTransfering: state => state.isSubmitting,
+    inputAmount: (state) => state.amount,
+    isSubmitDisabled: (state) =>
+      !state.amount ||
+      !state.currentSplToken ||
+      state.isSubmitting ||
+      state.hasError ||
+      state.isPendingTokenChange,
+    isTransfering: (state) => state.isSubmitting,
     totalAmount: (state: IFormStore) => {
       const walletStore = useWalletsStore();
       const formStore = useFormStore();
 
-      if (!state.currentSplToken) {
+      if (!state.currentSplToken || state.isPendingTokenChange) {
         return '';
       }
 
       const balance = walletStore.tokenBalance[state.transferDirection.direction];
-      return `${balance.gt(0) ? balance.toFixed(3) : ''}${formStore.currentSplToken?.symbol ? ` ${formStore.currentSplToken.symbol}` : ''}`;
+      return `${balance.gt(0) ? balance.toFixed(3) : ''}${
+        formStore.currentSplToken?.symbol ? ` ${formStore.currentSplToken.symbol}` : ''
+      }`;
     },
     directionBalance: (state) => (position: 'from' | 'to') => {
       const walletSore = useWalletsStore();
@@ -250,7 +263,9 @@ export const useFormStore = defineStore('form', {
       switch (position) {
         case 'from': {
           const token = state.transferDirection.direction === 'solana' ? solana : evmToken;
-          return `${walletSore.walletBalance[state.transferDirection.direction].toFixed(3)} ${token}`;
+          return `${walletSore.walletBalance[state.transferDirection.direction].toFixed(
+            3
+          )} ${token}`;
         }
         case 'to': {
           const to = state.transferDirection.direction === 'solana' ? 'neon' : 'solana';

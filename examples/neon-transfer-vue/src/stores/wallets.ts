@@ -16,15 +16,15 @@ import type { TokenBalance } from '@/types';
 import type { Wallet } from 'ethers';
 
 interface IWalletStore {
-  isLoading: boolean,
-  walletBalance: TokenBalance,
-  tokenBalance: TokenBalance,
-  neonWallet: Wallet,
-  neonBalance: Big,
-  solanaWallet: Keypair,
-  solanaWalletSigner: Wallet,
-  solanaBalance: Big,
-  splTokenBalance: TokenAmount,
+  isLoading: boolean;
+  walletBalance: TokenBalance;
+  tokenBalance: TokenBalance;
+  neonWallet: Wallet;
+  neonBalance: Big;
+  solanaWallet: Keypair;
+  solanaWalletSigner: Wallet;
+  solanaBalance: Big;
+  splTokenBalance: TokenAmount;
 }
 
 const BIG_ZERO = new Big(0);
@@ -61,7 +61,10 @@ export const useWalletsStore = defineStore('wallets', {
     },
     setSolanaWalletSigner() {
       const web3Store = useWeb3Store();
-      this.solanaWalletSigner = new EthersWallet(signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address), toRaw(web3Store.ethersProvider));
+      this.solanaWalletSigner = new EthersWallet(
+        signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address),
+        toRaw(web3Store.ethersProvider)
+      );
     },
     setNeonWallet(wallet: EthersWallet) {
       this.neonWallet = wallet; //Or use this signature: new EthersWallet(NEON_PRIVATE, toRaw(web3Store.ethersProvider))
@@ -73,8 +76,8 @@ export const useWalletsStore = defineStore('wallets', {
       this.tokenBalance = balance;
     },
     async setTokenBalance() {
-      const solana = await this.getSolanaBalance() || BIG_ZERO;
-      const neon = await this.getNeonBalance() || BIG_ZERO;
+      const solana = (await this.getSolanaBalance()) || BIG_ZERO;
+      const neon = (await this.getNeonBalance()) || BIG_ZERO;
 
       this.tokenBalance = {
         solana,
@@ -82,8 +85,8 @@ export const useWalletsStore = defineStore('wallets', {
       };
     },
     async setWalletBalance() {
-      const solana = await this.getSolanaBalance() || BIG_ZERO;
-      const neon = await this.getNeonBalance() || BIG_ZERO;
+      const solana = (await this.getSolanaBalance()) || BIG_ZERO;
+      const neon = (await this.getNeonBalance()) || BIG_ZERO;
 
       this.walletBalance = {
         solana,
@@ -119,7 +122,10 @@ export const useWalletsStore = defineStore('wallets', {
           }
           case 'wSOL': {
             const address = new PublicKey(formStore.currentSplToken?.address_spl);
-            const associatedToken = getAssociatedTokenAddressSync(address, this.solanaWallet.publicKey);
+            const associatedToken = getAssociatedTokenAddressSync(
+              address,
+              this.solanaWallet.publicKey
+            );
             const solana = await this.getSolanaBalance(associatedToken);
             const neon = await this.getMintTokenBalance();
 
@@ -188,8 +194,13 @@ export const useWalletsStore = defineStore('wallets', {
     async getSplTokenBalance(token: SPLToken) {
       const web3Store = useWeb3Store();
       const mintAccount = new PublicKey(token.address_spl);
-      const assocTokenAccountAddress = await getAssociatedTokenAddress(mintAccount, this.solanaWallet.publicKey);
-      const response = await web3Store.solanaConnection.getTokenAccountBalance(assocTokenAccountAddress);
+      const assocTokenAccountAddress = await getAssociatedTokenAddress(
+        mintAccount,
+        this.solanaWallet.publicKey
+      );
+      const response = await web3Store.solanaConnection.getTokenAccountBalance(
+        assocTokenAccountAddress
+      );
 
       return response?.value;
     }
