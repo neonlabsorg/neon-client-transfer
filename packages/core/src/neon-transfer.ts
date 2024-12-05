@@ -8,7 +8,14 @@ import {
 } from '@solana/spl-token';
 import { parseUnits } from 'ethers';
 import { NEON_TOKEN_DECIMALS } from './data';
-import { Amount, EvmInstruction, NeonAddress, SPLToken } from './models';
+import {
+  Amount,
+  EvmInstruction,
+  NeonDepositToBalanceInstructionParams,
+  NeonTransferInstructionParams,
+  SolanaNEONTransferTransactionParams,
+  SPLToken
+} from './models';
 import {
   authorityPoolAddress,
   neonBalanceProgramAddress,
@@ -18,7 +25,66 @@ import {
   toFullAmount
 } from './utils';
 
-export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neonWallet: NeonAddress, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, token: SPLToken, amount: Amount, chainId = 111, serviceWallet?: PublicKey, rewardAmount?: Amount): Promise<Transaction> {
+/**
+ * Creates a Solana transaction to transfer NEON tokens.
+ *
+ * This function generates a transaction for transferring NEON tokens from the Solana blockchain to Neon EVM.
+ * It creates the necessary instructions to approve the associated token account and deposit to
+ * a balance program address. Optionally, it adds a reward transfer instruction if a service wallet
+ * and reward amount are provided.
+ *
+ * @param {SolanaNEONTransferTransactionParams} params - An object containing the parameters required to perform the NEON token transfer.
+ * @param {PublicKey} params.solanaWallet - The public key of the user's Solana wallet, which will serve as the fee payer.
+ * @param {string} params.neonWallet - The address of the NEON wallet - receiver of NEON tokens.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the NEON EVM program on Solana.
+ * @param {PublicKey} params.neonTokenMint - The public key of the NEON token mint on Solana.
+ * @param {SPLToken} params.token - The SPL token object representing the NEON token being transferred.
+ * @param {Amount} params.amount - The amount of NEON tokens to transfer.
+ * @param {number} [params.chainId=111] - Neon EVM chain ID.
+ * @param {PublicKey} [params.serviceWallet] - An optional public key of a service wallet to which rewards should be transferred.
+ * @param {Amount} [params.rewardAmount] - An optional reward amount to be transferred to the service wallet.
+ * @returns {Promise<Transaction>} - A Promise that resolves to the generated Solana transaction.
+ *
+ * @example
+ * ```typescript
+ * const connection = new Connection("https://api.devnet.solana.com");
+ * const solanaWallet = new PublicKey("your_solana_wallet_public_key");
+ * const neonWallet = "your_neon_wallet_address";
+ * const neonEvmProgram = new PublicKey("neon_evm_program_public_key");
+ * const neonTokenMint = new PublicKey("neon_token_mint_public_key");
+ * const token: SPLToken = {
+ *   address: "erc20_token_address",
+ *   address_spl: "address_spl_value",
+ *   chainId: 245022926,
+ *   decimals: 18,
+ *   logoURI: "logo_url",
+ *   name: "NEON Token",
+ *   symbol: "NEON",
+ * };
+ *
+ * const transaction = await solanaNEONTransferTransaction({
+ *   solanaWallet,
+ *   neonWallet,
+ *   neonEvmProgram,
+ *   neonTokenMint,
+ *   token,
+ *   amount: 1,
+ *   chainId: 245022926
+ * });
+ * console.log("Transaction created successfully:", transaction);
+ * ```
+ */
+export async function solanaNEONTransferTransaction({
+  solanaWallet,
+  neonWallet,
+  neonEvmProgram,
+  neonTokenMint,
+  token,
+  amount,
+  chainId = 111,
+  serviceWallet,
+  rewardAmount,
+}: SolanaNEONTransferTransactionParams): Promise<Transaction> {
   const neonToken: SPLToken = { ...token, decimals: Number(NEON_TOKEN_DECIMALS) };
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const fullAmount = toFullAmount(amount, neonToken.decimals);
@@ -26,16 +92,24 @@ export async function solanaNEONTransferTransaction(solanaWallet: PublicKey, neo
   const transaction = new Transaction({ feePayer: solanaWallet });
 
   transaction.add(createApproveInstruction(associatedTokenAddress, balanceAddress, solanaWallet, fullAmount));
-  transaction.add(createNeonDepositToBalanceInstruction(chainId, solanaWallet, associatedTokenAddress, neonWallet, neonEvmProgram, neonTokenMint, serviceWallet));
+  transaction.add(createNeonDepositToBalanceInstruction({ chainId, solanaWallet, tokenAddress: associatedTokenAddress, neonWallet, neonEvmProgram, tokenMint: neonTokenMint, serviceWallet }));
 
   if (serviceWallet && rewardAmount) {
-    transaction.add(createNeonTransferInstruction(neonTokenMint, solanaWallet, serviceWallet, rewardAmount));
+    transaction.add(createNeonTransferInstruction({ neonTokenMint, solanaWallet, serviceWallet, rewardAmount }));
   }
 
   return transaction;
 }
 
-export function createNeonDepositToBalanceInstruction(chainId: number, solanaWallet: PublicKey, tokenAddress: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, tokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
+export function createNeonDepositToBalanceInstruction({
+  chainId,
+  solanaWallet,
+  tokenAddress,
+  neonWallet,
+  neonEvmProgram,
+  tokenMint,
+  serviceWallet,
+}: NeonDepositToBalanceInstructionParams): TransactionInstruction {
   const [depositWallet] = authorityPoolAddress(neonEvmProgram);
   const [balanceAddress] = neonBalanceProgramAddress(neonWallet, neonEvmProgram, chainId);
   const [contractAddress] = neonWalletProgramAddress(neonWallet, neonEvmProgram);
@@ -53,7 +127,7 @@ export function createNeonDepositToBalanceInstruction(chainId: number, solanaWal
 
   const a = Buffer.from([EvmInstruction.DepositToBalance]);
   const b = Buffer.from(neonWallet.slice(2), 'hex');
-  const c = numberTo64BitLittleEndian(chainId);
+  const c = Buffer.from(numberTo64BitLittleEndian(chainId));
   const data = Buffer.concat([a, b, c]);
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
@@ -76,7 +150,12 @@ export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWal
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
-export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWallet: PublicKey, serviceWallet: PublicKey, rewardAmount: Amount): TransactionInstruction {
+export function createNeonTransferInstruction({
+  neonTokenMint,
+  solanaWallet,
+  serviceWallet,
+  rewardAmount,
+}: NeonTransferInstructionParams): TransactionInstruction {
   const from = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet, true);
   const to = getAssociatedTokenAddressSync(neonTokenMint, serviceWallet, true);
   const fullAmount = toBigInt(rewardAmount);
@@ -93,11 +172,53 @@ export function createNeonTransferInstruction(neonTokenMint: PublicKey, solanaWa
   return new TransactionInstruction({ programId: TOKEN_PROGRAM_ID, keys, data });
 }
 
+/**
+ * Creates a transaction-like object that represents an unwrap WNEON in NEON token.
+ *
+ * @template T - The expected type of the transaction-like object, commonly `TransactionRequest` from ethers.js.
+ * @param from - The sender address in hexadecimal format.
+ * @param to - The recipient address in hexadecimal format - commonly wneon token contract address.
+ * @param data - The additional data to include in the transaction, represented as a string.
+ * @returns An object representing the transaction, cast to the expected type `T`.
+ *
+ * @example
+ * ```typescript
+ * import { TransactionRequest } from 'ethers';
+ *
+ * const fromAddress = "0x1234567890abcdef1234567890abcdef12345678";
+ * const toAddress = wneon.address;
+ * const data = "0x";
+ *
+ * const unwrapTransaction = wrappedNeonTransaction<TransactionRequest>(fromAddress, toAddress, data);
+ * ```
+ */
 export function wrappedNeonTransaction<T>(from: string, to: string, data: string): T {
   const value = `0x0`;
   return { from, to, value, data } as T;
 }
 
+/**
+ * Creates a transaction-like object that represents a NEON token transfer.
+ *
+ * @template T - The expected type of the transaction-like object, commonly `TransactionRequest` from ethers.js.
+ * @param from - The sender address in hexadecimal format - Neon EVM address.
+ * @param to - The recipient address in hexadecimal format - commonly token transfer contract address.
+ * @param amount - The amount of tokens to transfer, represented as a number, string, or bigint.
+ * @param data - The additional data to include in the transaction, represented as a string.
+ * @returns An object representing the transaction, cast to the expected type `T`.
+ *
+ * @example
+ * ```typescript
+ * import { TransactionRequest } from 'ethers';
+ *
+ * const fromAddress = "0x1234567890abcdef1234567890abcdef12345678";
+ * const toAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
+ * const amount = "10";
+ * const data = "0x";
+ *
+ * const transaction: TransactionRequest = neonNeonTransaction<TransactionRequest>(fromAddress, toAddress, amount, data);
+ * ```
+ */
 export function neonNeonTransaction<T>(from: string, to: string, amount: Amount, data: string): T {
   const value = `0x${parseUnits(amount.toString(), 'ether').toString(16)}`;
   return { from, to, value, data } as T;

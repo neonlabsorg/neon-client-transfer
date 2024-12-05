@@ -36,7 +36,18 @@ const neonProxyRpcApi = new NeonProxyRpcApi(proxyUrl);
 
 export async function transferSPLTokenToNeonEvm(token: SPLToken, amount: number): Promise<any> {
   const signer = web3.eth.accounts.privateKeyToAccount(keccak256(solanaWallet.publicKey.toBase58() + neonWallet.address));
-  const transaction = await neonTransferMintTransactionWeb3(connection, proxyUrl, neonProxyRpcApi, neonEvmProgram, solanaWallet.publicKey, neonWallet.address, signer, token, amount, chainId);
+  const transaction = await neonTransferMintTransactionWeb3({
+    connection,
+    proxyUrl,
+    proxyApi: neonProxyRpcApi,
+    neonEvmProgram,
+    solanaWallet: solanaWallet.publicKey,
+    neonWallet: neonWallet.address,
+    walletSigner: signer,
+    splToken: token,
+    amount,
+    chainId
+  });
   const signature = await sendSolanaTransaction(connection, transaction, [toSigner(solanaWallet)]);
   console.log(`transferSPLTokenToNeonEvm`, signature);
 }
@@ -47,11 +58,21 @@ export async function transferERC20TokenToSolana(token: SPLToken, amount: number
   try {
     await getAccount(connection, associatedToken);
   } catch (e) {
-    const solanaTransaction = createAssociatedTokenAccountTransaction(solanaWallet.publicKey, mint, associatedToken);
+    const solanaTransaction = createAssociatedTokenAccountTransaction({
+      solanaWallet: solanaWallet.publicKey,
+      tokenMint: mint,
+      associatedToken
+    });
     const signature = await sendSolanaTransaction(connection, solanaTransaction, [toSigner(solanaWallet)]);
     console.log(`Create Associated token account`, signature);
   }
-  const transaction = await createMintNeonTransactionWeb3(proxyUrl, neonWallet.address, associatedToken, token, amount);
+  const transaction = await createMintNeonTransactionWeb3({
+    provider: proxyUrl,
+    neonWallet: neonWallet.address,
+    associatedToken,
+    splToken: token,
+    amount
+  });
   const hash = await sendNeonTransaction(web3, transaction, neonWallet);
   console.log(`transferERC20TokenToSolana`, hash);
 }
