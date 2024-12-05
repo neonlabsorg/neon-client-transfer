@@ -1,4 +1,4 @@
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { ChainId, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
 
 // export const NEON_PRIVATE = '0x7ae72c37b092c82f60b4aa17e8ab476e20d13084570d39d3ea9e17ae3c6f7752';
@@ -10,7 +10,7 @@ import { ChainId, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-tran
 // export const PHANTOM_PRIVATE = decode('3ZbFDfA9Qwy6o3Pcf3Jm4Vj1G8KuQpk7jigpWpefdPWWdxnQoQ8UqeQPKGAZKv2E7b1dKFiC1i3eUwxKAzEAT4k2');
 
 export const NEON_PRIVATE = '0x0513b5249e75fde5f73999895fd624689de43d369f3d49671bfe50daadde5e89';
-export const PHANTOM_PRIVATE = decode('62ugR693aB2KTQY5tJqPM7Xnw9Tr8hrsqD6NnYVzFtxnp9WLUpChGonhW9TZZwnZ8shnhsC1GCD7newabEd2odvP');
+export const PHANTOM_PRIVATE = bs58.decode('62ugR693aB2KTQY5tJqPM7Xnw9Tr8hrsqD6NnYVzFtxnp9WLUpChGonhW9TZZwnZ8shnhsC1GCD7newabEd2odvP');
 
 export const NEON_CHAIN_IDS: ChainId[] = [
   { id: 111, name: 'LOCAL' },

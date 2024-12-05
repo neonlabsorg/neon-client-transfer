@@ -7,7 +7,7 @@ import {
   SPLToken
 } from '@neonevm/token-transfer-core';
 import { neonNeonTransactionEthers } from '@neonevm/token-transfer-ethers';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { sendNeonTransactionEthers, sendSolanaTransaction, toSigner } from './utils';
 
 require('dotenv').config({ path: `./.env` });
@@ -22,7 +22,7 @@ const connection = new Connection(solanaUrl, 'confirmed');
 const provider: any = new JsonRpcProvider(proxyUrl);
 
 const neonWallet = new Wallet(NEON_PRIVATE!, provider);
-const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
+const solanaWallet = Keypair.fromSecretKey(bs58.decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
 const neonTokenMint = new PublicKey(`89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g`);

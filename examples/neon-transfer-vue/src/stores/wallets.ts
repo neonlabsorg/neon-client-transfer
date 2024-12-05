@@ -5,7 +5,7 @@ import { getAssociatedTokenAddress, getAssociatedTokenAddressSync } from '@solan
 import type { SPLToken } from '@neonevm/token-transfer-core';
 import { erc20Abi, NEON_TOKEN_MINT_DECIMALS, signerPrivateKey } from '@neonevm/token-transfer-core';
 import { Contract } from 'ethers';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { Big } from 'big.js';
 import { Wallet as EthersWallet } from 'ethers';
 import { toRaw } from 'vue';
@@ -57,7 +57,7 @@ export const useWalletsStore = defineStore('wallets', {
       this.isLoading = false;
     },
     setSolanaWallet() {
-      this.solanaWallet = Keypair.fromSecretKey(decode(SOLANA_PRIVATE));
+      this.solanaWallet = Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE));
     },
     setSolanaWalletSigner() {
       const web3Store = useWeb3Store();

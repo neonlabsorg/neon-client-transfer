@@ -296,27 +296,30 @@ export async function getOverriddenSourceSplAccount(config: SourceSplAccountConf
   } = config;
   const [authAccountAddressDelegate] = authAccountAddress(signerAddress, neonEvmProgram, splToken);
   const sourceAccountInfo = <AccountInfo<Buffer>>(await connection.getAccountInfo(associatedTokenAddress));
-  const tokenAccountInfo = AccountLayout.decode(sourceAccountInfo.data);
-  //For the completely new accounts delegate will be changed
-  const updatedTokenAccountInfo = <RawAccount>{
-    ...tokenAccountInfo,
-    delegateOption: 1,
-    delegatedAmount: fullAmount,
-    delegate: authAccountAddressDelegate
-  };
-  //Encode data to hex string for the neon proxy
-  const buffer = Buffer.alloc(AccountLayout.span);
-  AccountLayout.encode(updatedTokenAccountInfo, buffer);
+  if (sourceAccountInfo) {
+    const tokenAccountInfo = AccountLayout.decode(sourceAccountInfo.data);
+    //For the completely new accounts delegate will be changed
+    const updatedTokenAccountInfo = <RawAccount>{
+      ...tokenAccountInfo,
+      delegateOption: 1,
+      delegatedAmount: fullAmount,
+      delegate: authAccountAddressDelegate
+    };
+    //Encode data to hex string for the neon proxy
+    const buffer = Buffer.alloc(AccountLayout.span);
+    AccountLayout.encode(updatedTokenAccountInfo, buffer);
 
-  const dataHexString = buffer.toString('hex');
+    const dataHexString = buffer.toString('hex');
 
-  return {
-    lamports: sourceAccountInfo.lamports,
-    data: `0x${dataHexString}`,
-    owner: sourceAccountInfo.owner.toBase58(),
-    executable: sourceAccountInfo.executable,
-    rentEpoch: RENT_EPOCH_ZERO
-  };
+    return {
+      lamports: sourceAccountInfo.lamports,
+      data: `0x${dataHexString}`,
+      owner: sourceAccountInfo.owner.toBase58(),
+      executable: sourceAccountInfo.executable,
+      rentEpoch: RENT_EPOCH_ZERO
+    };
+  }
+  return null;
 }
 
 export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus): TransactionInstruction {

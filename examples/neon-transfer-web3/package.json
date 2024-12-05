@@ -13,8 +13,8 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.4.1-devnet",
-    "@neonevm/token-transfer-web3": "4.4.1-devnet",
+    "@neonevm/token-transfer-core": "4.4.2",
+    "@neonevm/token-transfer-web3": "4.4.2",
     "big.js": "^6.2.1",
     "bn.js": "^5.2.1",
     "web3": "^4.5.0"

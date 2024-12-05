@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer-ethers",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "Neon EVM token transfer methods leveraging the ethers.js library",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -42,7 +42,7 @@
     "ethers": "^6.13.3"
   },
   "peerDependencies": {
-    "@neonevm/token-transfer-core": "4.4.1"
+    "@neonevm/token-transfer-core": "4.4.2"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^5.43.0",

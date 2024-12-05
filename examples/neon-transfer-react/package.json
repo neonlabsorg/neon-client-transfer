@@ -28,8 +28,8 @@
     ]
   },
   "dependencies": {
-    "@neonevm/token-transfer-core": "4.4.1-devnet",
-    "@neonevm/token-transfer-ethers": "4.4.1-devnet",
+    "@neonevm/token-transfer-core": "4.4.2",
+    "@neonevm/token-transfer-ethers": "4.4.2",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -48,7 +48,7 @@
   "devDependencies": {
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.78.0",
-    "bs58": "^5.0.0",
+    "bs58": "^6.0.0",
     "dotenv": "^16.3.1",
     "eslint-config-react-app": "^7.0.1",
     "react-app-rewired": "^2.2.1",
