@@ -2,7 +2,7 @@
   "name": "Transfer SDK Documentation",
   "entryPoints": ["packages/*"],
   "entryPointStrategy": "packages",
-  "out": "tsdocs",
+  "out": "docs",
   "includeVersion": false,
   "logLevel": "Verbose"
 }
