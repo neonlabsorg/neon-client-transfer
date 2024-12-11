@@ -7,14 +7,18 @@ import {
   TOKEN_LIST
 } from '@/utils';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-
+import { PublicKey } from '@solana/web3.js';
 import {
+  neonTransferMintTransactionEthers,
   createMintNeonTransactionEthers,
   neonNeonTransactionEthers
 } from '@neonevm/token-transfer-ethers';
 import {
+  createAssociatedTokenAccountTransaction,
+  solanaSOLTransferTransaction,
   solanaNEONTransferTransaction,
-  NEON_TRANSFER_CONTRACT_DEVNET
+  NEON_TRANSFER_CONTRACT_DEVNET,
+  SOL_TRANSFER_CONTRACT_DEVNET
 } from '@neonevm/token-transfer-core';
 
 import { useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
@@ -117,9 +121,9 @@ export const useFormStore = defineStore('form', {
       this.setIsSubmitting(true);
 
       if (this.transferDirection.direction === 'solana') {
-        switch (this.currentSplToken?.symbol) {
-          case 'NEON': {
-            const transaction = await solanaNEONTransferTransaction({
+        const transactionFunctions = {
+          NEON: () =>
+            solanaNEONTransferTransaction({
               solanaWallet: walletSore.solanaWallet.publicKey,
               neonWallet: walletSore.neonWallet.address,
               neonEvmProgram: web3Store.neonProgram,
@@ -127,105 +131,114 @@ export const useFormStore = defineStore('form', {
               token: this.currentSplToken,
               amount: this.amount,
               chainId: web3Store.chainId
-            });
-            const solana = await transactionStore.sendTransaction(transaction);
-            transactionStore.setSignature({ solana });
-            break;
-          }
-          case 'SOL': {
-            const transaction = await transactionStore.sendSolTransaction();
-            const solana = await transactionStore.sendTransaction(transaction);
-            transactionStore.setSignature({ solana });
-            break;
-          }
-          case 'wSOL': {
-            const transaction = await transactionStore.sendNeonMintTranaction();
-            const solana = await transactionStore.sendTransaction(transaction);
-            transactionStore.setSignature({ solana });
-            break;
-          }
-          default: {
-            const transaction = await transactionStore.sendNeonMintTranaction();
-            const solana = await transactionStore.sendTransaction(transaction);
-            transactionStore.setSignature({ solana });
-            break;
-          }
-        }
+            }),
+          SOL: () =>
+            solanaSOLTransferTransaction({
+              connection: web3Store.solanaConnection,
+              solanaWallet: walletSore.solanaWallet.publicKey,
+              neonWallet: walletSore.neonWallet.address,
+              neonEvmProgram: web3Store.neonProgram,
+              neonTokenMint: transactionStore.networkTokenMint,
+              splToken: this.currentSplToken,
+              amount: this.amount,
+              chainId: web3Store.chainId
+            }),
+          DEFAULT: () =>
+            //Used for all SPL token transaction (including wSOL)
+            neonTransferMintTransactionEthers({
+              connection: web3Store.solanaConnection,
+              proxyApi: web3Store.apiProxy,
+              neonEvmProgram: web3Store.neonProgram,
+              solanaWallet: walletSore.solanaWallet.publicKey,
+              neonWallet: walletSore.neonWallet.address,
+              walletSigner: toRaw(walletSore.solanaWalletSigner),
+              splToken: this.currentSplToken,
+              amount: this.amount,
+              chainId: web3Store.chainId
+            })
+        };
+
+        const transactionFunction =
+          transactionFunctions[this.currentSplToken.symbol as keyof typeof transactionFunctions] ||
+          transactionFunctions.DEFAULT;
+        await transactionStore.handleSolanaTransaction(transactionFunction);
       } else {
+        const mintPubkey = new PublicKey(this.currentSplToken.address_spl);
         const associatedToken = getAssociatedTokenAddressSync(
-          transactionStore.mintPublicKey,
+          mintPubkey,
           walletSore.solanaWallet.publicKey
         );
-        switch (this.currentSplToken?.symbol) {
-          case 'NEON': {
-            const transaction = await neonNeonTransactionEthers({
+
+        //Need to create associated token account for wSOL and other SPL tokens
+        let solana = '';
+        if (
+          !['SOL', 'NEON'].includes(this.currentSplToken.symbol) &&
+          !(await web3Store.solanaConnection.getAccountInfo(associatedToken))
+        ) {
+          const transaction = createAssociatedTokenAccountTransaction({
+            solanaWallet: walletSore.solanaWallet.publicKey,
+            tokenMint: mintPubkey,
+            associatedToken
+          });
+          solana = await transactionStore.sendTransaction(transaction);
+          this.handleDelay(1e3);
+        }
+
+        const transactionFunctions = {
+          NEON: () => {
+            console.log('asfsaf =', {
               provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               from: walletSore.neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: walletSore.solanaWallet.publicKey,
               amount: this.amount
             });
-            const neon = await transactionStore.sendNeonTranaction(transaction);
-            transactionStore.setSignature({ neon });
-            break;
-          }
-          case 'SOL': {
-            const transaction = await neonNeonTransactionEthers({
+            return neonNeonTransactionEthers({
               provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               from: walletSore.neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: walletSore.solanaWallet.publicKey,
               amount: this.amount
             });
-            const neon = await transactionStore.sendNeonTranaction(transaction);
-            transactionStore.setSignature({ neon });
-            break;
-          }
-          case 'wSOL': {
-            let solana = ``;
-            if (!(await web3Store.solanaConnection.getAccountInfo(associatedToken))) {
-              const transaction =
-                transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
-              solana = await transactionStore.sendTransaction(transaction);
-              this.handleDelay(1e3);
-            }
-            const transaction = await createMintNeonTransactionEthers({
-              provider: toRaw(web3Store.ethersProvider) as JsonRpcProvider,
+          },
+          SOL: () =>
+            neonNeonTransactionEthers({
+              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
+              from: walletSore.neonWallet.address,
+              to: SOL_TRANSFER_CONTRACT_DEVNET,
+              solanaWallet: walletSore.solanaWallet.publicKey,
+              amount: this.amount
+            }),
+          DEFAULT: () => {
+            console.log('object = ', {
+              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
               splToken: this.currentSplToken,
               amount: this.amount
             });
-            const neon = await transactionStore.sendNeonTranaction(transaction);
-            transactionStore.setSignature({ solana, neon });
-            break;
-          }
-          default: {
-            let solana = ``;
-            if (!(await web3Store.solanaConnection.getAccountInfo(associatedToken))) {
-              const transaction =
-                transactionStore.createAssociatedTokenAccountTransaction(associatedToken);
-              solana = await transactionStore.sendTransaction(transaction);
-              this.handleDelay(1e3);
-            }
-            const transaction = await createMintNeonTransactionEthers({
-              provider: toRaw(web3Store.ethersProvider) as JsonRpcProvider,
+            return createMintNeonTransactionEthers({
+              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
-              splToken: this.currentSplToken!,
+              splToken: this.currentSplToken,
               amount: this.amount
             });
-            const neon = await transactionStore.sendNeonTranaction(transaction);
-            transactionStore.setSignature({ solana, neon });
-            break;
           }
-        }
+          //Used for all ERC20 token transaction (including wSOL)
+        };
+
+        const transaction = await (
+          transactionFunctions[this.currentSplToken.symbol as keyof typeof transactionFunctions] ||
+          transactionFunctions.DEFAULT
+        )();
+        const neon = await transactionStore.sendNeonTransaction(transaction);
+        transactionStore.setSignature({ solana, neon });
       }
 
       await this.handleDelay(1e3);
       await walletSore.setWalletBalance();
       await walletSore.getTokenBalance(this.currentSplToken);
-      // await walletSore.setTokenBalance();
       await this.handleDelay(5e3);
 
       this.setIsSubmitting(false);

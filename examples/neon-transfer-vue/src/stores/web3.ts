@@ -11,16 +11,16 @@ import { useWalletsStore } from '@/stores';
 import type { NetworkUrl } from '@/types';
 
 interface IWeb3Store {
-  solanaSigner: Signer,
-  isLoading: boolean,
-  chainId: number,
-  ethersProvider: JsonRpcProvider,
-  networkTokenMint: PublicKey,
-  solanaConnection: Connection,
-  networkUrl: NetworkUrl,
-  neonProgram: PublicKey,
-  proxyStatus: NeonProgramStatus,
-  apiProxy: NeonProxyRpcApi,
+  solanaSigner: Signer;
+  isLoading: boolean;
+  chainId: number;
+  ethersProvider: JsonRpcProvider;
+  networkTokenMint: PublicKey;
+  solanaConnection: Connection;
+  networkUrl: NetworkUrl;
+  neonProgram: PublicKey;
+  proxyStatus: NeonProgramStatus;
+  apiProxy: NeonProxyRpcApi;
 }
 
 export const useWeb3Store = defineStore('web3', {
@@ -51,8 +51,8 @@ export const useWeb3Store = defineStore('web3', {
       this.chainId = chainId;
     },
     setNetworkUrl(networkUrl?: NetworkUrl) {
-      this.networkUrl = networkUrl || networkUrls.find(chain => chain.id === this.chainId) || networkUrls[0];
-
+      this.networkUrl =
+        networkUrl || networkUrls.find((chain) => chain.id === this.chainId) || networkUrls[0];
     },
     setWeb3Provider() {
       this.ethersProvider = new JsonRpcProvider(this.networkUrl.neonProxy);

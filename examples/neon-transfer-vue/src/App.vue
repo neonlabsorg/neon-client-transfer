@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import { useFormStore, useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 import { networkUrls, stringShort } from '@/utils';
 import useNeonWallet from '@/composables/useNeonWallet';
+import useSolanaWalletSigner from '@/composables/useSolanaWalletSigner';
 
 import type { TransferDirection } from '@/types';
 
@@ -29,6 +30,7 @@ const {
 const { signature, solanaSignature, neonSignature } = storeToRefs(transactionStore);
 
 const { initNeonWallet } = useNeonWallet();
+const { initSolanaWalletSigner } = useSolanaWalletSigner();
 
 const handleEvmNetworkSelect = (event: any): any => {
   web3Store.setChainId(Number(event.target.value));
@@ -74,6 +76,7 @@ const handleAmountChange = (event: Event) => {
 onBeforeMount(async () => {
   await web3Store.initStore();
   await walletsStore.initStore();
+  initSolanaWalletSigner();
   await transactionStore.initStore();
   formStore.initStore();
 });

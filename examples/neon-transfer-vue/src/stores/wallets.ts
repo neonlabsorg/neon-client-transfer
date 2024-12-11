@@ -10,7 +10,7 @@ import { Big } from 'big.js';
 import { Wallet as EthersWallet } from 'ethers';
 import { toRaw } from 'vue';
 
-import { NEON_PRIVATE, SOLANA_PRIVATE } from '@/utils';
+import { SOLANA_PRIVATE } from '@/utils';
 import { useFormStore, useWeb3Store } from '@/stores';
 import type { TokenBalance } from '@/types';
 import type { Wallet } from 'ethers';
@@ -94,8 +94,6 @@ export const useWalletsStore = defineStore('wallets', {
       };
     },
     async getTokenBalance(token: SPLToken) {
-      //TODO: optimize this method, avoid unnecessary calls based on direction
-      //don’t need to work out balances of the other direction
       const formStore = useFormStore();
       formStore.setIsPendingTokenChange(true);
 
@@ -103,21 +101,19 @@ export const useWalletsStore = defineStore('wallets', {
         switch (token.symbol) {
           case 'NEON': {
             const solana = await this.getSplTokenBalance(token);
-            const neon = await this.getNeonBalance();
 
             formStore.setError(false);
             this.updateTokenBalance({
-              solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals)),
-              neon
+              ...this.tokenBalance,
+              solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals))
             });
             break;
           }
           case 'SOL': {
-            const solana = await this.getSolanaBalance();
             const neon = await this.getNeonBalance();
 
             formStore.setError(false);
-            this.updateTokenBalance({ solana, neon });
+            this.updateTokenBalance({ ...this.tokenBalance, neon });
             break;
           }
           case 'wSOL': {
@@ -126,21 +122,35 @@ export const useWalletsStore = defineStore('wallets', {
               address,
               this.solanaWallet.publicKey
             );
-            const solana = await this.getSolanaBalance(associatedToken);
-            const neon = await this.getMintTokenBalance();
+
+            const transaction =
+              formStore.transferDirection.direction === 'solana'
+                ? await this.getSolanaBalance(associatedToken)
+                : await this.getMintTokenBalance();
 
             formStore.setError(false);
-            this.updateTokenBalance({ solana, neon });
+            const newBalance = { ...this.tokenBalance };
+            newBalance[formStore.transferDirection.direction] = transaction;
+            this.updateTokenBalance(newBalance);
             break;
           }
           default: {
-            const solana = await this.getSplTokenBalance(token);
-            const neon = await this.getMintTokenBalance();
-            formStore.setError(false);
-            this.updateTokenBalance({
-              solana: new Big(solana.amount).div(Math.pow(10, solana.decimals)),
-              neon
-            });
+            if (formStore.transferDirection.direction === 'solana') {
+              const solana = await this.getSplTokenBalance(token);
+
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                solana: new Big(solana.amount).div(Math.pow(10, solana.decimals))
+              });
+            } else {
+              const neon = await this.getMintTokenBalance();
+              formStore.setError(false);
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                neon
+              });
+            }
+
             break;
           }
         }
