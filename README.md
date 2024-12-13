@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-The package using on our [NeonPass](https://neonpass.live/) codebase.
+This package uses our [NeonPass](https://neonpass.live/) codebase.
 - [React demo](https://codesandbox.io/s/neon-transfer-demo-z93nlj) available.
 
 ---
