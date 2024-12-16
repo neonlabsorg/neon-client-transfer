@@ -7,7 +7,7 @@ import {
 } from '@neonevm/token-transfer-core';
 import { HttpProvider } from 'web3-providers-http';
 import { Web3 } from 'web3';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { sendNeonTransaction, sendSolanaTransaction, toSigner } from './utils';
 
 require('dotenv').config({ path: `./.env` });
@@ -22,7 +22,7 @@ const connection = new Connection(solanaUrl, 'confirmed');
 const web3 = new Web3(new HttpProvider(proxyUrl));
 
 const neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE!);
-const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
+const solanaWallet = Keypair.fromSecretKey(bs58.decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
 const solTokenMint = new PublicKey(`So11111111111111111111111111111111111111112`);

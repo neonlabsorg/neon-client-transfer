@@ -21,7 +21,7 @@ import {
   neonNeonTransactionEthers,
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { Big } from 'big.js';
 
 import {
@@ -84,7 +84,7 @@ function NeonTransferApp() {
 
   // add account and keypayer
   const solanaWallet = useMemo(() => {
-    return Keypair.fromSecretKey(decode(SOLANA_PRIVATE));
+    return Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE));
   }, []);
 
   const neonWallet = useMemo(() => {

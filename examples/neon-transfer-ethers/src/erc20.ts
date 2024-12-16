@@ -10,7 +10,7 @@ import {
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
 import { JsonRpcProvider, keccak256, Wallet } from 'ethers';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { sendNeonTransactionEthers, sendSolanaTransaction, toSigner } from './utils';
 
 require('dotenv').config({ path: `./.env` });
@@ -25,7 +25,7 @@ const connection = new Connection(solanaUrl, 'confirmed');
 const provider: any = new JsonRpcProvider(proxyUrl);
 
 const neonWallet: any = new Wallet(NEON_PRIVATE!, provider);
-const solanaWallet = Keypair.fromSecretKey(decode(PHANTOM_PRIVATE!));
+const solanaWallet = Keypair.fromSecretKey(bs58.decode(PHANTOM_PRIVATE!));
 
 const neonEvmProgram = new PublicKey(`eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU`);
 const chainId = parseInt(`0xe9ac0ce`);

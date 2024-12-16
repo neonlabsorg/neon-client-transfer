@@ -1,6 +1,6 @@
 {
   "name": "@neonevm/token-transfer",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "JavaScript client-side module for creating transfer transactions from Solana to NeonEVM",
   "private": true,
   "workspaces": [
@@ -67,7 +67,7 @@
     "@types/node-fetch": "^2.6.10",
     "@typescript-eslint/parser": "^5.43.0",
     "big.js": "^6.2.1",
-    "bs58": "^5.0.0",
+    "bs58": "^6.0.0",
     "dotenv": "^16.3.1",
     "eslint": "8.27.0",
     "eslint-plugin-prettier": "^4.2.1",

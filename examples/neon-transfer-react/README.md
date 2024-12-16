@@ -1,11 +1,10 @@
 # Neon Token Transfer Demo
 
-This code have to demonstrate how working with [neon-portal](https://github.com/neonlabsorg/neon-client-transfer) package
-in your project.
+This code demonstrates how to use [neon-portal](https://github.com/neonlabsorg/neon-client-transfer) package in your project.
 
 You can see [Live Demo](https://2x5gdt.csb.app/).
 
-For running rename `.env.example` to `.env`, when add your `Solana` and `MetaMask` wallets private keys:
+Before running rename .env.example to .env, then add your Solana and MetaMask wallets private keys:
 
 ```dotenv
 REACT_APP_NEON_PRIVATE: '<your neon private key>' // Private key from your MM wallet

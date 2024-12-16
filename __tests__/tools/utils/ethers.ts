@@ -27,7 +27,6 @@ export async function neonBalanceEthers(provider: JsonRpcProvider, address: Wall
   return new Big(balance.toString()).div(Big(10).pow(NEON_TOKEN_MINT_DECIMALS));
 }
 
-
 export async function mintTokenBalanceEthers(wallet: Wallet, token: SPLToken, contractAbi: any = erc20Abi, method = 'balanceOf'): Promise<number> {
   const tokenInstance = new Contract(token.address, contractAbi, wallet);
   if (tokenInstance[method]) {
