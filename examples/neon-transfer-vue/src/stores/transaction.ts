@@ -13,15 +13,15 @@ import {
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
 import { useFormStore, useWalletsStore, useWeb3Store } from '@/stores';
-import { JsonRpcProvider, type TransactionRequest, type Wallet } from 'ethers'
+import { JsonRpcProvider, type TransactionRequest, type Wallet } from 'ethers';
 import type { TransferSignature } from '@/types';
 import { toRaw } from 'vue';
 
 interface ITransactionStore {
-  signature: TransferSignature
-  gasTokens: GasToken[],
-  mintPublicKey: PublicKey,
-  networkTokenMint: PublicKey
+  signature: TransferSignature;
+  gasTokens: GasToken[];
+  mintPublicKey: PublicKey;
+  networkTokenMint: PublicKey;
 }
 
 export const useTransactionStore = defineStore('transaction', {
@@ -41,9 +41,12 @@ export const useTransactionStore = defineStore('transaction', {
     },
     setNetworkTokenMint() {
       const web3Store = useWeb3Store();
-      const id = this.gasTokens
-        .findIndex(i => parseInt(i.tokenChainId, 16) === web3Store.chainId);
-      this.networkTokenMint = new SolanaPublicKey(id > -1 ? this.gasTokens[id].tokenMint : NEON_TOKEN_MINT_DEVNET);
+      const id = this.gasTokens.findIndex(
+        (i) => parseInt(i.tokenChainId, 16) === web3Store.chainId
+      );
+      this.networkTokenMint = new SolanaPublicKey(
+        id > -1 ? this.gasTokens[id].tokenMint : NEON_TOKEN_MINT_DEVNET
+      );
     },
     setMintPublicKey() {
       const formSore = useFormStore();
@@ -87,7 +90,7 @@ export const useTransactionStore = defineStore('transaction', {
       try {
         const receipt = await rawWallet.sendTransaction(transaction);
         return receipt.hash;
-      } catch(err) {
+      } catch (err) {
         console.error(err);
       }
     },
@@ -142,17 +145,34 @@ export const useTransactionStore = defineStore('transaction', {
         amount: formStore.inputAmount
       });
     },
+    async sendNeonTransaction(transaction: TransactionRequest) {
+      const walletStore = useWalletsStore();
+      const receipt = await toRaw(walletStore.neonWallet).sendTransaction(transaction);
+      return receipt.hash;
+    },
+    async handleSolanaTransaction(transactionFunction: () => Promise<any>) {
+      try {
+        const transaction = await transactionFunction();
+        const solana = await this.sendTransaction(transaction);
+        this.setSignature({ solana });
+      } catch (error) {
+        console.error('Transaction failed', error);
+      }
+    },
     async sendTransaction(transaction: SolanaTransaction) {
       const web3Store = useWeb3Store();
 
-      transaction.recentBlockhash = (await web3Store.solanaConnection.getLatestBlockhash()).blockhash;
+      transaction.recentBlockhash = (
+        await web3Store.solanaConnection.getLatestBlockhash()
+      ).blockhash;
       transaction.sign(...[web3Store.solanaSigner]);
-      const signature = await web3Store.solanaConnection.sendRawTransaction(transaction.serialize(), { skipPreflight: false });
+      const signature = await web3Store.solanaConnection.sendRawTransaction(
+        transaction.serialize(),
+        { skipPreflight: false }
+      );
 
-      const {
-        blockhash,
-        lastValidBlockHeight
-      } = await web3Store.solanaConnection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } =
+        await web3Store.solanaConnection.getLatestBlockhash();
       await web3Store.solanaConnection.confirmTransaction({
         blockhash,
         lastValidBlockHeight,
@@ -160,10 +180,11 @@ export const useTransactionStore = defineStore('transaction', {
       });
 
       return signature;
-    },
+    }
   },
   getters: {
-    solanaSignature: (state) => `https://explorer.solana.com/tx/${state.signature.solana}?cluster=devnet`,
+    solanaSignature: (state) =>
+      `https://explorer.solana.com/tx/${state.signature.solana}?cluster=devnet`,
     neonSignature: (state) => `https://devnet.neonscan.org/tx/${state.signature.neon}`
   }
 });
