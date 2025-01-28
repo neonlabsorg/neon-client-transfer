@@ -100,13 +100,21 @@ export const useWalletsStore = defineStore('wallets', {
       try {
         switch (token.symbol) {
           case 'NEON': {
-            const solana = await this.getSplTokenBalance(token);
+            if (formStore.transferDirection.direction === 'solana') {
+              const balance = await this.getSplTokenBalance(token);
 
-            formStore.setError(false);
-            this.updateTokenBalance({
-              ...this.tokenBalance,
-              solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals))
-            });
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                solana: new Big(balance?.amount).div(Math.pow(10, balance?.decimals))
+              });
+            } else {
+              const balance = await this.getNeonBalance();
+
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                neon: balance
+              });
+            }
             break;
           }
           case 'SOL': {
@@ -117,7 +125,7 @@ export const useWalletsStore = defineStore('wallets', {
             break;
           }
           case 'wSOL': {
-            const address = new PublicKey(formStore.currentSplToken?.address_spl);
+            const address = new PublicKey(token?.address_spl);
             const associatedToken = getAssociatedTokenAddressSync(
               address,
               this.solanaWallet.publicKey
