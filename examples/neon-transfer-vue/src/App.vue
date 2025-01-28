@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted } from 'vue';
+import { onBeforeMount, onMounted, toRaw } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFormStore, useTransactionStore, useWalletsStore, useWeb3Store } from '@/stores';
 import { networkUrls, stringShort } from '@/utils';
@@ -52,6 +52,10 @@ const handleTransferDirection = () => {
       : neonWallet.value.address.toString()
   };
   formStore.setTransferDirection(changeDirection);
+
+  if (formStore.currentSplToken) {
+    walletsStore.getTokenBalance(formStore.currentSplToken);
+  }
   transactionStore.setSignature({});
 };
 const handleSelect = (event: Event) => {
