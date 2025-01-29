@@ -52,7 +52,6 @@ export const useWalletsStore = defineStore('wallets', {
       this.isLoading = true;
       this.setSolanaWallet();
       this.setSolanaWalletSigner();
-      await this.setTokenBalance();
       await this.setWalletBalance();
       this.isLoading = false;
     },
@@ -96,7 +95,6 @@ export const useWalletsStore = defineStore('wallets', {
     async getTokenBalance(token: SPLToken) {
       const formStore = useFormStore();
       formStore.setIsPendingTokenChange(true);
-
       try {
         switch (token.symbol) {
           case 'NEON': {
@@ -118,10 +116,15 @@ export const useWalletsStore = defineStore('wallets', {
             break;
           }
           case 'SOL': {
-            const neon = await this.getNeonBalance();
+            const balance =
+              formStore.transferDirection.direction === 'solana'
+                ? await this.getSolanaBalance()
+                : await this.getMintTokenBalance();
 
             formStore.setError(false);
-            this.updateTokenBalance({ ...this.tokenBalance, neon });
+            const newBalance = { ...this.tokenBalance };
+            newBalance[formStore.transferDirection.direction] = balance;
+            this.updateTokenBalance(newBalance);
             break;
           }
           case 'wSOL': {
@@ -131,14 +134,14 @@ export const useWalletsStore = defineStore('wallets', {
               this.solanaWallet.publicKey
             );
 
-            const transaction =
+            const balance =
               formStore.transferDirection.direction === 'solana'
                 ? await this.getSolanaBalance(associatedToken)
                 : await this.getMintTokenBalance();
 
             formStore.setError(false);
             const newBalance = { ...this.tokenBalance };
-            newBalance[formStore.transferDirection.direction] = transaction;
+            newBalance[formStore.transferDirection.direction] = balance;
             this.updateTokenBalance(newBalance);
             break;
           }

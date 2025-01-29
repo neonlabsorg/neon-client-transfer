@@ -111,6 +111,23 @@ export const useFormStore = defineStore('form', {
         setTimeout(() => resolve(), timestamp);
       });
     },
+    async initWalletUpdate() {
+      const walletSore = useWalletsStore();
+
+      if (this.currentSplToken?.symbol === 'SOL') {
+        const solana = await walletSore.getSolanaBalance();
+        walletSore.updateWalletBalance({
+          ...walletSore.walletBalance,
+          solana
+        });
+      } else {
+        const neon = await walletSore.getNeonBalance();
+        walletSore.updateWalletBalance({
+          ...walletSore.walletBalance,
+          neon
+        });
+      }
+    },
     async initTransfer() {
       //TODO: Refactor this!!!
       //Get rid of the repeated code
@@ -185,22 +202,14 @@ export const useFormStore = defineStore('form', {
         }
 
         const transactionFunctions = {
-          NEON: () => {
-            console.log('asfsaf =', {
+          NEON: () =>
+            neonNeonTransactionEthers({
               provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               from: walletSore.neonWallet.address,
               to: NEON_TRANSFER_CONTRACT_DEVNET,
               solanaWallet: walletSore.solanaWallet.publicKey,
               amount: this.amount
-            });
-            return neonNeonTransactionEthers({
-              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
-              from: walletSore.neonWallet.address,
-              to: NEON_TRANSFER_CONTRACT_DEVNET,
-              solanaWallet: walletSore.solanaWallet.publicKey,
-              amount: this.amount
-            });
-          },
+            }),
           SOL: () =>
             neonNeonTransactionEthers({
               provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
@@ -209,22 +218,14 @@ export const useFormStore = defineStore('form', {
               solanaWallet: walletSore.solanaWallet.publicKey,
               amount: this.amount
             }),
-          DEFAULT: () => {
-            console.log('object = ', {
+          DEFAULT: () =>
+            createMintNeonTransactionEthers({
               provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
               neonWallet: walletSore.neonWallet.address,
               associatedToken,
               splToken: this.currentSplToken,
               amount: this.amount
-            });
-            return createMintNeonTransactionEthers({
-              provider: toRaw(web3Store.ethersProvider as JsonRpcProvider),
-              neonWallet: walletSore.neonWallet.address,
-              associatedToken,
-              splToken: this.currentSplToken,
-              amount: this.amount
-            });
-          }
+            })
           //Used for all ERC20 token transaction (including wSOL)
         };
 
@@ -237,7 +238,9 @@ export const useFormStore = defineStore('form', {
       }
 
       await this.handleDelay(1e3);
-      await walletSore.setWalletBalance();
+      if (['SOL', 'NEON'].includes(this.currentSplToken?.symbol)) {
+        await this.initWalletUpdate();
+      }
       await walletSore.getTokenBalance(this.currentSplToken);
       await this.handleDelay(5e3);
 

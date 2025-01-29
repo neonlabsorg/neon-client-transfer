@@ -36,7 +36,6 @@ const handleEvmNetworkSelect = (event: any): any => {
   formStore.setTokenList();
   formStore.setCurrentSplToken('');
   transactionStore.setSignature({});
-  walletsStore.setTokenBalance();
 };
 const handleTransferDirection = () => {
   const isSolanaDirection = transferDirection.value.direction === 'solana';
