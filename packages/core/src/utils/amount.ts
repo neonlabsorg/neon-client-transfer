@@ -25,6 +25,18 @@ export function toBigInt(amount: Amount): bigint {
   return BigInt(data.toString());
 }
 
+/**
+ * Converts a given number into a 64-bit little-endian representation as a `Uint8Array`.
+ *
+ * @param {number} num - The number to be converted to 64-bit little-endian format.
+ * @returns {Uint8Array} A `Uint8Array` representing the 64-bit little-endian encoded value.
+ *
+ * @example
+ * ```typescript
+ * const littleEndianBytes = numberTo64BitLittleEndian(123456789);
+ * console.log(littleEndianBytes);
+ * ```
+ */
 export function numberTo64BitLittleEndian(num: number): Uint8Array {
   const buffer = new ArrayBuffer(8); // 64 bits = 8 bytes
   const view = new DataView(buffer);
@@ -39,6 +51,20 @@ export function numberTo64BitLittleEndian(num: number): Uint8Array {
   return new Uint8Array(buffer);
 }
 
+/**
+ * Converts a `bigint` number into a 256-bit big-endian (`U256BE`) representation as a `Uint8Array`.
+ *
+ * @param {bigint} bigIntNumber - The `bigint` number to be converted to a 256-bit big-endian format.
+ * @throws {Error} If the number is out of range for a 256-bit unsigned integer.
+ * @returns {Uint8Array} A `Uint8Array` representing the 256-bit big-endian encoded value.
+ *
+ * @example
+ * ```typescript
+ * const bigIntValue = BigInt('123456789012345678901234567890');
+ * const u256Bytes = toU256BE(bigIntValue);
+ * console.log(u256Bytes);
+ * ```
+ */
 export function toU256BE(bigIntNumber: bigint) {
   if (bigIntNumber < BigInt(0) || bigIntNumber > BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')) {
     throw new Error('Number out of range for U256BE');
