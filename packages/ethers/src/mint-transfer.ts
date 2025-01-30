@@ -171,6 +171,44 @@ export async function createMintNeonTransactionEthers({
   return transaction;
 }
 
+/**
+ * Creates a Solana transaction to wrap SOL into wSOL and transfer it to Neon EVM.
+ *
+ * This function performs the following operations:
+ * 1. Wraps **SOL into wSOL** by creating an associated token account (if necessary),
+ *    transferring SOL, and syncing the native balance.
+ * 2. **Generates a Neon transaction** to transfer **0.1 wSOL** from Solana to Neon.
+ * 3. **Creates and signs a transaction** using an Ethers wallet for Neon EVM.
+ * 4. **Adds all necessary instructions** to the Solana transaction and returns it.
+ *
+ * @param {MintTransferParams<Wallet>} params - The parameters required for the transaction.
+ * @param {Connection} params.connection - The Solana blockchain connection.
+ * @param {ProxyApi} params.proxyApi - The API interface for interacting with the proxy.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} params.solanaWallet - The Solana wallet public key initiating the transfer.
+ * @param {string} params.neonWallet - The Ethereum-style Neon wallet address.
+ * @param {Wallet} params.walletSigner - The Ethers.js wallet used for signing Neon transactions - private key for a signer based on the Neon and Solana wallet addresses.
+ * @param {SPLToken} params.splToken - The SPL token details for wSOL.
+ * @param {Amount} params.amount - The amount of wSOL to transfer (expected to be **0.1 wSOL**).
+ * @param {number} params.chainId - The chain ID of the target blockchain.
+ * @param {number} [params.neonHeapFrame=NEON_HEAP_FRAME] - The heap frame size for Neon transaction execution.
+ * @returns {Promise<Transaction>} A Solana `Transaction` that wraps SOL to wSOL and transfers it to Neon.
+ *
+ * @example
+ * ```typescript
+ * const transaction = await createWrapAndTransferSOLTransaction({
+ *   connection,
+ *   proxyApi,
+ *   neonEvmProgram,
+ *   solanaWallet: userWallet,
+ *   neonWallet: "0xNeonWalletAddress",
+ *   walletSigner: ethersSigner,
+ *   splToken: wSolToken,
+ *   amount: "0.1",
+ *   chainId: 245022926
+ * });
+ * ```
+ */
 export async function createWrapAndTransferSOLTransaction(params: MintTransferParams<Wallet>): Promise<Transaction> {
   const { connection, proxyApi, neonEvmProgram, solanaWallet, neonWallet, walletSigner, splToken, amount, chainId, neonHeapFrame = NEON_HEAP_FRAME } = params;
   const instructions: TransactionInstruction[] = [];

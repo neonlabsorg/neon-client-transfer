@@ -148,6 +148,19 @@ export async function neonTransferMintTransaction<W extends Provider, TxResult e
   return transaction;
 }
 
+/**
+ * Creates a Compute Budget Utilities instruction for a given program.
+ *
+ * @param {PublicKey} programId - The public key of the target program.
+ * @param {NeonComputeUnits} [computeUnits=NEON_COMPUTE_UNITS] - The number of compute units to be used (defaults to `NEON_COMPUTE_UNITS`).
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for setting the compute budget.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createComputeBudgetUtilsInstruction(myProgramId, 500_000);
+ * transaction.add(instruction);
+ * ```
+ */
 export function createComputeBudgetUtilsInstruction(programId: PublicKey, computeUnits: NeonComputeUnits = NEON_COMPUTE_UNITS): TransactionInstruction {
   const a = Buffer.from([0x00]);
   const b = Buffer.from(toBytesInt32(parseInt(computeUnits ?? NEON_COMPUTE_UNITS)));
@@ -156,6 +169,19 @@ export function createComputeBudgetUtilsInstruction(programId: PublicKey, comput
   return new TransactionInstruction({ programId, data, keys: [] });
 }
 
+/**
+ * Creates a Compute Budget Heap Frame instruction for a given program.
+ *
+ * @param {PublicKey} programId - The public key of the target program.
+ * @param {NeonHeapFrame} [neonHeapFrame=NEON_HEAP_FRAME] - The heap frame size to be allocated (defaults to `NEON_HEAP_FRAME`).
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for setting the heap frame size.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createComputeBudgetHeapFrameInstruction(myProgramId, 256_000);
+ * transaction.add(instruction);
+ * ```
+ */
 export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, neonHeapFrame: NeonHeapFrame = NEON_HEAP_FRAME): TransactionInstruction {
   const a = Buffer.from([0x01]);
   const b = Buffer.from(toBytesInt32(parseInt(neonHeapFrame ?? NEON_HEAP_FRAME)));
@@ -163,6 +189,27 @@ export function createComputeBudgetHeapFrameInstruction(programId: PublicKey, ne
   return new TransactionInstruction({ programId, data, keys: [] });
 }
 
+/**
+ * Creates an instruction to approve a deposit transaction.
+ *
+ * @param {ApproveDepositInstructionParams} params - The parameters required for the instruction.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet approving the deposit.
+ * @param {PublicKey} params.neonPDAWallet - The public key of the Neon PDA wallet that will receive the deposit.
+ * @param {PublicKey} params.associatedToken - The public key of the associated token account.
+ * @param {number} params.amount - The amount of tokens to approve for deposit.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for approving the deposit.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createApproveDepositInstruction({
+ *   solanaWallet: userWallet,
+ *   neonPDAWallet: neonWalletPDA,
+ *   associatedToken: userTokenAccount,
+ *   amount: 1000000,
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createApproveDepositInstruction({
    solanaWallet,
    neonPDAWallet,
@@ -189,6 +236,31 @@ export function createAccountV3Instruction({
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates an instruction to retrieve the account balance for a legacy Neon account.
+ *
+ * @param {LegacyAccountBalanceInstructionParams} params - The parameters required for the instruction.
+ * @param {Connection} params.connection - The Solana blockchain connection.
+ * @param {AccountInfo} params.account - The legacy Neon account whose balance needs to be checked.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {number} params.chainId - The chain ID of the target blockchain.
+ * @returns {Promise<TransactionInstruction | null>} A promise resolving to a `TransactionInstruction` for retrieving the account balance, or `null` if the account does not exist.
+ *
+ * @example
+ * ```typescript
+ * const instruction = await createAccountBalanceForLegacyAccountInstruction({
+ *   connection,
+ *   account,
+ *   solanaWallet,
+ *   neonEvmProgram,
+ *   chainId: 245022926
+ * });
+ * if (instruction) {
+ *   transaction.add(instruction);
+ * }
+ * ```
+ */
 export async function createAccountBalanceForLegacyAccountInstruction({
   connection,
   account,
@@ -205,6 +277,27 @@ export async function createAccountBalanceForLegacyAccountInstruction({
   return null!;
 }
 
+/**
+ * Creates an instruction to retrieve the balance account for a Neon EVM wallet.
+ *
+ * @param {AccountBalanceInstructionParams} params - The parameters required for the instruction.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet initiating the request.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {string} params.neonWallet - The Ethereum-style Neon wallet address in hex format.
+ * @param {number} params.chainId - The chain ID of the target blockchain.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for retrieving the Neon wallet balance.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createAccountBalanceInstruction({
+ *   solanaWallet: userWallet,
+ *   neonEvmProgram: neonProgram,
+ *   neonWallet: "0x1234567890abcdef1234567890abcdef12345678",
+ *   chainId: 245022926
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createAccountBalanceInstruction({
   solanaWallet,
   neonEvmProgram,
@@ -226,6 +319,20 @@ export function createAccountBalanceInstruction({
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates and returns the required account keys for a claim instruction based on the provided Neon emulation data.
+ *
+ * @param {NeonEmulate} neonEmulate - The Neon emulation data containing Ethereum and Solana accounts.
+ * @returns {ClaimInstructionResult} An object containing:
+ *   - `neonKeys`: An array of `AccountMeta` objects representing the required account keys.
+ *   - `legacyAccounts`: An array of legacy Solana accounts associated with the claim instruction.
+ *
+ * @example
+ * ```typescript
+ * const claimKeys = createClaimInstructionKeys(neonEmulateData);
+ * console.log(claimKeys.neonKeys, claimKeys.legacyAccounts);
+ * ```
+ */
 export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstructionResult {
   const legacyAccounts: SolanaAccount[] = [];
   const accountsMap = new Map<string, AccountMeta>();
@@ -254,6 +361,39 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
   return { neonKeys: Array.from(accountsMap.values()), legacyAccounts };
 }
 
+/**
+ * Creates a claim instruction based on the provided transaction configuration.
+ *
+ * @template TxResult - The expected type of the transaction result.
+ * @param {ClaimInstructionConfig<TxResult>} config - The configuration parameters for the claim instruction.
+ * @param {ProxyApi} config.proxyApi - The API interface for interacting with the proxy.
+ * @param {NeonTransaction} config.neonTransaction - The Neon transaction object.
+ * @param {Connection} config.connection - The Solana blockchain connection.
+ * @param {PublicKey} config.signerAddress - The public key of the transaction signer.
+ * @param {PublicKey} config.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {SPLToken} config.splToken - The SPL token used in the transaction.
+ * @param {PublicKey} config.associatedTokenAddress - The associated token account address.
+ * @param {number} config.fullAmount - The full amount involved in the claim transaction.
+ * @returns {Promise<ClaimInstructionResult>} A promise resolving to an object containing:
+ *   - `neonKeys`: An array of `AccountMeta` objects representing required account keys.
+ *   - `legacyAccounts`: An array of legacy Solana accounts.
+ *   - `neonTransaction`: The original Neon transaction.
+ *
+ * @example
+ * ```typescript
+ * const claimInstruction = await createClaimInstruction({
+ *   proxyApi,
+ *   neonTransaction,
+ *   connection,
+ *   signerAddress,
+ *   neonEvmProgram,
+ *   splToken,
+ *   associatedTokenAddress,
+ *   fullAmount
+ * });
+ * console.log(claimInstruction);
+ * ```
+ */
 export async function createClaimInstruction<TxResult extends TransactionResult>(config: ClaimInstructionConfig<TxResult>): Promise<ClaimInstructionResult> {
   const {
     proxyApi,
@@ -284,6 +424,7 @@ export async function createClaimInstruction<TxResult extends TransactionResult>
   }
   return { neonKeys: [], legacyAccounts: [], neonTransaction };
 }
+
 
 export async function getOverriddenSourceSplAccount(config: SourceSplAccountConfig): Promise<ExtendedAccountInfo | any> {
   const {
@@ -322,6 +463,21 @@ export async function getOverriddenSourceSplAccount(config: SourceSplAccountConf
   return null;
 }
 
+/**
+ * @deprecated This method is deprecated and may be removed in future versions.
+ * Use an updated execution instruction createExecFromDataInstructionV2 method instead.
+ *
+ * Creates an execution instruction from raw transaction data.
+ *
+ * @param {PublicKey} solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {PublicKey} neonPDAWallet - The public key of the Neon PDA wallet.
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {string} neonRawTransaction - The raw Neon transaction in hex format.
+ * @param {AccountMeta[]} neonKeys - The list of required account metadata.
+ * @param {NeonProgramStatus} proxyStatus - The status of the Neon program including treasury pool count.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for executing the Neon transaction.
+ *
+ */
 export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], proxyStatus: NeonProgramStatus): TransactionInstruction {
   const count = Number(proxyStatus.neonTreasuryPoolCount);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
@@ -342,6 +498,30 @@ export function createExecFromDataInstruction(solanaWallet: PublicKey, neonPDAWa
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates an instruction to generate an account using a seed.
+ *
+ * This function constructs a Solana `TransactionInstruction` for creating an account
+ * derived from a seed. The account is initialized with 128KB of allocated space.
+ *
+ * @param {CreateAccountWithSeedParams} createAccountWithSeedParams - The parameters required for creating the account.
+ * @param {PublicKey} createAccountWithSeedParams.solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {string} createAccountWithSeedParams.seed - The seed string used to derive the account.
+ * @param {PublicKey} createAccountWithSeedParams.holderAccountPK - The public key of the derived holder account.
+ * @param {PublicKey} createAccountWithSeedParams.neonEvmProgram - The public key of the Neon EVM program.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for creating the account with a seed.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createAccountWithSeedInstruction({
+ *   solanaWallet: userWallet,
+ *   seed: "unique-seed",
+ *   holderAccountPK: derivedAccount,
+ *   neonEvmProgram: neonProgram
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createAccountWithSeedInstruction(createAccountWithSeedParams: CreateAccountWithSeedParams): TransactionInstruction {
   const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
   const space = 128 * 1024; //128KB
@@ -357,6 +537,30 @@ export function createAccountWithSeedInstruction(createAccountWithSeedParams: Cr
   });
 }
 
+/**
+ * Creates an instruction to initialize a holder account using a seeded address.
+ *
+ * This function generates a `TransactionInstruction` that initializes a new holder account
+ * by encoding the seed into the transaction data.
+ *
+ * @param {CreateAccountWithSeedParams} createAccountWithSeedParams - The parameters required to create the holder account.
+ * @param {PublicKey} createAccountWithSeedParams.solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {string} createAccountWithSeedParams.seed - The seed string used to derive the holder account.
+ * @param {PublicKey} createAccountWithSeedParams.holderAccountPK - The public key of the derived holder account created before.
+ * @param {PublicKey} createAccountWithSeedParams.neonEvmProgram - The public key of the Neon EVM program.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for creating the holder account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createHolderAccountInstruction({
+ *   solanaWallet: userWallet,
+ *   seed: "unique-seed",
+ *   holderAccountPK: derivedAccount,
+ *   neonEvmProgram: neonProgram
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createHolderAccountInstruction(createAccountWithSeedParams: CreateAccountWithSeedParams): TransactionInstruction {
   const { solanaWallet, seed, holderAccountPK, neonEvmProgram } = createAccountWithSeedParams;
   const instruction = Buffer.from([EvmInstruction.HolderCreate]);
@@ -375,6 +579,23 @@ export function createHolderAccountInstruction(createAccountWithSeedParams: Crea
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates an instruction to delete a holder account from the Neon EVM program.
+ *
+ * This function generates a `TransactionInstruction` that allows a Solana wallet
+ * to remove a holder account from the Neon EVM program.
+ *
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {PublicKey} holderAccountPK - The public key of the holder account to be deleted.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for deleting the holder account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = deleteHolderAccountInstruction(neonProgram, userWallet, holderAccount);
+ * transaction.add(instruction);
+ * ```
+ */
 export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solanaWallet: PublicKey, holderAccountPK: PublicKey): TransactionInstruction {
   const data = Buffer.from([EvmInstruction.HolderDelete]);
   const keys: AccountMeta[] = [
@@ -384,6 +605,35 @@ export function deleteHolderAccountInstruction(neonEvmProgram: PublicKey, solana
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Creates an execution instruction from raw transaction data.
+ *
+ * @param {CreateExecFromDataInstructionParams} params - The parameters required for the execution instruction.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {string} params.neonWallet - The Ethereum-style Neon wallet address in hex format.
+ * @param {PublicKey} params.holderAccount - The public key of the holder account.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {string} params.neonRawTransaction - The raw Neon transaction in hex format.
+ * @param {number} params.neonPoolCount - The count of Neon Treasury Pools (optional, defaults to snapshot value).
+ * @param {number} params.chainId - The chain ID of the target blockchain.
+ * @param {AccountMeta[]} params.neonKeys - The list of required account metadata.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for executing the Neon transaction.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createExecFromDataInstructionV2({
+ *   solanaWallet: userWallet,
+ *   neonWallet: "0x1234567890abcdef1234567890abcdef12345678",
+ *   holderAccount: holderPubkey,
+ *   neonEvmProgram: neonProgram,
+ *   neonRawTransaction: "0xabcdef...",
+ *   neonPoolCount: 10,
+ *   chainId: 245022926,
+ *   neonKeys: accountKeys
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createExecFromDataInstructionV2(params: CreateExecFromDataInstructionParams): TransactionInstruction {
   const {
     solanaWallet, neonWallet, holderAccount, neonEvmProgram,
@@ -440,7 +690,33 @@ export function createMintSolanaTransaction(solanaWallet: PublicKey, tokenMint: 
   return createAssociatedTokenAccountTransaction({ solanaWallet, tokenMint, associatedToken, neonHeapFrame });
 }
 
-// #region Neon -> Solana
+/**
+ * Creates an instruction to initialize an associated token account.
+ *
+ * This function generates a `TransactionInstruction` to create an associated token account
+ * for a given token mint and owner. The associated account is derived using the standard
+ * Solana token program conventions.
+ *
+ * @param {AssociatedTokenAccountInstructionParams} params - The parameters required to create the associated token account.
+ * @param {PublicKey} params.tokenMint - The public key of the token mint.
+ * @param {PublicKey} params.associatedAccount - The public key of the associated token account to be created.
+ * @param {PublicKey} params.owner - The public key of the owner of the associated token account.
+ * @param {PublicKey} params.payer - The public key of the payer funding the account creation.
+ * @param {PublicKey} [params.associatedProgramId=ASSOCIATED_TOKEN_PROGRAM_ID] - The public key of the associated token program (default: `ASSOCIATED_TOKEN_PROGRAM_ID`) from '@solana/spl-token' library.
+ * @param {PublicKey} [params.programId=TOKEN_PROGRAM_ID] - The public key of the token program (default: `TOKEN_PROGRAM_ID`) from '@solana/spl-token' library.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for creating the associated token account.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createAssociatedTokenAccountInstruction({
+ *   tokenMint: tokenMintAddress,
+ *   associatedAccount: associatedTokenAccount,
+ *   owner: userWallet,
+ *   payer: feePayer
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createAssociatedTokenAccountInstruction({
   tokenMint,
   associatedAccount,

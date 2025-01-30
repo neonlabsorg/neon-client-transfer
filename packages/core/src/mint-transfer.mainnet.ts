@@ -10,7 +10,8 @@ import {
   authAccountAddress,
   collateralPoolAddress,
   neonBalanceProgramAddress,
-  neonBalanceProgramAddressV2, Provider,
+  neonBalanceProgramAddressV2,
+  Provider,
   toBytesInt32,
   TransactionResult
 } from './utils';
@@ -93,7 +94,35 @@ export async function neonTransferMintTransactionMainnet<W extends Provider, TxR
   return transaction;
 }
 
-
+/**
+ * Creates a mainnet-compatible execution instruction from raw transaction data for Neon EVM.
+ *
+ * This function generates a `TransactionInstruction` for executing a Neon EVM transaction
+ * within the Solana blockchain on **mainnet**. It derives necessary accounts, encodes transaction data,
+ * and constructs the instruction with the appropriate keys.
+ *
+ * @param {PublicKey} solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {string} neonWallet - The Ethereum-style Neon wallet address in hex format.
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {string} neonRawTransaction - The raw Neon transaction in hex format.
+ * @param {AccountMeta[]} neonKeys - The list of required account metadata.
+ * @param {number} chainId - The chain ID of the target blockchain.
+ * @param {number} [neonPoolCount=NEON_TREASURY_POOL_COUNT] - The number of Neon treasury pools (optional, defaults to `NEON_TREASURY_POOL_COUNT`).
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for executing the Neon transaction on **mainnet**.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createExecFromDataInstructionV2Mainnet(
+ *   userWallet,
+ *   "0x1234567890abcdef1234567890abcdef12345678",
+ *   neonProgram,
+ *   "0xabcdef...",
+ *   accountKeys,
+ *   245022926
+ * );
+ * transaction.add(instruction);
+ * ```
+ */
 export function createExecFromDataInstructionV2Mainnet(solanaWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonRawTransaction: string, neonKeys: AccountMeta[], chainId: number, neonPoolCount = NEON_TREASURY_POOL_COUNT): TransactionInstruction {
   const count = Number(neonPoolCount ?? NEON_TREASURY_POOL_COUNT);
   const treasuryPoolIndex = Math.floor(Math.random() * count) % count;
