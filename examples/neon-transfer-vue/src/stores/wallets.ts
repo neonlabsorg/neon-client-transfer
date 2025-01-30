@@ -10,21 +10,21 @@ import { Big } from 'big.js';
 import { Wallet as EthersWallet } from 'ethers';
 import { toRaw } from 'vue';
 
-import { NEON_PRIVATE, SOLANA_PRIVATE } from '@/utils';
+import { SOLANA_PRIVATE } from '@/utils';
 import { useFormStore, useWeb3Store } from '@/stores';
 import type { TokenBalance } from '@/types';
 import type { Wallet } from 'ethers';
 
 interface IWalletStore {
-  isLoading: boolean,
-  walletBalance: TokenBalance,
-  tokenBalance: TokenBalance,
-  neonWallet: Wallet,
-  neonBalance: Big,
-  solanaWallet: Keypair,
-  solanaWalletSigner: Wallet,
-  solanaBalance: Big,
-  splTokenBalance: TokenAmount,
+  isLoading: boolean;
+  walletBalance: TokenBalance;
+  tokenBalance: TokenBalance;
+  neonWallet: Wallet;
+  neonBalance: Big;
+  solanaWallet: Keypair;
+  solanaWalletSigner: Wallet;
+  solanaBalance: Big;
+  splTokenBalance: TokenAmount;
 }
 
 const BIG_ZERO = new Big(0);
@@ -52,7 +52,6 @@ export const useWalletsStore = defineStore('wallets', {
       this.isLoading = true;
       this.setSolanaWallet();
       this.setSolanaWalletSigner();
-      await this.setTokenBalance();
       await this.setWalletBalance();
       this.isLoading = false;
     },
@@ -61,7 +60,10 @@ export const useWalletsStore = defineStore('wallets', {
     },
     setSolanaWalletSigner() {
       const web3Store = useWeb3Store();
-      this.solanaWalletSigner = new EthersWallet(signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address), toRaw(web3Store.ethersProvider));
+      this.solanaWalletSigner = new EthersWallet(
+        signerPrivateKey(this.solanaWallet.publicKey, this.neonWallet.address),
+        toRaw(web3Store.ethersProvider)
+      );
     },
     setNeonWallet(wallet: EthersWallet) {
       this.neonWallet = wallet; //Or use this signature: new EthersWallet(NEON_PRIVATE, toRaw(web3Store.ethersProvider))
@@ -73,8 +75,8 @@ export const useWalletsStore = defineStore('wallets', {
       this.tokenBalance = balance;
     },
     async setTokenBalance() {
-      const solana = await this.getSolanaBalance() || BIG_ZERO;
-      const neon = await this.getNeonBalance() || BIG_ZERO;
+      const solana = (await this.getSolanaBalance()) || BIG_ZERO;
+      const neon = (await this.getNeonBalance()) || BIG_ZERO;
 
       this.tokenBalance = {
         solana,
@@ -82,8 +84,8 @@ export const useWalletsStore = defineStore('wallets', {
       };
     },
     async setWalletBalance() {
-      const solana = await this.getSolanaBalance() || BIG_ZERO;
-      const neon = await this.getNeonBalance() || BIG_ZERO;
+      const solana = (await this.getSolanaBalance()) || BIG_ZERO;
+      const neon = (await this.getNeonBalance()) || BIG_ZERO;
 
       this.walletBalance = {
         solana,
@@ -91,50 +93,75 @@ export const useWalletsStore = defineStore('wallets', {
       };
     },
     async getTokenBalance(token: SPLToken) {
-      //TODO: optimize this method, avoid unnecessary calls based on direction
-      //don’t need to work out balances of the other direction
       const formStore = useFormStore();
       formStore.setIsPendingTokenChange(true);
-
       try {
         switch (token.symbol) {
           case 'NEON': {
-            const solana = await this.getSplTokenBalance(token);
-            const neon = await this.getNeonBalance();
+            if (formStore.transferDirection.direction === 'solana') {
+              const balance = await this.getSplTokenBalance(token);
 
-            formStore.setError(false);
-            this.updateTokenBalance({
-              solana: new Big(solana?.amount).div(Math.pow(10, solana?.decimals)),
-              neon
-            });
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                solana: new Big(balance?.amount).div(Math.pow(10, balance?.decimals))
+              });
+            } else {
+              const balance = await this.getNeonBalance();
+
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                neon: balance
+              });
+            }
             break;
           }
           case 'SOL': {
-            const solana = await this.getSolanaBalance();
-            const neon = await this.getNeonBalance();
+            const balance =
+              formStore.transferDirection.direction === 'solana'
+                ? await this.getSolanaBalance()
+                : await this.getMintTokenBalance();
 
             formStore.setError(false);
-            this.updateTokenBalance({ solana, neon });
+            const newBalance = { ...this.tokenBalance };
+            newBalance[formStore.transferDirection.direction] = balance;
+            this.updateTokenBalance(newBalance);
             break;
           }
           case 'wSOL': {
-            const address = new PublicKey(formStore.currentSplToken?.address_spl);
-            const associatedToken = getAssociatedTokenAddressSync(address, this.solanaWallet.publicKey);
-            const solana = await this.getSolanaBalance(associatedToken);
-            const neon = await this.getMintTokenBalance();
+            const address = new PublicKey(token?.address_spl);
+            const associatedToken = getAssociatedTokenAddressSync(
+              address,
+              this.solanaWallet.publicKey
+            );
+
+            const balance =
+              formStore.transferDirection.direction === 'solana'
+                ? await this.getSolanaBalance(associatedToken)
+                : await this.getMintTokenBalance();
 
             formStore.setError(false);
-            this.updateTokenBalance({ solana, neon });
+            const newBalance = { ...this.tokenBalance };
+            newBalance[formStore.transferDirection.direction] = balance;
+            this.updateTokenBalance(newBalance);
             break;
           }
           default: {
-            const solana = await this.getSplTokenBalance(token);
-            const neon = await this.getMintTokenBalance();
-            formStore.setError(false);
-            this.updateTokenBalance({
-              solana: new Big(solana.amount).div(Math.pow(10, solana.decimals)),
-              neon
-            });
+            if (formStore.transferDirection.direction === 'solana') {
+              const solana = await this.getSplTokenBalance(token);
+
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                solana: new Big(solana.amount).div(Math.pow(10, solana.decimals))
+              });
+            } else {
+              const neon = await this.getMintTokenBalance();
+              formStore.setError(false);
+              this.updateTokenBalance({
+                ...this.tokenBalance,
+                neon
+              });
+            }
+
             break;
           }
         }
@@ -188,8 +215,13 @@ export const useWalletsStore = defineStore('wallets', {
     async getSplTokenBalance(token: SPLToken) {
       const web3Store = useWeb3Store();
       const mintAccount = new PublicKey(token.address_spl);
-      const assocTokenAccountAddress = await getAssociatedTokenAddress(mintAccount, this.solanaWallet.publicKey);
-      const response = await web3Store.solanaConnection.getTokenAccountBalance(assocTokenAccountAddress);
+      const assocTokenAccountAddress = await getAssociatedTokenAddress(
+        mintAccount,
+        this.solanaWallet.publicKey
+      );
+      const response = await web3Store.solanaConnection.getTokenAccountBalance(
+        assocTokenAccountAddress
+      );
 
       return response?.value;
     }
