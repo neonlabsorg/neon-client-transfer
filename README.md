@@ -23,7 +23,7 @@ yarn add @neonevm/token-transfer-core
 npm install @neonevm/token-transfer-core
 ```
 
-For using with `ethers.js` we recommend additional using `@neonemv/token-transfer-ethers`
+For using with `ethers.js` we recommend additional using `@neonevm/token-transfer-ethers`
 
 ```sh
 yarn add @neonevm/token-transfer-ethers
@@ -31,7 +31,20 @@ yarn add @neonevm/token-transfer-ethers
 npm install @neonevm/token-transfer-ethers
 ```
 
-### For native
+## **📌 Quick Navigation**
+
+- **🔹 Native Token Transactions**
+  - [Solana → Neon EVM (NEON)](#transfer-solana-neon-transactions)
+  - [Neon EVM → Solana (NEON)](#transfer-neon-solana-transactions)
+  - [Solana → Neon EVM (SOL)](#transfer-sol-to-neon-evm)
+- **🔹 ERC20 Token Transactions**
+  - [Solana → Neon EVM (ERC20)](#transfer-erc20-solana-neon-transactions)
+  - [Neon EVM → Solana (ERC20)](#transfer-erc20-neon-solana-transactions)
+
+---
+
+
+### For native token transfer
 
 Upon installation, it is essential to provide certain mandatory properties when initializing a new instance to ensure proper functionality. When integrating this into your frontend application, it's necessary to grant Solana/Neon wallets access for signing and sending transactions across Solana and Neon EVM networks.
 
@@ -66,11 +79,34 @@ const solTokenMint = new PublicKey(solNativeToken.tokenMint);
 const solEvmProgram = new PublicKey(solProxyStatus.neonEvmProgramId);
 ```
 
-Still, for testing you can use `NEON_TRANSFER_CONTRACT_DEVNET` or `NEON_TRANSFER_CONTRACT_MAINNET` constants. This objects contains snapshots with latest `neonProxyStatus` state.
+Still, for testing, you can use the `NEON_TRANSFER_CONTRACT_DEVNET` or `NEON_TRANSFER_CONTRACT_MAINNET` constants.
+
+These constants represent the Neon Transfer Contracts deployed on their respective networks.
+
+- `NEON_TRANSFER_CONTRACT_DEVNET` is the smart contract deployed on the Neon Devnet. It should be used exclusively for testing and development purposes, allowing you to simulate token transfers without involving real assets.
+
+- `NEON_TRANSFER_CONTRACT_MAINNET` is the smart contract deployed on the Neon Mainnet. This contract is used for real token transfers and should only be used in production environments where transactions have actual economic value.
+
+These objects also contain snapshots of the latest `neonProxyStatus` state, providing up-to-date network status and configuration details for transactions.
+
+You can import the Neon and Solana transfer contract constants from the @neonevm/token-transfer-core package. These constants provide the contract addresses for both devnet (for testing) and mainnet (for real transactions).
+
+```sh
+yarn add @neonevm/token-transfer-core
+# or
+npm install @neonevm/token-transfer-core
+```
+```javascript
+import {
+NEON_TRANSFER_CONTRACT_DEVNET,
+SOL_TRANSFER_CONTRACT_DEVNET,
+NEON_TRANSFER_CONTRACT_MAINNET
+} from '@neonevm/token-transfer-core';
+```
 
 #### Transfer NEON transactions
-
-To generate a transaction for transferring NEON from Solana to Neon EVM, utilize the functions found in the `neon-transfer.ts` file.
+<a id='transfer-solana-neon-transactions'></a>
+To generate a transaction for transferring **NEON** from **Solana** to **Neon EVM**, utilize the functions found in the `neon-transfer.ts` file.
 
 ```javascript
 const neonToken: SPLToken = {
@@ -120,7 +156,8 @@ transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized'))
 const signature = await connection.sendRawTransaction(transaction.serialize()); // method for sign and send transaction to network
 ```
 
-And for transfer NEON from Neon EVM to Solana, you should know token contract address, you can look it in [this file](https://github.com/neonlabsorg/neon-client-transfer/blob/master/src/data/constants.ts).
+<a id='transfer-neon-solana-transactions'></a>
+And for transfer **NEON** from **Neon EVM** to **Solana**, you should know token contract address, you can find it in [this file](https://github.com/neonlabsorg/neon-client-transfer/blob/master/src/data/constants.ts).
 
 ```javascript
 const tokenContract = NEON_TRANSFER_CONTRACT_DEVNET; // or SOL_TRANSFER_CONTRACT_DEVNET
@@ -139,11 +176,50 @@ if (signedTrx?.rawTransaction) {
 }
 ```
 
+#### **Transfer SOL to Neon EVM**
+
+This process:
+- **Wraps SOL into wSOL**
+- **Transfers wSOL from Solana to Neon EVM**
+- **Ensures that the transaction is confirmed before proceeding**
+
+To wrap **SOL** to **wSOL** and transfer **wSOL** from **Solana** to **Neon EVM**, use the following:
+
+```javascript
+const amount = 1;
+const id = faucet.tokens.find(i => i.symbol === 'wSOL');
+const wSOL = faucet.tokens[id];
+
+const proxyRpc = new NeonProxyRpcApi(proxyUrl);
+const provider = new JsonRpcProvider(proxyUrl);
+const signerPrivateKey = keccak256(Buffer.from(`${neonWallet.address.slice(2)}${solanaWallet.publicKey.toBase58()}`, 'utf-8'));
+
+const associatedToken = getAssociatedTokenAddressSync(new PublicKey(wSOL.address_spl), solanaWallet.publicKey);
+
+const solanaWalletSigner = walletSigner(provider, signerPrivateKey);
+const transaction = await createWrapAndTransferSOLTransaction({
+  connection,
+  proxyApi: proxyRpc,
+  neonEvmProgram,
+  solanaWallet: solanaWallet.publicKey,
+  neonWallet: neonWallet.address,
+  walletSigner: solanaWalletSigner,
+  splToken: wSOL,
+  amount,
+  chainId: neonChainId
+});
+transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+const signature = await sendSolanaTransaction(connection, transaction, [signer], true, { skipPreflight });
+```
+
+---
+
 #### Transfer ERC20 transactions
 
 When working with Devnet, Testnet, or Mainnet, different ERC20 tokens are utilized. We have compiled a [token-list](https://github.com/neonlabsorg/token-list) containing the tokens supported and available on Neon EVM. For further information, please refer to our [documentation](https://docs.neonfoundation.io/docs/tokens/token_list).
-
-For transfer ERC20 tokens from Solana to Neon EVM, using this patterns:
+<a id='transfer-erc20-solana-neon-transactions'></a>
+For transfer **ERC20** tokens from **Solana** to **Neon EVM**, using this patterns:
 
 ```javascript
 import tokenList from 'token-list/tokenlist.json';
@@ -174,7 +250,8 @@ transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 const signature = await connection.sendRawTransaction(transaction.serialize());
 ```
 
-And for transfer ERC20 tokens from Neon EVM to Solana:
+<a id='transfer-erc20-neon-solana-transactions'></a>
+And for transfer **ERC20** tokens from **Neon EVM** to **Solana**:
 
 ```javascript
 import tokenList from 'token-list/tokenlist.json';
@@ -239,3 +316,5 @@ yarn docs
 # or
 npm run docs
 ```
+
+
