@@ -4,7 +4,7 @@ This code demonstrates how to use [neon-portal](https://github.com/neonlabsorg/n
 
 You can see [Live Demo](https://2x5gdt.csb.app/).
 
-Before running rename .env.example to .env, then add your Solana and MetaMask wallets private keys:
+Before running rename `.env.example` to `.env`, then add your `Solana` and `MetaMask` wallets private keys:
 
 ```dotenv
 REACT_APP_NEON_PRIVATE: '<your neon private key>' // Private key from your MM wallet
