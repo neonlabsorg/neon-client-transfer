@@ -56,7 +56,7 @@ const networkUrls = [{
   id: 245022927,
   token: 'SOL',
   solana: 'https://api.devnet.solana.com',
-  neonProxy: 'https://devnet.neonevm.org/solana/sol'
+  neonProxy: 'https://devnet.neonevm.org/sol'
 }];
 
 function NeonTransferApp() {
@@ -317,7 +317,6 @@ function NeonTransferApp() {
               chainId,
             }),
         };
-
         const transactionFunction = transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT;
         await handleSolanaTransaction(transactionFunction, solanaSigner);
       } else {
@@ -363,7 +362,6 @@ function NeonTransferApp() {
               amount,
             }),
         };
-
         const transaction = await (transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT)();
         const neon = await sendNeonTransaction(transaction, neonWallet);
         setSignature({ solana, neon });

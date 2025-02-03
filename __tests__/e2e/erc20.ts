@@ -37,6 +37,7 @@ export async function itSolanaTokenSPL(provider: Web3 | JsonRpcProvider, connect
   try {
     let transaction: Transaction;
     if (provider instanceof JsonRpcProvider) {
+      console.log('Initiating transaction with ethers.js...');
       const solanaWalletSigner = walletSigner(<JsonRpcProvider>provider, signerPrivateKey(solanaWallet.publicKey, neonWallet.address));
       transaction = await neonTransferMintTransactionEthers({
         connection,
@@ -86,9 +87,14 @@ export async function itNeonTokenMint(connection: Connection, provider: Web3 | J
   const mintPubkey = new PublicKey(token.address_spl);
   let balanceBefore = await mintTokenBalanceEthers(neonWallet as Wallet, token);
   if (!balanceBefore) {
-    await faucet.requestERC20(neonWallet.address, token, 1);
+    const requestPromise = faucet.requestERC20(neonWallet.address, token, 1);
+    const requestTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Faucet request timeout")), 15e3));
+    await Promise.race([requestPromise, requestTimeout]);
+
+    console.log("Fetching balance after faucet drop...");
     balanceBefore = await mintTokenBalanceEthers(neonWallet as Wallet, token);
-    await delay(30e6);
+    await delay(10e6);
   }
   console.log(`Balance: ${balanceBefore ?? 0} ${token.symbol}`);
   const signer: Signer = toSigner(solanaWallet);
@@ -109,7 +115,7 @@ export async function itNeonTokenMint(connection: Connection, provider: Web3 | J
       await sendNeonTransaction(provider, <TransactionWeb3>neonTransaction, <Web3Account>neonWallet);
     neonSignature(`Neon Signature`, signedNeonTransaction);
     expect(signedNeonTransaction.length).toBeGreaterThan(0);
-    await delay(20e3);
+    await delay(10e3);
     const balanceAfter = await mintTokenBalanceEthers(neonWallet as Wallet, token);
     const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, token);
     console.log(`Balance: ${balanceBefore} > ${balanceAfter} ${token.symbol} ==> ${balanceSPL?.uiAmount} ${token.symbol} in Solana`);

@@ -905,39 +905,6 @@
     "@emnapi/runtime" "^1.1.0"
     "@tybys/wasm-util" "^0.9.0"
 
-"@neonevm/token-transfer-core@4.4.1":
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.1.tgz#2404f762f56a736f46abbd6e9669adff9a5eca95"
-  integrity sha512-a88V8nTz3S7oD2L9vdZc7r4gz2/mTuWy4wTW6g7KnNlQ7aFCTOw5KwtQKs6MTbDaEiYoHxiOghTeRkpZXE2YFw==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    big.js "^6.2.1"
-    ethers "^6.13.3"
-
-"@neonevm/token-transfer-ethers@4.4.1":
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.4.1.tgz#4635fbdf503b9ebf85f934865822f17dd5d539dc"
-  integrity sha512-5eErq8RPsOAY/ZwtYTYdJQ2kcv3N7fK95KF2nAM73cHPhJH/pYxD+eZUnLMyMc5OUj2Q8knqPH/56fBD9NfmdA==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    ethers "^6.13.3"
-
-"@neonevm/token-transfer-web3@4.4.1":
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-web3/-/token-transfer-web3-4.4.1.tgz#3dbd04e87ed1e2b80467156d0dcfc89af68d3023"
-  integrity sha512-KzrzrHK/FKFANosG3yh8Lk9JLzDofhhook5e8+dRuvLFNKpzCfrsrKVRLhUzUwqD1fToXQxP8Tz+HmzVJ2yJgw==
-  dependencies:
-    "@solana/spl-token" "^0.3.8"
-    "@solana/web3.js" "^1.77.3"
-    web3-core "^4.3.2"
-    web3-eth "^4.3.1"
-    web3-eth-accounts "^4.1.0"
-    web3-eth-contract "^4.1.4"
-    web3-types "^1.3.1"
-    web3-utils "^4.1.0"
-
 "@noble/curves@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.2.0.tgz#92d7e12e4e49b23105a2555c6984d41733d65c35"
