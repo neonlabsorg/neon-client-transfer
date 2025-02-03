@@ -1622,20 +1622,20 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.5.tgz#4fc56c15c580b9adb7dc3c333a134e540b44bfb1"
   integrity sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==
 
-"@neonevm/token-transfer-core@4.4.1-devnet":
-  version "4.4.1-devnet"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.1-devnet.tgz#615f60ed919f648472dcc64922f095dd4f04ebf2"
-  integrity sha512-InrqGPL2Al0lrxbfHOy3AUY9p2a1wbVJqnoYAV01UPfr+Tfc7eaDqzI7vO8BefCIgX3O1W7NUhKd5Cz4LbLjjA==
+"@neonevm/token-transfer-core@4.4.2":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-core/-/token-transfer-core-4.4.2.tgz#bb6f2300aa249f001464ad0d30db62f6898cef66"
+  integrity sha512-f+B3BldDMueR/XKw6Bri6uo7uuCW2uJ3Qs2oX/gvTq187IRrcdH7GymGmhXnyQxjX698HokpE/acBaBtG+5F1A==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"
     big.js "^6.2.1"
     ethers "^6.13.3"
 
-"@neonevm/token-transfer-ethers@4.4.1-devnet":
-  version "4.4.1-devnet"
-  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.4.1-devnet.tgz#20a823b9bdbbc4771308fdcfd90a4745e437aa79"
-  integrity sha512-n46G/q2/FxEvDkSFyQUC8DjEIpifNkEdIYUQGazy1UsHPoxyQesH++kvycZpgwT1fD4swiBUB6PQWIJMIdobiw==
+"@neonevm/token-transfer-ethers@4.4.2":
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/@neonevm/token-transfer-ethers/-/token-transfer-ethers-4.4.2.tgz#1a43b7a8ae4d208de6d0e45abeaadb2f7cc3dd44"
+  integrity sha512-myhCFzznEvUbjqMWcJ033s9noPrlmQZi/koHXmQk0YJY+WY+WWOOYTh1GhmnV+6q9Zb9qVlYMaynvzRRNneAkA==
   dependencies:
     "@solana/spl-token" "^0.3.8"
     "@solana/web3.js" "^1.77.3"

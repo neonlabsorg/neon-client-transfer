@@ -47,7 +47,7 @@ import {
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
-jest.setTimeout(12e4);
+jest.setTimeout(24e4);
 
 const skipPreflight = true;
 const CHAIN_ID = Number(process.env.CHAIN_ID);

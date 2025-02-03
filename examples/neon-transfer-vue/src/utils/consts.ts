@@ -23,7 +23,7 @@ export const networkUrls: NetworkUrl[] = [
     id: 245022927,
     token: 'SOL',
     solana: 'https://api.devnet.solana.com',
-    neonProxy: 'https://devnet.neonevm.org/solana/sol'
+    neonProxy: 'https://devnet.neonevm.org/sol'
   }
 ];
 
