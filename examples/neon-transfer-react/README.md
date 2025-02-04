@@ -2,7 +2,7 @@
 
 This code demonstrates how to use [neon-portal](https://github.com/neonlabsorg/neon-client-transfer) package in your project.
 
-You can see [Live Demo](https://2x5gdt.csb.app/).
+You can see [Live Demo](https://gnytck-5173.csb.app/).
 
 Before running rename `.env.example` to `.env`, then add your `Solana` and `MetaMask` wallets private keys:
 
