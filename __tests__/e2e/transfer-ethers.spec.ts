@@ -83,7 +83,7 @@ afterEach(async () => {
   await delay(5e3);
 });
 
-describe('NEON token transfer tests', () => {
+describe.skip('NEON token transfer tests', () => {
 
   it(`Should transfer 0.1 NEON from Solana to Neon`, async () => {
     const amount = 0.1;

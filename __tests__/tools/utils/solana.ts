@@ -5,6 +5,7 @@ import {
 import {
   AccountInfo,
   Connection,
+  Commitment,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -55,7 +56,6 @@ export async function createAssociatedTokenAccount(connection: Connection, signe
   const tokenMint = new PublicKey(token.address_spl);
   const tokenAccount = getAssociatedTokenAddressSync(tokenMint, solanaWallet);
   let account = await connection.getAccountInfo(tokenAccount);
-  console.log(account?.owner);
   if (!account) {
     const transaction = new Transaction();
     transaction.add(createAssociatedTokenAccountInstruction(solanaWallet, tokenAccount, solanaWallet, tokenMint));
@@ -83,4 +83,13 @@ export function solanaSignature(comment: string, signature: string, url: string 
   }
   const urlParams = new URLSearchParams(params);
   console.log(`${comment}: ${signature}; url: https://explorer.solana.com/tx/${signature}?${urlParams.toString()}`);
+}
+
+export async function solanaAirdrop(connection: Connection, publicKey: PublicKey, lamports: number, commitment: Commitment = 'finalized'): Promise<number> {
+  let balance = await connection.getBalance(publicKey);
+  if (balance < lamports) {
+    const signature = await connection.requestAirdrop(publicKey, lamports);
+    await connection.confirmTransaction(signature, commitment);
+  }
+  return balance;
 }

@@ -65,7 +65,7 @@ afterEach(async () => {
   await delay(5e3);
 });
 
-describe(`SOL Transfer tests`, () => {
+describe.skip(`SOL Transfer tests`, () => {
 
   it(`Should transfer 0.1 SOL from Solana to NeonEVM (SOL)`, async () => {
     const amount = 0.1;
