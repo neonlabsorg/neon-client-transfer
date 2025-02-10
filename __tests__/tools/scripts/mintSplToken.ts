@@ -1,16 +1,16 @@
-import { generateSigner, percentAmount } from '@metaplex-foundation/umi';
+import { SPLToken } from '@neonevm/token-transfer-core';
+import {
+  generateSigner,
+  percentAmount,
+  PublicKey
+} from '@metaplex-foundation/umi';
 import { createAndMint, TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
 import { mplCandyMachine } from '@metaplex-foundation/mpl-candy-machine';
+import bs58 from 'bs58';
 import { setupUmiClient } from './utils/setupClient';
 
-export async function mintSplToken(): Promise<any> {
+export async function mintSplToken(token: SPLToken, amount = 1e6, uri = ''): Promise<PublicKey | null> {
   const { umi, wallet } = setupUmiClient();
-
-  const metadata = {
-    name: '$FunGible Token 1',
-    symbol: '$FT1',
-    uri: 'https://ipfs.io/ipfs/QmdCQ63AhRdiHHvBGxkvo5eMmxrweXdkgZEw6ifeq2KEkP'
-  };
 
   //Create a new Mint PDA
   const mint = generateSigner(umi);
@@ -21,16 +21,19 @@ export async function mintSplToken(): Promise<any> {
     const response = await (createAndMint(umi, {
       mint,
       authority: umi.identity,
-      name: metadata.name,
-      symbol: metadata.symbol,
-      uri: metadata.uri,
+      name: token.name,
+      symbol: token.symbol,
+      uri: uri || `{image: ${token.logoURI}}`,
       sellerFeeBasisPoints: percentAmount(0),
-      decimals: 9,
-      amount: 1000000_000000000,
+      decimals: token.decimals,
+      amount: amount * (10 ** token.decimals),
       tokenOwner: wallet.publicKey,
       tokenStandard: TokenStandard.Fungible
     }).sendAndConfirm(umi));
-    console.log(`Successfully minted 1 million tokens (${mint.publicKey})`);
+    const { signature: signatureBytes } = response;
+    const signature = bs58.encode(signatureBytes);
+    console.log(`${token.name} Mint signature: ${signature}`);
+    console.log(`Successfully minted ${amount}.${(10 ** token.decimals).toString().slice(1)} tokens: (${mint.publicKey})`);
     return mint.publicKey;
   } catch (err) {
     console.error(err);

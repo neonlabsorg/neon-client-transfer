@@ -4,8 +4,8 @@ import { deployErc20ForSplWrapper, mintSplToken } from '../scripts';
 import { customSplToken } from '../artifacts';
 
 export async function setupResourceForSpl(chainId: number, proxyUrl: string, factoryAddress: string): Promise<SPLToken | null> {
-  const tokenMint = await mintSplToken();
   const token = { ...customSplToken, chainId };
+  const tokenMint = await mintSplToken(token);
 
   if (tokenMint) {
     token.address_spl = tokenMint;

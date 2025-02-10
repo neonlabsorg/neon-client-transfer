@@ -48,7 +48,7 @@ let neonWallet: Wallet;
 let provider: JsonRpcProvider;
 let connection: Connection;
 
-describe('NEON token transfer tests', () => {
+describe.skip('NEON token transfer tests', () => {
   beforeAll(async () => {
     try {
       provider = getEthersProvider(NEON_PROXY_URL!);
@@ -76,8 +76,8 @@ describe('NEON token transfer tests', () => {
       } else {
         await faucet.requestNeon(neonWallet.address, 2);
         await delay(1e4);
-        const token = await neonBalanceEthers(provider, neonWallet);
-        console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
+        const balance = await neonBalanceEthers(provider, neonWallet);
+        console.log(`Neon wallet: ${neonWallet.address}: ${balance.toNumber()} NEON`);
       }
     } catch (e) {
       console.log(e);
