@@ -31,7 +31,7 @@
     "publish": "npx lerna publish from-package",
     "prepack": "lerna run prepack --stream",
     "test": "jest --detectOpenHandles --testPathIgnorePatterns=transfer.spec.ts",
-    "test:deploy": "npx jest transfer.spec.ts --detectOpenHandles",
+    "test:ci": "npx jest transfer.spec.ts --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "audit": "lerna run audit --stream",
     "docs": "typedoc"

@@ -9,6 +9,7 @@ import { join } from 'path';
 import { Connection, Keypair } from '@solana/web3.js';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { WNEON_TOKEN_MODEL, WSOL_TOKEN_MODEL } from '../artifacts';
+import { ethers } from "ethers";
 
 export class Deployer {
   solanaWallet: Keypair;
@@ -27,18 +28,18 @@ export class Deployer {
     this.deploySystemContract = new DeploySystemContract(provider, chainId);
   }
 
-  private contractPath(bin: string): string {
-    return join(process.cwd(), '__tests__/data/contracts', bin);
+  get deployer() {
+    return this.deploySystemContract;
+  }
+
+  private contractPath(fileName: string): string {
+    return join(process.cwd(), '__tests__/data/contracts', fileName);
   }
 
   async deployFactoryContract(): Promise<NeonAddress | null> {
     console.log(`Compile and deploy ERC20ForSplFactory.bin contract`);
-    const contractPath = this.contractPath('ERC20ForSplFactory.bin');
-    const contractData = this.deploySystemContract.readContract(contractPath);
-    const factoryAddress = contractAddressByData(this.chainId, contractData);
-    if(factoryAddress) return factoryAddress;
     try {
-      return await this.deploySystemContract.deployContract(contractData, this.neonWallet);
+      return await this.deployContract('ERC20ForSplFactory.bin');
     } catch (e) {
       console.log('Error deploying Factory contract', e);
       return null;
@@ -59,11 +60,11 @@ export class Deployer {
 
   //For wSOL token, we don't need to mint it
   async deployMintedToken(factoryAddress: string, token: SPLToken = WSOL_TOKEN_MODEL): Promise<SPLToken | null> {
+    token.chainId = this.chainId;
     const tokenMint = token.address_spl;
     try {
       const ecr20Address = await deployErc20ForSplWrapper(this.provider, this.neonWallet, factoryAddress, tokenMint);
       token.address = ecr20Address ?? '';
-      token.chainId = this.chainId;
       return token;
     } catch (e) {
       console.log('Error deploying Minted Token', e);
@@ -73,10 +74,8 @@ export class Deployer {
 
   async deployNeonTokenContract(): Promise<NeonAddress | null> {
     console.log(`Deploy NeonToken.bin contract - NEON_TRANSFER_CONTRACT`);
-    const contractPath = this.contractPath('NeonToken.bin');
-    const contractData = this.deploySystemContract.readContract(contractPath);
     try {
-      return await this.deploySystemContract.deployContract(contractData, this.neonWallet);
+      return await this.deployContract('NeonToken.bin');
     } catch (e) {
       console.log('Error deploying NeonToken contract', e);
       return null;
@@ -86,14 +85,78 @@ export class Deployer {
   async deployWNeonTokenContract(): Promise<SPLToken | null> {
     console.log(`Deploy WNEON.bin contract`);
     const wNEON = { ...WNEON_TOKEN_MODEL, chainId: this.chainId };
-    const contractPath = this.contractPath('WNEON.bin');
-    const contractData = this.deploySystemContract.readContract(contractPath);
     try {
-      wNEON.address = await this.deploySystemContract.deployContract(contractData, this.neonWallet);
+      wNEON.address = await this.deployContract('WNEON.bin');
       return wNEON;
     } catch (e) {
       console.log('Error deploying WNEON contract', e);
       return null;
     }
+  }
+
+  async deployContract(contract: string = ''): Promise<NeonAddress | null> {
+    if(!contract) {
+      console.log(`Contract name wasn't provided`);
+      return null;
+    }
+    const contractPath = this.contractPath(contract);
+    const contractBinary = this.deploySystemContract.readContract(contractPath);
+
+    const contractAddress = contractAddressByData(this.chainId, contractBinary);
+    const deployedCode = await this.provider.getCode(contractAddress);
+
+    if (deployedCode !== "0x") {
+      console.log(`Contract already deployed at ${contractAddress}`);
+      return contractAddress;
+    }
+
+    const accountNonce = await this.provider.getTransactionCount(this.neonWallet.address);
+    const { gasPrice } = await this.provider.getFeeData();
+
+    try {
+      const deployTx = {
+        chainId: this.chainId,
+        nonce: accountNonce,
+        data: `0x${contractBinary}`,
+        gasLimit: ethers.toBeHex(1_000_000_000),
+        gasPrice,
+        gas: 0,
+      };
+
+      deployTx.gas = Number(await this.provider.estimateGas(deployTx));
+
+      console.log("Deploying contract...");
+      const tx = await this.neonWallet.sendTransaction(deployTx);
+      console.log(`Transaction Hash: ${tx.hash}`);
+
+      const { contractAddress } = await waitForTxConfirmation(this.provider, tx.hash);
+      console.log(`Contract deployed at: ${contractAddress}`);
+
+      return contractAddress;
+    } catch (e) {
+      console.log('Error deploying contract', e);
+      return null;
+    }
+  }
+}
+
+async function waitForTxConfirmation(provider: JsonRpcProvider, txHash: string, confirmations = 1, timeout = 120000) {
+  try {
+    // Check if transaction is already confirmed
+    const receipt = await provider.getTransactionReceipt(txHash);
+    if (receipt) {
+      console.log("Transaction already confirmed:", receipt);
+      return receipt;
+    }
+
+    // Wait for transaction confirmation
+    console.log(`Waiting for ${confirmations} confirmation(s)...`);
+    const txReceipt = await provider.waitForTransaction(txHash, confirmations, timeout);
+    console.log("Transaction confirmed:", txReceipt);
+
+    return txReceipt;
+  } catch (error) {
+    console.error("Transaction confirmation failed:", error);
+    return null;
   }
 }

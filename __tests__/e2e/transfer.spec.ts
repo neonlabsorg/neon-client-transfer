@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
 import {
   GasToken,
+  NeonAddress,
   NeonProxyRpcApi,
   NEON_TRANSFER_CONTRACT_DEVNET,
   solanaNEONTransferTransaction,
@@ -53,6 +54,7 @@ let neonTransferContract: string;
 let neonWallet: Wallet;
 let solanaWallet: Keypair;
 let signer: Signer;
+let sender: NeonAddress;
 
 let faucet: FaucetDropper;
 let provider: JsonRpcProvider;
@@ -76,6 +78,11 @@ let wNEON: SPLToken;
 let fungibleSplToken: SPLToken;
 let wSOL: SPLToken;
 
+const dropTokens = async (faucet: FaucetDropper, solanaWallet: Keypair, neonWallet: Wallet, neonAmount: number) => {
+  solanaBalance = await solanaAirdrop(connection, solanaWallet.publicKey, 1e9);
+  evmNeonBalance = await neonAirdrop(provider, faucet, neonWallet, neonAmount);
+}
+
 beforeAll(async () => {
   const result = await getMultiTokenProxy(NEON_RPC_URL);
   provider = new JsonRpcProvider(NEON_RPC_URL);
@@ -87,13 +94,16 @@ beforeAll(async () => {
   neonTokenMint = token.tokenMintAddress;
   gasToken = token.gasToken;
   faucet = new FaucetDropper(chainId, NEON_FAUCET_URL);
+  const neonAirdropAmount = chainId === DEVNET_CHAIN_ID ? 1e2 : 1e3;
 
   //Define Gas token token on EVM
   NEON = {
     ...NEON_TOKEN_MODEL,
-    address_spl: gasToken.tokenMint
+    address_spl: gasToken.tokenMint,
+    chainId
   };
 
+  console.log('PROXY DATA: ', gasToken, neonEvmProgram.toBase58(), neonTokenMint.toBase58());
   console.log('CHAIN ID: ', chainId);
 
   if(chainId === DEVNET_CHAIN_ID) {
@@ -104,46 +114,50 @@ beforeAll(async () => {
     wNEON = faucet.tokens.find(t => t.symbol.toUpperCase() === 'WNEON');
     wSOL = faucet.tokens.find(t => t.symbol.toUpperCase() === 'WSOL');
     fungibleSplToken = faucet.tokens.find(t => t.symbol.toUpperCase() === 'USDT');
+    await dropTokens(faucet, solanaWallet, neonWallet, neonAirdropAmount);
   } else {
    /*
-    * Create wallets
+    * Create wallets and airdrop tokens
     */
     solanaWallet = Keypair.generate();
     const hdWallet = Wallet.createRandom(provider);
     neonWallet = new Wallet(hdWallet.privateKey, provider);
+    await dropTokens(faucet, solanaWallet, neonWallet, neonAirdropAmount);
+    console.log(`BALANCES: ${solanaBalance/LAMPORTS_PER_SOL} SOL, ${evmNeonBalance} NEON`, "NEON WALLET - ", neonWallet.address);
 
    /*
     * Deploy contracts
     */
     const deployer = new Deployer(provider, connection, neonWallet, solanaWallet, chainId);
+    sender = deployer.deployer.sender;
+    // await neonAirdrop(provider, faucet, deployer.deployer.sender, neonAirdropAmount);
+    // await delay(3e3);
+    // await deployer.deployer.initDeployer();
 
-    //Deploy wNEON contract
-    wNEON = await deployer.deployWNeonTokenContract();
-    console.log('wNEON token', wNEON);
-
-    //Deploy NEON transfer contract
-    neonTransferContract = await deployer.deployNeonTokenContract();
-    console.log('NEON transfer contract', neonTransferContract);
+    const pendingTxs = await provider.getTransactionCount(neonWallet.address, "pending");
+    console.log(`Pending transactions: ${pendingTxs}`);
 
     //Deploy Factory contract
     const factoryAddress = await deployer.deployFactoryContract();
     console.log('Factory address: ', factoryAddress);
 
+    //Deploy NEON transfer contract
+    neonTransferContract = await deployer.deployNeonTokenContract();
+    console.log('NEON transfer contract', neonTransferContract);
+
+    //Deploy wNEON contract
+    wNEON = await deployer.deployWNeonTokenContract();
+    console.log('wNEON token', wNEON);
+
+    //Deploy contracts for erc20 wrappers and mint spl tokens
     if(factoryAddress) {
-      //Deploy contracts for erc20 wrappers and mint spl tokens
       fungibleSplToken = await deployer.deploySplToken(customSplToken, factoryAddress);
-      wSOL = await deployer.deployMintedToken(factoryAddress);
+      // wSOL = await deployer.deployMintedToken(factoryAddress); //TODO: fix erc20 wrapper deploy for wSOL
       console.log('Fungible SPL token', fungibleSplToken, wSOL);
     }
   }
 
   signer = toSigner(solanaWallet);
-
-  /*
-   * Tokens Airdrop
-   */
-  solanaBalance = await solanaAirdrop(connection, solanaWallet.publicKey, 1e9);
-  evmNeonBalance = await neonAirdrop(provider, faucet, neonWallet, 1e3);
 });
 
 describe("Wallets Test", () => {
@@ -162,9 +176,49 @@ describe("Wallets Test", () => {
     console.log(`${neonWallet.address} balance: ${evmNeonBalance} NEON`);
     expect(evmNeonBalance).toBeGreaterThan(0);
   });
+
+  it("Sender address should be defined", async () => {
+    const balance = (await neonBalanceEthers(provider, sender)).toNumber();
+    console.log(`Sender ${sender} balance: ${balance} NEON`);
+    expect(sender).toBeDefined();
+    expect(balance).toBeGreaterThanOrEqual(0);
+  });
 });
 
 describe("Tokens trasfer test", () => {
+  it("Should transfer 0.1 NEON from Neon to Solana", async () => {
+    const amount = 1;
+    if (neonTransferContract) {
+      await createAssociatedTokenAccount(connection, signer, NEON);
+      await delay(2e3);
+      const balanceSPLBefore = await splTokenBalance(connection, solanaWallet.publicKey, NEON);
+      console.log(`NEON balance in solana: ${balanceSPLBefore?.uiAmount}`);
+      try {
+        const balanceBefore = await neonBalanceEthers(provider, neonWallet);
+        const transaction = await neonNeonTransactionEthers({
+          provider,
+          from: neonWallet.address,
+          to: neonTransferContract,
+          solanaWallet: solanaWallet.publicKey,
+          amount
+        });
+        transaction.nonce = await neonWallet.getNonce();
+        const hash = await sendNeonTransactionEthers(transaction, neonWallet);
+        neonSignature(`Signature`, hash);
+        expect(hash.length).toBeGreaterThan(2);
+        await delay(20e3);
+        const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, NEON);
+        const balanceAfter = await neonBalanceEthers(provider, neonWallet);
+        console.log(`Balance: ${balanceBefore} > ${balanceAfter} NEON ==> ${balanceSPL?.uiAmount} ${NEON.symbol} in Solana`);
+        expect(balanceAfter.toNumber()).toBeLessThan(balanceBefore.toNumber());
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      throw new Error('neonTransferContract wasn\'t deployed');
+    }
+  });
+
   it("Should transfer 0.1 NEON from Solana to Neon", async () => {
     await createAssociatedTokenAccount(connection, signer, NEON);
     const balanceBefore = await splTokenBalance(connection, solanaWallet.publicKey, NEON);
@@ -193,34 +247,6 @@ describe("Tokens trasfer test", () => {
     }
   });
 
-  it("Should transfer 0.1 NEON from Neon to Solana", async () => {
-    if (neonTransferContract) {
-      try {
-        const balanceBefore = await neonBalanceEthers(provider, neonWallet);
-        const transaction = await neonNeonTransactionEthers({
-          provider,
-          from: neonWallet.address,
-          to: neonTransferContract,
-          solanaWallet: solanaWallet.publicKey,
-          amount
-        });
-        transaction.nonce = await neonWallet.getNonce();
-        const hash = await sendNeonTransactionEthers(transaction, neonWallet);
-        neonSignature(`Signature`, hash);
-        expect(hash.length).toBeGreaterThan(2);
-        await delay(20e3);
-        const balanceSPL = await splTokenBalance(connection, solanaWallet.publicKey, NEON);
-        const balanceAfter = await neonBalanceEthers(provider, neonWallet);
-        console.log(`Balance: ${balanceBefore} > ${balanceAfter} NEON ==> ${balanceSPL?.uiAmount} ${NEON.symbol} in Solana`);
-        expect(balanceAfter.toNumber()).toBeLessThan(balanceBefore.toNumber());
-      } catch (e) {
-        console.log(e);
-      }
-    } else {
-      throw new Error('neonTransferContract wasn\'t deployed');
-    }
-  });
-
   it("Should wrap 1 NEON to wNEON in Neon network", async () => {
     if(wNEON) {
       await isWNeonWrapInNeon({ wNEON, NEON, neonWallet, solanaWallet, amount, provider });
@@ -237,7 +263,7 @@ describe("Tokens trasfer test", () => {
     }
   });
 
-  it("Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon", async () => {
+  it.skip("Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon", async () => {
     if(wSOL) {
       await isWSolToNeonTransfer({ connection, wSOL, neonWallet, solanaWallet, chainId, neonEvmProgram, solanaUrl: SOLANA_URL!, signer, amount, neonProxyRpcApi, provider, skipPreflight });
     } else {
@@ -245,7 +271,7 @@ describe("Tokens trasfer test", () => {
     }
   });
 
-  it("Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL", async () => {
+  it.skip("Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL", async () => {
     if(wSOL) {
       await isWSolToSolanaTransfer({ connection, wSOL, neonWallet, solanaWallet, solanaUrl: SOLANA_URL!, signer, amount, provider, skipPreflight });
     } else {

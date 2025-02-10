@@ -4,8 +4,8 @@ import {
 } from '@solana/spl-token';
 import {
   AccountInfo,
-  Connection,
   Commitment,
+  Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -89,7 +89,8 @@ export async function solanaAirdrop(connection: Connection, publicKey: PublicKey
   let balance = await connection.getBalance(publicKey);
   if (balance < lamports) {
     const signature = await connection.requestAirdrop(publicKey, lamports);
-    await connection.confirmTransaction(signature, commitment);
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature }, commitment);
   }
-  return balance;
+  return await connection.getBalance(publicKey);
 }
