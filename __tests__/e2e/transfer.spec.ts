@@ -241,6 +241,7 @@ describe("Tokens trasfer test", () => {
   });
 
   it.skip("Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon", async () => {
+    //Currently this test runs only with devnet setup, due to impossibility to deploy erc20 wrapper for wSOL
     if(wSOL) {
       await isWSolToNeonTransfer({ connection, wSOL, neonWallet, solanaWallet, chainId, neonEvmProgram, solanaUrl: SOLANA_URL!, signer, amount, neonProxyRpcApi, provider, skipPreflight });
     } else {
@@ -249,6 +250,7 @@ describe("Tokens trasfer test", () => {
   });
 
   it.skip("Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL", async () => {
+    //Currently this test runs only with devnet setup, due to impossibility to deploy erc20 wrapper for wSOL
     if(wSOL) {
       await isWSolToSolanaTransfer({ connection, wSOL, neonWallet, solanaWallet, solanaUrl: SOLANA_URL!, signer, amount, provider, skipPreflight });
     } else {

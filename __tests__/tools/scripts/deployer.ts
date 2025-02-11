@@ -6,8 +6,8 @@ import {
 } from '@neonevm/contracts-deployer';
 import { NeonAddress, SPLToken } from '@neonevm/token-transfer-core';
 import { join } from 'path';
-import { Connection, Keypair } from '@solana/web3.js';
-import { fetchMetadata, Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { fetchMetadata, findMetadataPda, Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { publicKey } from "@metaplex-foundation/umi";
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { ethers } from "ethers";
@@ -65,9 +65,9 @@ export class Deployer {
   async deployMintedToken(factoryAddress: string, token: SPLToken = WSOL_TOKEN_MODEL): Promise<SPLToken | null> {
     token.chainId = this.chainId;
     const tokenMint = token.address_spl;
-    //Firstly we need to be sure that metadata accounts exist for minted token
-    const metadata = await getSPLMetadata(this.solanaWallet, tokenMint, this.connection.rpcEndpoint);
-    if (!metadata) {
+    //Firstly we need to be sure that metadata accounts exists for minted token
+    const isDeployable = await isSPLMetadata(this.solanaWallet, tokenMint, this.connection);
+    if (!isDeployable) {
       console.log(`Token metadata not found for mint: ${tokenMint}`);
       return null;
     }
@@ -149,17 +149,29 @@ export class Deployer {
   }
 }
 
-async function getSPLMetadata(solanaWallet: Keypair, tokenMint: string, endpoint: string): Promise<Metadata | null> {
-  const { umi } = setupUmiClient(endpoint, solanaWallet);
+async function isSPLMetadata(solanaWallet: Keypair, tokenMint: string, connection: Connection): Promise<boolean> {
+  const { umi } = setupUmiClient(connection.rpcEndpoint, solanaWallet);
+  console.log('Endpoint: ', connection.rpcEndpoint);
   try {
     const mintPublicKey = publicKey(tokenMint);
     const metadata = await fetchMetadata(umi, mintPublicKey);
 
-    console.log(`Metadata for token mint ${tokenMint}: `, metadata);
-    return metadata;
+    const [metadataPDA, bump] = findMetadataPda(umi, {
+      mint: mintPublicKey
+    });
+    if(!metadata) return false;
+
+    //Check existence of metadata account
+    const account = await connection.getAccountInfo(new PublicKey(metadataPDA));
+    if (!account) {
+      console.log(`Metadata account not found for mint: ${tokenMint} with PDA ${metadataPDA}`);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error("Failed to fetch metadata:", error);
-    return null;
+    return false;
   }
 }
 
@@ -216,7 +228,7 @@ export async function deployContracts(params: { provider: JsonRpcProvider, conne
   //Deploy contracts for erc20 wrappers and mint spl tokens
   if(factoryAddress) {
     fungibleSplToken = await deployer.deploySplToken(customSplToken, factoryAddress);
-    //TODO: get Metaplex Metadata accounts in genesis block
+    //TODO: add Metaplex Metadata account in genesis block
     wSOL = await deployer.deployMintedToken(factoryAddress); //TODO: fix erc20 wrapper deploy for wSOL
     console.log('Fungible SPL token', fungibleSplToken, wSOL);
   }
