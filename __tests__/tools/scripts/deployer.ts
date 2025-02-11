@@ -7,9 +7,12 @@ import {
 import { NeonAddress, SPLToken } from '@neonevm/token-transfer-core';
 import { join } from 'path';
 import { Connection, Keypair } from '@solana/web3.js';
+import { fetchMetadata, Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { publicKey } from "@metaplex-foundation/umi";
 import { JsonRpcProvider, Wallet } from 'ethers';
-import { WNEON_TOKEN_MODEL, WSOL_TOKEN_MODEL } from '../artifacts';
 import { ethers } from "ethers";
+import { customSplToken, WNEON_TOKEN_MODEL, WSOL_TOKEN_MODEL } from '../artifacts';
+import { setupUmiClient } from "./utils/setupClient";
 
 export class Deployer {
   solanaWallet: Keypair;
@@ -62,6 +65,12 @@ export class Deployer {
   async deployMintedToken(factoryAddress: string, token: SPLToken = WSOL_TOKEN_MODEL): Promise<SPLToken | null> {
     token.chainId = this.chainId;
     const tokenMint = token.address_spl;
+    //Firstly we need to be sure that metadata accounts exist for minted token
+    const metadata = await getSPLMetadata(this.solanaWallet, tokenMint, this.connection.rpcEndpoint);
+    if (!metadata) {
+      console.log(`Token metadata not found for mint: ${tokenMint}`);
+      return null;
+    }
     try {
       const ecr20Address = await deployErc20ForSplWrapper(this.provider, this.neonWallet, factoryAddress, tokenMint);
       token.address = ecr20Address ?? '';
@@ -140,6 +149,20 @@ export class Deployer {
   }
 }
 
+async function getSPLMetadata(solanaWallet: Keypair, tokenMint: string, endpoint: string): Promise<Metadata | null> {
+  const { umi } = setupUmiClient(endpoint, solanaWallet);
+  try {
+    const mintPublicKey = publicKey(tokenMint);
+    const metadata = await fetchMetadata(umi, mintPublicKey);
+
+    console.log(`Metadata for token mint ${tokenMint}: `, metadata);
+    return metadata;
+  } catch (error) {
+    console.error("Failed to fetch metadata:", error);
+    return null;
+  }
+}
+
 async function waitForTxConfirmation(provider: JsonRpcProvider, txHash: string, confirmations = 1, timeout = 120000) {
   try {
     // Check if transaction is already confirmed
@@ -159,4 +182,44 @@ async function waitForTxConfirmation(provider: JsonRpcProvider, txHash: string, 
     console.error("Transaction confirmation failed:", error);
     return null;
   }
+}
+
+export async function deployContracts(params: { provider: JsonRpcProvider, connection: Connection, neonWallet: Wallet, solanaWallet: Keypair, chainId: number }): Promise<{
+  sender: NeonAddress,
+  factoryAddress: NeonAddress | null,
+  neonTransferContract: NeonAddress | null,
+  wNEON: SPLToken | null,
+  fungibleSplToken: SPLToken | null,
+  wSOL: SPLToken | null
+  }> {
+  let fungibleSplToken = null;
+  let wSOL = null;
+  const { provider, neonWallet, solanaWallet, chainId, connection } = params;
+  const deployer = new Deployer(provider, connection, neonWallet, solanaWallet, chainId);
+  const sender = deployer.deployer.sender;
+  // await neonAirdrop(provider, faucet, deployer.deployer.sender, neonAirdropAmount);
+  // await delay(3e3);
+  // await deployer.deployer.initDeployer();
+
+  //Deploy Factory contract
+  const factoryAddress = await deployer.deployFactoryContract();
+  console.log('Factory address: ', factoryAddress);
+
+  //Deploy NEON transfer contract
+  const neonTransferContract = await deployer.deployNeonTokenContract();
+  console.log('NEON transfer contract', neonTransferContract);
+
+  //Deploy wNEON contract
+  const wNEON = await deployer.deployWNeonTokenContract();
+  console.log('wNEON token', wNEON);
+
+  //Deploy contracts for erc20 wrappers and mint spl tokens
+  if(factoryAddress) {
+    fungibleSplToken = await deployer.deploySplToken(customSplToken, factoryAddress);
+    //TODO: get Metaplex Metadata accounts in genesis block
+    wSOL = await deployer.deployMintedToken(factoryAddress); //TODO: fix erc20 wrapper deploy for wSOL
+    console.log('Fungible SPL token', fungibleSplToken, wSOL);
+  }
+
+  return { sender, factoryAddress, neonTransferContract: null, wNEON: null, fungibleSplToken, wSOL };
 }

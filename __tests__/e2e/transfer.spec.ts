@@ -13,9 +13,8 @@ import {
 } from '@neonevm/token-transfer-ethers';
 import {
   createAssociatedTokenAccount,
-  customSplToken,
   delay,
-  Deployer,
+  deployContracts,
   DEVNET_CHAIN_ID,
   FaucetDropper,
   getGasToken,
@@ -49,6 +48,7 @@ const amount = 0.1;
 
 //Contracts
 let neonTransferContract: string;
+let factoryAddress: string;
 
 //Wallets
 let neonWallet: Wallet;
@@ -128,34 +128,11 @@ beforeAll(async () => {
    /*
     * Deploy contracts
     */
-    const deployer = new Deployer(provider, connection, neonWallet, solanaWallet, chainId);
-    sender = deployer.deployer.sender;
-    // await neonAirdrop(provider, faucet, deployer.deployer.sender, neonAirdropAmount);
-    // await delay(3e3);
-    // await deployer.deployer.initDeployer();
-
-    const pendingTxs = await provider.getTransactionCount(neonWallet.address, "pending");
-    console.log(`Pending transactions: ${pendingTxs}`);
-
-    //Deploy Factory contract
-    const factoryAddress = await deployer.deployFactoryContract();
-    console.log('Factory address: ', factoryAddress);
-
-    //Deploy NEON transfer contract
-    neonTransferContract = await deployer.deployNeonTokenContract();
-    console.log('NEON transfer contract', neonTransferContract);
-
-    //Deploy wNEON contract
-    wNEON = await deployer.deployWNeonTokenContract();
-    console.log('wNEON token', wNEON);
-
-    //Deploy contracts for erc20 wrappers and mint spl tokens
-    if(factoryAddress) {
-      fungibleSplToken = await deployer.deploySplToken(customSplToken, factoryAddress);
-      // wSOL = await deployer.deployMintedToken(factoryAddress); //TODO: fix erc20 wrapper deploy for wSOL
-      console.log('Fungible SPL token', fungibleSplToken, wSOL);
-    }
+    ({ sender, factoryAddress, neonTransferContract, wNEON, fungibleSplToken, wSOL } = await deployContracts({ provider, connection, neonWallet, solanaWallet, chainId }));
   }
+
+  const pendingTxs = await provider.getTransactionCount(neonWallet.address, "pending");
+  console.log(`Pending transactions: ${pendingTxs}`);
 
   signer = toSigner(solanaWallet);
 });

@@ -1,4 +1,4 @@
-import { Connection, Keypair } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { createSignerFromKeypair, signerIdentity } from '@metaplex-foundation/umi';
 import { PHANTOM_PRIVATE } from '../../../tools';
