@@ -236,21 +236,19 @@ describe("Tokens trasfer test", () => {
     if (wNEON && neonTransferContract) {
       await isWNeonTransferToSolana({ wNEON, NEON, neonWallet, solanaWallet, amount, provider, neonTransferContract, connection });
     } else {
-      throw new Error('ERC20 wrapper for wNEON or neonTransferContract wern\'t deployed');
+      throw new Error('ERC20 wrapper for wNEON or neonTransferContract wasn\'t deployed');
     }
   });
 
-  it.skip("Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon", async () => {
-    //Currently this test runs only with devnet setup, due to impossibility to deploy erc20 wrapper for wSOL
+  it("Should wrap SOL -> wSOL and transfer 0.1 wSOL from Solana to Neon", async () => {
     if(wSOL) {
       await isWSolToNeonTransfer({ connection, wSOL, neonWallet, solanaWallet, chainId, neonEvmProgram, solanaUrl: SOLANA_URL!, signer, amount, neonProxyRpcApi, provider, skipPreflight });
     } else {
-      throw new Error('ERC20 wrapper for WSOL wasn\'t deployed'); //Force test fail
+      throw new Error('ERC20 wrapper for WSOL wasn\'t deployed');
     }
   });
 
-  it.skip("Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL", async () => {
-    //Currently this test runs only with devnet setup, due to impossibility to deploy erc20 wrapper for wSOL
+  it("Should transfer 0.1 wSOL from Neon to Solana and unwrap wSOL -> SOL", async () => {
     if(wSOL) {
       await isWSolToSolanaTransfer({ connection, wSOL, neonWallet, solanaWallet, solanaUrl: SOLANA_URL!, signer, amount, provider, skipPreflight });
     } else {

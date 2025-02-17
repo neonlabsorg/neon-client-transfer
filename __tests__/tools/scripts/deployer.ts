@@ -7,7 +7,7 @@ import {
 import { NeonAddress, SPLToken } from '@neonevm/token-transfer-core';
 import { join } from 'path';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { fetchMetadata, findMetadataPda, Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { fetchMetadata, findMetadataPda } from "@metaplex-foundation/mpl-token-metadata";
 import { publicKey } from "@metaplex-foundation/umi";
 import { JsonRpcProvider, Wallet } from 'ethers';
 import { ethers } from "ethers";
@@ -151,7 +151,7 @@ export class Deployer {
 
 async function isSPLMetadata(solanaWallet: Keypair, tokenMint: string, connection: Connection): Promise<boolean> {
   const { umi } = setupUmiClient(connection.rpcEndpoint, solanaWallet);
-  console.log('Endpoint: ', connection.rpcEndpoint);
+
   try {
     const mintPublicKey = publicKey(tokenMint);
     const metadata = await fetchMetadata(umi, mintPublicKey);
@@ -228,10 +228,13 @@ export async function deployContracts(params: { provider: JsonRpcProvider, conne
   //Deploy contracts for erc20 wrappers and mint spl tokens
   if(factoryAddress) {
     fungibleSplToken = await deployer.deploySplToken(customSplToken, factoryAddress);
-    //TODO: add Metaplex Metadata account in genesis block
-    wSOL = await deployer.deployMintedToken(factoryAddress); //TODO: fix erc20 wrapper deploy for wSOL
+    /* To be able to deploy erc20 wrapper for wSOL token
+     * should be added Metaplex Metadata account
+     * 6dM4TqWyWJsbx7obrdLcviBkTafD5E8av61zfU6jq57X in genesis block
+     */
+    wSOL = await deployer.deployMintedToken(factoryAddress);
     console.log('Fungible SPL token', fungibleSplToken, wSOL);
   }
 
-  return { sender, factoryAddress, neonTransferContract: null, wNEON: null, fungibleSplToken, wSOL };
+  return { sender, factoryAddress, neonTransferContract, wNEON, fungibleSplToken, wSOL };
 }
