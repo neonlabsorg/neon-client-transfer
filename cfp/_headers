@@ -1,8 +1,8 @@
-/functions/assets/*.js
-  Content-Type: application/javascript
+; /functions/assets/*.js
+;   Content-Type: application/javascript
 
-/functions/assets/*.css
-  Content-Type: text/css
+; /functions/assets/*.css
+;   Content-Type: text/css
 
-/functions/assets/*.html
-  Content-Type: text/html
+; /functions/assets/*.html
+;   Content-Type: text/html
