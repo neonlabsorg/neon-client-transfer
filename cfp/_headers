@@ -3,3 +3,6 @@
 
 /functions/assets/*.css
   Content-Type: text/css
+
+/functions/assets/*.html
+  Content-Type: text/html
