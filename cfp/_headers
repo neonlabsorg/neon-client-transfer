@@ -1,2 +1,5 @@
-/functions/assets/*.css
+/functions/assets/style.css
+  Content-Type: text/css
+
+/functions/assets/highlight.css
   Content-Type: text/css
