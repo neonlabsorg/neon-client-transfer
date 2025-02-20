@@ -5,3 +5,4 @@
 # /functions/assets/navigation.js /assets/navigation.js 301
 # /functions/assets/search.js /assets/search.js 301
 # /functions/assets/style.css /assets/style.css 301
+/functions/* /funcs/:splat 301
