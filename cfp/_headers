@@ -4,11 +4,14 @@
 /functions/assets/*.css
   Content-Type: text/css
 
+/functions/assets/*.html
+  Content-Type: text/html
+
 /assets/*.js
   Content-Type: application/javascript
 
 /assets/*.css
   Content-Type: text/css
 
-/functions/assets/*.html
+/assets/*.html
   Content-Type: text/html
