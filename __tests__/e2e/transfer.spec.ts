@@ -33,17 +33,18 @@ import {
   neonSignature
 } from "../tools";
 import { JsonRpcProvider, Wallet } from 'ethers';
-import { config } from 'dotenv';
 import { itNeonTokenMint, itSolanaTokenSPL } from "./erc20";
 import { isWSolToNeonTransfer, isWSolToSolanaTransfer } from "./wSol";
 import { isWNeonWrapInNeon, isWNeonTransferToSolana } from "./wNeon";
 
-config({ path: './__tests__/env/.env' });
 jest.setTimeout(32e4);
 
-const NEON_RPC_URL = process.env.NEON_URL;
-const SOLANA_URL = process.env.SOLANA_URL;
-const NEON_FAUCET_URL = process.env.FAUSET_URL;
+const PROXY_IP = process.env.PROXY_IP;
+const SOLANA_IP = process.env.SOLANA_IP;
+
+const NEON_RPC_URL = `http://${PROXY_IP}:9090/solana`;
+const SOLANA_URL = `http://${SOLANA_IP}:8899`;
+const NEON_FAUCET_URL = `http://${PROXY_IP}:3333`;
 const amount = 0.1;
 
 //Contracts

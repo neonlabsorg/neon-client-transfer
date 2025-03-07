@@ -7,8 +7,61 @@ on:
   workflow_dispatch:
 
 jobs:
+  echo:
+    runs-on: ["self-hosted", "k8s-prod"]
+    steps:
+      - name: Vars
+        run: |
+          echo "TFSTATE_BUCKET=${{ vars.TFSTATE_BUCKET }}"
+          echo "TFSTATE_KEY=${{ vars.TFSTATE_KEY_PREFIX }}-${{ github.run_number }}"
+          echo "TFSTATE_REGION=${{ vars.TFSTATE_REGION }}"
+      - name: Secrets
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}"
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          echo "HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}"
+          echo "CI_STANDS_KEY_HCLOUD=${{ secrets.CI_STANDS_KEY_HCLOUD }}"
+
+  prepare-env:
+    name: Prepare environment
+    runs-on: ["self-hosted", "k8s-prod"]
+    steps:
+      - name: Checkout neon_tests
+        uses: actions/checkout@v4
+        with:
+          repository: neonlabsorg/neon-tests
+          ref: NDEV-3568-neon-js-test-on-hetzner
+          path: neon-tests
+      - name: "Prepare terraform stand"
+        id: prepare_terraform
+        timeout-minutes: 15
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          HCLOUD_TOKEN: ${{secrets.HCLOUD_TOKEN}}
+          #TFSTATE_BUCKET: ${{vars.TFSTATE_BUCKET}}
+          TFSTATE_BUCKET: token-transfer-core
+          #TFSTATE_KEY: ${{vars.TFSTATE_KEY_PREFIX}}-${{ github.run_number }}
+          TFSTATE_KEY: neon-client-core-${{ github.run_number }}
+          #TFSTATE_REGION: ${{vars.TFSTATE_REGION}}
+          TFSTATE_REGION: eu-central-1
+          #DEVNET_SOLANA_URL: ${{ secrets.SOLANA_URL }}
+          DEVNET_SOLANA_URL: https://devnet.sol-rpc.neoninfra.xyz:8443/qccxeCwY02UM5p0ELvbdHS9uedrKbPE2f7eUqabd
+        uses: neonlabsorg/neon-tests/.github/actions/create-tf-stand@NDEV-3568-neon-js-test-on-hetzner
+        with:
+          ci_stands_key_hcloud: ${{ secrets.CI_STANDS_KEY_HCLOUD }}
+          hetzner_instance_types: ${{vars.HETZNER_INSTANCE_TYPES}}
+          working-directory: ./neon-tests
+    outputs:
+      proxy_ip: ${{ steps.prepare_terraform.outputs.proxy_ip }}
+      solana_ip: ${{ steps.prepare_terraform.outputs.solana_ip }}
+
   tests:
     runs-on: ["self-hosted", "k8s-prod"]
+    needs:
+      - prepare-env
 
     strategy:
       matrix:
@@ -32,4 +85,41 @@ jobs:
         run: yarn build
 
       - name: Run Neon Transfer e2e-tests
+        env:
+          PROXY_IP: ${{ needs.prepare-env.outputs.proxy_ip }}
+          SOLANA_IP: ${{ needs.prepare-env.outputs.solana_ip }}
         run: yarn test:ci
+
+  destroy:
+    name: Destroy stand
+    runs-on: ["self-hosted", "k8s-prod"]
+    needs:
+      - tests
+      - prepare-env
+    if: always()
+    steps:
+      - name: Checkout neon_tests
+        uses: actions/checkout@v4
+        with:
+          repository: neonlabsorg/neon-tests
+          ref: NDEV-3568-neon-js-test-on-hetzner
+          path: neon-tests
+      - name: "Destroy stand"
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          HCLOUD_TOKEN: ${{secrets.HCLOUD_TOKEN}}
+          #TFSTATE_BUCKET: ${{vars.TFSTATE_BUCKET}}
+          TFSTATE_BUCKET: token-transfer-core
+          #TFSTATE_KEY: ${{vars.TFSTATE_KEY_PREFIX}}-${{ github.run_number }}
+          TFSTATE_KEY: neon-client-core-${{ github.run_number }}
+          #TFSTATE_REGION: ${{vars.TFSTATE_REGION}}
+          TFSTATE_REGION: eu-central-1
+          PROXY_IP: ${{ needs.prepare-env.outputs.proxy_ip }}
+          SOLANA_IP: ${{ needs.prepare-env.outputs.solana_ip }}
+          DEVNET_SOLANA_URL: https://devnet.sol-rpc.neoninfra.xyz:8443/qccxeCwY02UM5p0ELvbdHS9uedrKbPE2f7eUqabd
+        uses: neonlabsorg/neon-tests/.github/actions/destroy-tf-stand@NDEV-3568-neon-js-test-on-hetzner
+        with:
+          ci_stands_key_hcloud: ${{ secrets.CI_STANDS_KEY_HCLOUD }}
+          working-directory: ./neon-tests
