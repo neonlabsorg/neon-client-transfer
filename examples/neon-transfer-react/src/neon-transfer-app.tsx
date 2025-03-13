@@ -21,7 +21,7 @@ import {
   neonNeonTransactionEthers,
   neonTransferMintTransactionEthers
 } from '@neonevm/token-transfer-ethers';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
 import { Big } from 'big.js';
 
 import {
@@ -56,7 +56,7 @@ const networkUrls = [{
   id: 245022927,
   token: 'SOL',
   solana: 'https://api.devnet.solana.com',
-  neonProxy: 'https://devnet.neonevm.org/solana/sol'
+  neonProxy: 'https://devnet.neonevm.org/sol'
 }];
 
 function NeonTransferApp() {
@@ -84,7 +84,7 @@ function NeonTransferApp() {
 
   // add account and keypayer
   const solanaWallet = useMemo(() => {
-    return Keypair.fromSecretKey(decode(SOLANA_PRIVATE));
+    return Keypair.fromSecretKey(bs58.decode(SOLANA_PRIVATE));
   }, []);
 
   const neonWallet = useMemo(() => {
@@ -317,7 +317,6 @@ function NeonTransferApp() {
               chainId,
             }),
         };
-
         const transactionFunction = transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT;
         await handleSolanaTransaction(transactionFunction, solanaSigner);
       } else {
@@ -363,7 +362,6 @@ function NeonTransferApp() {
               amount,
             }),
         };
-
         const transaction = await (transactionFunctions[splToken.symbol as keyof typeof transactionFunctions] || transactionFunctions.DEFAULT)();
         const neon = await sendNeonTransaction(transaction, neonWallet);
         setSignature({ solana, neon });

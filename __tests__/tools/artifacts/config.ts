@@ -1,5 +1,9 @@
-import { decode } from 'bs58';
-import { ChainId, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-transfer-core';
+import bs58 from 'bs58';
+import {
+  ChainId,
+  NEON_TOKEN_MINT_DECIMALS,
+  SPLToken
+} from '@neonevm/token-transfer-core';
 
 // export const NEON_PRIVATE = '0x7ae72c37b092c82f60b4aa17e8ab476e20d13084570d39d3ea9e17ae3c6f7752';
 // export const wNEON_PRIVATE = '0xf91e9d060544ba23a059b62b8626acefd21c51c83192dcb0bbb534eb48e14159';
@@ -10,7 +14,7 @@ import { ChainId, NEON_TOKEN_MINT_DECIMALS, SPLToken } from '@neonevm/token-tran
 // export const PHANTOM_PRIVATE = decode('3ZbFDfA9Qwy6o3Pcf3Jm4Vj1G8KuQpk7jigpWpefdPWWdxnQoQ8UqeQPKGAZKv2E7b1dKFiC1i3eUwxKAzEAT4k2');
 
 export const NEON_PRIVATE = '0x0513b5249e75fde5f73999895fd624689de43d369f3d49671bfe50daadde5e89';
-export const PHANTOM_PRIVATE = decode('62ugR693aB2KTQY5tJqPM7Xnw9Tr8hrsqD6NnYVzFtxnp9WLUpChGonhW9TZZwnZ8shnhsC1GCD7newabEd2odvP');
+export const PHANTOM_PRIVATE = bs58.decode('62ugR693aB2KTQY5tJqPM7Xnw9Tr8hrsqD6NnYVzFtxnp9WLUpChGonhW9TZZwnZ8shnhsC1GCD7newabEd2odvP');
 
 export const NEON_CHAIN_IDS: ChainId[] = [
   { id: 111, name: 'LOCAL' },
@@ -18,6 +22,8 @@ export const NEON_CHAIN_IDS: ChainId[] = [
   { id: 245022940, name: 'testnet' },
   { id: 245022934, name: 'mainnet-beta' }
 ];
+
+export const DEVNET_CHAIN_ID = 245022926;
 
 export const NEON_TOKEN_MODEL: SPLToken = {
   chainId: 0,
@@ -41,7 +47,27 @@ export const customSplToken: SPLToken = {
   address_spl: '',
   address: '0x',
   decimals: 9,
-  name: '$FunGible Token 1',
-  symbol: '$FT1',
+  name: 'USDT',
+  symbol: 'USDT',
   logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/ethereum-eth-logo.svg'
 };
+
+export const WNEON_TOKEN_MODEL: SPLToken = {
+  chainId: 111,
+  address_spl: '',
+  address: '',
+  decimals: 18,
+  name: 'Wrapped Neon',
+  symbol: 'wNEON',
+  logoURI: 'https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/wrapped-neon-logo.svg'
+};
+
+export const WSOL_TOKEN_MODEL: SPLToken = {
+  "chainId": 111,
+  "address_spl": "So11111111111111111111111111111111111111112",
+  "address": "",
+  "decimals": 9,
+  "name": "Wrapped SOL",
+  "symbol": "wSOL",
+  "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/solana-wsol-logo.svg"
+}

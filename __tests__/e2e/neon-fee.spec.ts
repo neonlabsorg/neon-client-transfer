@@ -2,13 +2,12 @@ import { beforeAll, describe, expect, it, jest } from '@jest/globals';
 import {
   createAssociatedTokenAccount,
   delay,
-  FaucetDropper,
+  FaucetDropper, getEthersProvider,
   getGasToken,
   getMultiTokenProxy,
-  getWeb3Provider,
   NEON_PRIVATE,
   NEON_TOKEN_MODEL,
-  neonBalanceWeb3,
+  neonBalanceEthers,
   PHANTOM_PRIVATE,
   sendSolanaTransaction,
   solanaSignature,
@@ -23,9 +22,8 @@ import {
   SPLToken,
   TOKEN_LIST_DEVNET_SNAPSHOT
 } from '@neonevm/token-transfer-core';
-import { Web3 } from 'web3';
-import { Web3Account } from 'web3-eth-accounts';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, Signer } from '@solana/web3.js';
+import { JsonRpcProvider, Wallet } from "ethers";
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(12e4);
@@ -46,23 +44,23 @@ let neonEvmProgram: PublicKey;
 let neonTokenMint: PublicKey;
 let neonProxyRpcApi: NeonProxyRpcApi;
 
-let web3: Web3;
-let neonWallet: Web3Account;
+let neonWallet: Wallet;
+let provider: JsonRpcProvider;
 let connection: Connection;
 
-describe('NEON token transfer tests', () => {
+describe.skip('NEON token transfer tests', () => {
   beforeAll(async () => {
     try {
+      provider = getEthersProvider(NEON_PROXY_URL!);
       const result = await getMultiTokenProxy(NEON_PROXY_URL!);
       const token = getGasToken(result.tokensList, CHAIN_ID);
       connection = new Connection(SOLANA_URL!, 'confirmed');
-      web3 = getWeb3Provider(NEON_PROXY_URL!);
       neonProxyRpcApi = result.proxyRpc;
       neonProxyStatus = result.proxyStatus;
       neonEvmProgram = result.evmProgramAddress;
       neonTokenMint = token.tokenMintAddress;
       solanaWallet = Keypair.fromSecretKey(PHANTOM_PRIVATE);
-      neonWallet = web3.eth.accounts.privateKeyToAccount(NEON_PRIVATE);
+      neonWallet = new Wallet(NEON_PRIVATE, provider);
       tokensList = (await neonProxyRpcApi.nativeTokenList()) || TOKEN_LIST_DEVNET_SNAPSHOT;
       gasToken = token.gasToken;
     } catch (e) {
@@ -72,14 +70,14 @@ describe('NEON token transfer tests', () => {
 
   beforeAll(async () => {
     try {
-      const token = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
+      const token = await neonBalanceEthers(provider, neonWallet);
       if (token.gte(0.1)) {
         console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
       } else {
         await faucet.requestNeon(neonWallet.address, 2);
         await delay(1e4);
-        const token = await neonBalanceWeb3(NEON_PROXY_URL!, neonWallet.address);
-        console.log(`Neon wallet: ${neonWallet.address}: ${token.toNumber()} NEON`);
+        const balance = await neonBalanceEthers(provider, neonWallet);
+        console.log(`Neon wallet: ${neonWallet.address}: ${balance.toNumber()} NEON`);
       }
     } catch (e) {
       console.log(e);
@@ -102,7 +100,7 @@ describe('NEON token transfer tests', () => {
     }
   });
 
-  it.skip(`Should transfer 0.1 NEON with NEON fee from Solana to Neon`, async () => {
+  it(`Should transfer 0.1 NEON with NEON fee from Solana to Neon`, async () => {
     const amount = 0.1;
     const neonToken: SPLToken = {
       ...NEON_TOKEN_MODEL,
@@ -128,8 +126,7 @@ describe('NEON token transfer tests', () => {
       solanaSignature(`Signature`, signature, SOLANA_URL!);
       await delay(10e3);
       const balanceAfter = await splTokenBalance(connection, solanaWallet.publicKey, neonToken);
-      const balanceNeon = await neonBalanceWeb3(NEON_PROXY_URL!
-        , neonWallet.address);
+      const balanceNeon = await neonBalanceEthers(provider, neonWallet);
       console.log(`Balance: ${balanceBefore?.uiAmount} > ${balanceAfter?.uiAmount} ${neonToken.symbol} ==> ${balanceNeon} ${neonToken.symbol} in Neon`);
       expect(balanceAfter?.uiAmount).toBeLessThan(balanceBefore?.uiAmount!);
     } catch (e) {

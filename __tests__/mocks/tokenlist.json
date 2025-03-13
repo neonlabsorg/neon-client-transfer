@@ -498,6 +498,24 @@
       "name": "$FunGible Token 1",
       "symbol": "$FT1",
       "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/ethereum-eth-logo.svg"
+    },
+    {
+      "chainId": 245022926,
+      "address_spl": "C3yEUbxVkdM4V732sFCC7a99Ded1dgdqUzthskWN69y7",
+      "address": "0xBF786eADf117bd5A80636AC3055ffC1Bc233B8C7",
+      "decimals": 9,
+      "name": "newERC20USDT",
+      "symbol": "newERC20USDT",
+      "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/tether-usdt-logo.svg"
+    },
+    {
+      "chainId": 245022926,
+      "address_spl": "FyMoyBd2tERgLZsjmg7Ui3wnoCZwcerF46e79hxmVje1",
+      "address": "0xa55969232aC2984ec784659ec675235522aD48ee",
+      "decimals": 9,
+      "name": "newERC20USDC",
+      "symbol": "newERC20USDC",
+      "logoURI": "https://raw.githubusercontent.com/neonlabsorg/token-list/master/assets/usd-coin-usdc-logo.svg"
     }
   ],
   "version": {

@@ -11,7 +11,7 @@ export default () => {
     const ethersProvider = new JsonRpcProvider(web3Store.networkUrl.neonProxy);
     neonWallet = new Wallet(NEON_PRIVATE, ethersProvider); //This helps to avoid wrapped in Proxy wallet props
     walletStore.setNeonWallet(neonWallet);
-  }
+  };
 
-  return { initNeonWallet }
-}
+  return { initNeonWallet };
+};

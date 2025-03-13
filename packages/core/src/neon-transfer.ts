@@ -101,6 +101,36 @@ export async function solanaNEONTransferTransaction({
   return transaction;
 }
 
+/**
+ * Creates a Solana transaction instruction to deposit tokens into a Neon EVM balance.
+ *
+ * This function generates a `TransactionInstruction` that facilitates the deposit of SPL tokens
+ * into a Neon EVM balance.
+ *
+ * @param {NeonDepositToBalanceInstructionParams} params - The parameters required for the deposit transaction.
+ * @param {number} params.chainId - The chain ID of the target blockchain.
+ * @param {PublicKey} params.solanaWallet - The public key of the Solana wallet initiating the transaction.
+ * @param {PublicKey} params.tokenAddress - The public key of the source token account.
+ * @param {string} params.neonWallet - The Ethereum-style Neon wallet address in hex format.
+ * @param {PublicKey} params.neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} params.tokenMint - The public key of the SPL token mint.
+ * @param {PublicKey} [params.serviceWallet] - The optional service wallet used for operational transactions.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for depositing tokens into the Neon EVM balance.
+ *
+ * @example
+ * ```typescript
+ * const instruction = createNeonDepositToBalanceInstruction({
+ *   chainId: 245022926,
+ *   solanaWallet: userWallet,
+ *   tokenAddress: userTokenAccount,
+ *   neonWallet: "0x1234567890abcdef1234567890abcdef12345678",
+ *   neonEvmProgram: neonProgram,
+ *   tokenMint: tokenMintAddress,
+ *   serviceWallet: serviceWalletAddress
+ * });
+ * transaction.add(instruction);
+ * ```
+ */
 export function createNeonDepositToBalanceInstruction({
   chainId,
   solanaWallet,
@@ -132,6 +162,23 @@ export function createNeonDepositToBalanceInstruction({
   return new TransactionInstruction({ programId: neonEvmProgram, keys, data });
 }
 
+/**
+ * Not used
+ *
+ * Creates a Solana transaction instruction to deposit tokens into a Neon EVM account.
+ *
+ * This function generates a `TransactionInstruction` that facilitates the deposit of SPL tokens
+ * into a Neon EVM-compatible account.
+ *
+ * @param {PublicKey} solanaWallet - The public key of the Solana wallet initiating the deposit.
+ * @param {PublicKey} neonPDAWallet - The public key of the Neon PDA wallet.
+ * @param {PublicKey} depositWallet - The public key of the deposit wallet.
+ * @param {string} neonWallet - The Ethereum-style Neon wallet address in hex format.
+ * @param {PublicKey} neonEvmProgram - The public key of the Neon EVM program.
+ * @param {PublicKey} neonTokenMint - The public key of the SPL token mint.
+ * @param {PublicKey} [serviceWallet] - The optional service wallet used for operational transactions.
+ * @returns {TransactionInstruction} A Solana `TransactionInstruction` for depositing tokens into the Neon EVM account.
+ */
 export function createNeonDepositInstruction(solanaWallet: PublicKey, neonPDAWallet: PublicKey, depositWallet: PublicKey, neonWallet: string, neonEvmProgram: PublicKey, neonTokenMint: PublicKey, serviceWallet?: PublicKey): TransactionInstruction {
   const solanaAssociatedTokenAddress = getAssociatedTokenAddressSync(neonTokenMint, solanaWallet);
   const poolKey = getAssociatedTokenAddressSync(neonTokenMint, depositWallet, true);

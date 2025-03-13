@@ -7,12 +7,45 @@ on:
   workflow_dispatch:
 
 jobs:
+  prepare-env:
+    name: Prepare environment
+    runs-on: ["self-hosted", "k8s-prod"]
+    steps:
+      - name: Checkout neon_tests
+        uses: actions/checkout@v4
+        with:
+          repository: neonlabsorg/neon-tests
+          ref: develop
+          path: neon-tests
+      - name: "Prepare terraform stand"
+        id: prepare_terraform
+        timeout-minutes: 15
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          HCLOUD_TOKEN: ${{secrets.HCLOUD_TOKEN}}
+          TFSTATE_BUCKET: ${{vars.TFSTATE_BUCKET}}
+          TFSTATE_KEY: ${{vars.TFSTATE_KEY_PREFIX}}-${{ github.run_number }}
+          TFSTATE_REGION: ${{vars.TFSTATE_REGION}}
+          DEVNET_SOLANA_URL: ${{ secrets.DEVNET_SOLANA_URL }}
+        uses: neonlabsorg/neon-tests/.github/actions/create-tf-stand@develop
+        with:
+          ci_stands_key_hcloud: ${{ secrets.CI_STANDS_KEY_HCLOUD }}
+          hetzner_instance_types: ${{vars.HETZNER_INSTANCE_TYPES}}
+          working-directory: ./neon-tests
+    outputs:
+      proxy_ip: ${{ steps.prepare_terraform.outputs.proxy_ip }}
+      solana_ip: ${{ steps.prepare_terraform.outputs.solana_ip }}
+
   tests:
     runs-on: ["self-hosted", "k8s-prod"]
+    needs:
+      - prepare-env
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [20.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -32,4 +65,38 @@ jobs:
         run: yarn build
 
       - name: Run Neon Transfer e2e-tests
-        run: yarn test
+        env:
+          PROXY_IP: ${{ needs.prepare-env.outputs.proxy_ip }}
+          SOLANA_IP: ${{ needs.prepare-env.outputs.solana_ip }}
+        run: yarn test:ci
+
+  destroy:
+    name: Destroy stand
+    runs-on: ["self-hosted", "k8s-prod"]
+    needs:
+      - tests
+      - prepare-env
+    if: always()
+    steps:
+      - name: Checkout neon_tests
+        uses: actions/checkout@v4
+        with:
+          repository: neonlabsorg/neon-tests
+          ref: develop
+          path: neon-tests
+      - name: "Destroy stand"
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          HCLOUD_TOKEN: ${{secrets.HCLOUD_TOKEN}}
+          TFSTATE_BUCKET: ${{vars.TFSTATE_BUCKET}}
+          TFSTATE_KEY: ${{vars.TFSTATE_KEY_PREFIX}}-${{ github.run_number }}
+          TFSTATE_REGION: ${{vars.TFSTATE_REGION}}
+          PROXY_IP: ${{ needs.prepare-env.outputs.proxy_ip }}
+          SOLANA_IP: ${{ needs.prepare-env.outputs.solana_ip }}
+          DEVNET_SOLANA_URL: ${{ secrets.DEVNET_SOLANA_URL }}
+        uses: neonlabsorg/neon-tests/.github/actions/destroy-tf-stand@develop
+        with:
+          ci_stands_key_hcloud: ${{ secrets.CI_STANDS_KEY_HCLOUD }}
+          working-directory: ./neon-tests
