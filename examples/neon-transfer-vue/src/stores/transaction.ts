@@ -185,6 +185,6 @@ export const useTransactionStore = defineStore('transaction', {
   getters: {
     solanaSignature: (state) =>
       `https://explorer.solana.com/tx/${state.signature.solana}?cluster=devnet`,
-    neonSignature: (state) => `https://devnet.neonscan.org/tx/${state.signature.neon}`
+    neonSignature: (state) => `https://neon-devnet.blockscout.com/tx/${state.signature.neon}`
   }
 });

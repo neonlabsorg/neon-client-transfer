@@ -35,7 +35,7 @@ export async function mintTokenBalanceWeb3(proxyUrl: string, account: string, to
 }
 
 export function neonSignature(comment: string, signature: string): void {
-  console.log(`${comment}: ${signature}; url: https://devnet.neonscan.org/tx/${signature}`);
+  console.log(`${comment}: ${signature}; url: https://neon-devnet.blockscout.com/tx/${signature}`);
 }
 
 export function walletSignerWeb3(web3: Web3, pk: string): Web3Account {
