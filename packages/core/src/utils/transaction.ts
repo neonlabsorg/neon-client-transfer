@@ -1,5 +1,6 @@
-import { Transaction } from '@solana/web3.js';
+import { Transaction, TransactionInstruction } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { PreparatorySolanaInstruction, SolanaAccountData } from '../models';
 
 export function solanaTransactionLog(transaction: Transaction): void {
   console.log(transaction.instructions.map(({ programId, keys, data }, index) => {
@@ -12,4 +13,22 @@ ${bs58.encode(data)}
 ${JSON.stringify(data)}
 ------------------------------`;
   }).join('\n\n'));
+}
+
+export function prepareSolanaInstruction(instruction: TransactionInstruction): PreparatorySolanaInstruction {
+  const data = bs58.encode(instruction.data);
+  const programId = instruction.programId.toBase58();
+  const accounts: SolanaAccountData[] = [];
+  for (const { pubkey, isSigner, isWritable } of instruction.keys) {
+    accounts.push({ address: pubkey.toBase58(), isSigner, isWritable });
+  }
+  return { programId, data, accounts };
+}
+
+export function prepareSolanaInstructions(instructions: TransactionInstruction[]): PreparatorySolanaInstruction[] {
+  const result: PreparatorySolanaInstruction[] = [];
+  for (const instruction of instructions) {
+    result.push(prepareSolanaInstruction(instruction));
+  }
+  return result;
 }

@@ -89,5 +89,14 @@ export type NeonTransferInstructionParams = {
   rewardAmount: Amount;
 };
 
+export interface SolanaAccountData {
+  address: string;
+  isSigner: boolean;
+  isWritable: boolean;
+}
 
-
+export interface PreparatorySolanaInstruction {
+  programId: string;
+  accounts: SolanaAccountData[];
+  data: string;
+}

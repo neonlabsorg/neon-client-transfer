@@ -27,7 +27,7 @@ import {
   toSigner
 } from '../tools';
 import { itNeonTokenMint, itSolanaTokenSPL } from './erc20';
-import { JsonRpcProvider, Wallet } from "ethers";
+import { JsonRpcProvider, Wallet } from 'ethers';
 
 require('dotenv').config({ path: `./__tests__/env/.env` });
 jest.setTimeout(24e4);

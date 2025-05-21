@@ -37,7 +37,6 @@ import {
   NeonMintTxParams,
   NeonProgramStatus,
   SolanaAccount,
-  SolanaOverrides,
   SourceSplAccountConfig,
   SPLToken,
   WrapSOLTransactionParams
@@ -395,30 +394,9 @@ export function createClaimInstructionKeys(neonEmulate: NeonEmulate): ClaimInstr
  * ```
  */
 export async function createClaimInstruction<TxResult extends TransactionResult>(config: ClaimInstructionConfig<TxResult>): Promise<ClaimInstructionResult> {
-  const {
-    proxyApi,
-    neonTransaction,
-    connection,
-    signerAddress,
-    neonEvmProgram,
-    splToken,
-    associatedTokenAddress,
-    fullAmount
-  } = config;
+  const { proxyApi, neonTransaction, solanaTransactions } = config;
   if (neonTransaction.rawTransaction) {
-    if (splToken.symbol.toUpperCase() !== 'WSOL') { //TODO: Add support for WSOL
-      const overriddenSourceAccount = await getOverriddenSourceSplAccount({
-        connection,
-        signerAddress,
-        neonEvmProgram,
-        splToken,
-        fullAmount,
-        associatedTokenAddress
-      });
-      const solanaOverrides: SolanaOverrides = { solanaOverrides: { [associatedTokenAddress.toBase58()]: overriddenSourceAccount } };
-      console.log('Solana Overrides', solanaOverrides);
-    }
-    const neonEmulate: NeonEmulate = await proxyApi.neonEmulate([neonTransaction.rawTransaction.slice(2)]);
+    const neonEmulate: NeonEmulate = await proxyApi.neonEmulate(neonTransaction.rawTransaction.slice(2), solanaTransactions);
     console.log('Emulator result', neonEmulate);
     return createClaimInstructionKeys(neonEmulate);
   }

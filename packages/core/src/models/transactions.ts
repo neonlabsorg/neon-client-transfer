@@ -1,4 +1,4 @@
-import { AccountMeta, Connection, PublicKey } from "@solana/web3.js";
+import { AccountMeta, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { NeonHeapFrame, SolanaAccount } from "./api";
 import { NeonProxyRpcApi } from "../api";
 import { Amount, NeonAddress, SPLToken } from "./token";
@@ -18,6 +18,7 @@ type BaseNeonParams = {
 type BaseNeonTransactionParams = TransactionConnectionParams & BaseNeonParams & {
   chainId: number;
   neonHeapFrame?: NeonHeapFrame;
+  solanaTransactions?: Transaction[];
 };
 
 export type NeonMintTxParams<Signer extends Provider, TxResult extends TransactionResult> = BaseNeonTransactionParams & {

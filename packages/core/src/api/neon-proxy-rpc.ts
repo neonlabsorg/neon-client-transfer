@@ -1,4 +1,6 @@
 import { GasToken, GasTokenV2, NeonEmulate, NeonProgramStatus, RPCResponse } from '../models';
+import { Transaction, TransactionInstruction } from '@solana/web3.js';
+import { prepareSolanaInstructions } from '../utils';
 
 export class NeonProxyRpcApi {
   /**
@@ -51,11 +53,19 @@ export class NeonProxyRpcApi {
   /**
    * Emulates a Neon transaction using the `neon_emulate` method.
    *
-   * @param params - The parameters for the emulation, typically transaction data.
+   * @param transaction - Signed neon transaction in hex format.
+   * @param trx - Optional array of Solana transactions to be executed before the Neon transaction.
    * @returns A promise that resolves to the result of the Neon emulation.
    */
-  async neonEmulate(params: string[] = []): Promise<NeonEmulate> {
-    return this.proxy<NeonEmulate>('neon_emulate', params).then(d => d.result);
+  async neonEmulate(transaction: string, trx?: Transaction[]): Promise<NeonEmulate> {
+    const params: any[] = [transaction];
+    if (trx?.length) {
+      const preparatorySolanaTransactions = trx.map((tx) => {
+        return { instructions: prepareSolanaInstructions(tx.instructions) };
+      });
+      params.push({ preparatorySolanaTransactions });
+    }
+    return this.proxy<NeonEmulate>('neon_emulate', [params]).then(d => d.result);
   }
 
   /**

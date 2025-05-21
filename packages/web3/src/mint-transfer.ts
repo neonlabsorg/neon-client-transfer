@@ -38,19 +38,7 @@ export async function neonTransferMintTransactionWeb3(params: MintTransferParams
   const associatedTokenAddress = getAssociatedTokenAddressSync(new PublicKey(splToken.address_spl), solanaWallet);
   const climeData = claimTransactionData(proxyUrl, associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken, proxyUrl);
-  const {
-    neonKeys,
-    legacyAccounts
-  } = await createClaimInstruction<SignTransactionResult>({
-    proxyApi,
-    neonTransaction: signedTransaction,
-    connection,
-    neonEvmProgram,
-    splToken,
-    associatedTokenAddress,
-    signerAddress: walletSigner.address,
-    fullAmount
-  });
+  const { neonKeys, legacyAccounts } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction });
 
   const neonTxParams: NeonMintTxParams<typeof walletSigner, typeof signedTransaction> = {
     connection,
@@ -99,19 +87,7 @@ export async function createWrapAndTransferSOLTransaction(params: MintTransferPa
   const wSOLAccount = await connection.getAccountInfo(associatedTokenAddress);
   const climeData = claimTransactionData(proxyUrl, associatedTokenAddress, neonWallet, fullAmount);
   const signedTransaction = await neonClaimTransactionFromSigner(climeData, walletSigner, neonWallet, splToken, proxyUrl);
-  const {
-    neonKeys,
-    legacyAccounts
-  } = await createClaimInstruction<SignTransactionResult>({
-    proxyApi,
-    neonTransaction: signedTransaction,
-    connection,
-    neonEvmProgram,
-    splToken,
-    associatedTokenAddress,
-    signerAddress: walletSigner.address,
-    fullAmount
-  });
+  const { neonKeys, legacyAccounts } = await createClaimInstruction<SignTransactionResult>({ proxyApi, neonTransaction: signedTransaction });
 
   const neonTxParams: NeonMintTxParams<typeof walletSigner, typeof signedTransaction> = {
     connection,
@@ -122,7 +98,7 @@ export async function createWrapAndTransferSOLTransaction(params: MintTransferPa
     neonKeys,
     legacyAccounts,
     neonTransaction: signedTransaction,
-    splToken,
+    splToken,g
     amount: fullAmount,
     chainId,
     neonHeapFrame

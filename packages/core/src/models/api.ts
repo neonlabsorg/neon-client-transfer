@@ -1,6 +1,6 @@
-import {AccountMeta, Connection, PublicKey} from '@solana/web3.js';
+import { AccountMeta, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { NeonProxyRpcApi } from '../api';
-import {GasToken, SPLToken} from './token';
+import { GasToken, SPLToken } from './token';
 import { SignTransactionResult } from '../utils';
 
 export const enum ProxyStatus {
@@ -129,12 +129,7 @@ export interface EthersSignedTransaction {
 export interface ClaimInstructionConfig<T> {
   proxyApi: NeonProxyRpcApi;
   neonTransaction: T | any;
-  connection: Connection;
-  signerAddress: string;
-  neonEvmProgram: PublicKey;
-  splToken: SPLToken;
-  associatedTokenAddress: PublicKey;
-  fullAmount: bigint
+  solanaTransactions?: Transaction[];
 }
 
 export interface SourceSplAccountConfig {
