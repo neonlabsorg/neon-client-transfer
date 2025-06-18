@@ -9,7 +9,7 @@ on:
 jobs:
   prepare-env:
     name: Prepare environment
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - name: Checkout neon_tests
         uses: actions/checkout@v4
