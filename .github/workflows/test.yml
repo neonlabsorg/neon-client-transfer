@@ -39,7 +39,7 @@ jobs:
       solana_ip: ${{ steps.prepare_terraform.outputs.solana_ip }}
 
   tests:
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     needs:
       - prepare-env
 
@@ -72,7 +72,7 @@ jobs:
 
   destroy:
     name: Destroy stand
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     needs:
       - tests
       - prepare-env
