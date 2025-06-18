@@ -76,7 +76,9 @@ jobs:
     needs:
       - tests
       - prepare-env
-    if: always()
+    if: |
+      always() &&
+      !contains(needs.prepare-env.result, 'cancelled')
     steps:
       - name: Checkout neon_tests
         uses: actions/checkout@v4
