@@ -25,8 +25,8 @@ jobs:
           docker_username: ${{ secrets.DOCKER_USERNAME }}
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
           aws_default_region: "eu-central-1"
-          aws_secret_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_secret_access_key_id: ${{ secrets.CI_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.CI_AWS_SECRET_ACCESS_KEY }}
           gh_token: ${{ secrets.GHTOKEN }}
           dockerhub_org_name: ${{ github.repository_owner }}
           devnet_solana_url: "${{ secrets.DEVNET_SOLANA_URL }}"
@@ -93,9 +93,9 @@ jobs:
           docker_ca_cert: ${{ needs.prepare-env.outputs.docker_ca_cert }}
           docker_cert: ${{ needs.prepare-env.outputs.docker_cert }}
           docker_key: ${{ needs.prepare-env.outputs.docker_key }}
-          aws_secret_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key_id: ${{ secrets.CI_AWS_ACCESS_KEY_ID }}
           aws_default_region: "eu-central-1"
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.CI_AWS_SECRET_ACCESS_KEY }}
           gh_token: ${{ secrets.GHTOKEN }}
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
 
